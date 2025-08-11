@@ -137,6 +137,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	}
 
 	server := &http.Server{
+		Addr:              conf.Web.ListenAddress,
 		ReadHeaderTimeout: 3 * time.Second,
 		ReadTimeout:       3 * time.Second,
 		WriteTimeout:      1 * time.Minute,
