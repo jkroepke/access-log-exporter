@@ -140,7 +140,8 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		Addr:              conf.Web.ListenAddress,
 		ReadHeaderTimeout: 3 * time.Second,
 		ReadTimeout:       3 * time.Second,
-		WriteTimeout:      1 * time.Minute,
+		WriteTimeout:      10 * time.Second,
+		MaxHeaderBytes:    10 * 1024,
 		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		Handler:           mux,
 	}
