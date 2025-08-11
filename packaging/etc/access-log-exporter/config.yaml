@@ -1,15 +1,16 @@
-# Example configuration file for an nginx
-#syslog:
-#  listenAddress: "udp://0.0.0.0:8514"
-
-#bucketSize:
-#  # Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime
-#  time: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
-#  # Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength
-#  size: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
-#  # Set of buckets which will be used for prometheus histogram metrics such as BytesSent
-#  length: [ 10, 100, 1000, 10000, 100000, 1000000, 10000000 ]
-
+# bufferSize: 1000
+# syslog:
+#   listenAddress: "udp://[::]:8514"
+# web:
+#   listenAddress: ":4040"
+#   config: ""
+# workerCount: 0
+# preset: "simple"
+# log:
+#   level: "info"
+#   format: "console"
+# debug:
+#   enabled: false
 presets:
   # apache
   # LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" accesslog_exporter

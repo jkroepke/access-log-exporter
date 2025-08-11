@@ -32,11 +32,11 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 		"Size of the buffer for syslog messages. Default is 1000. Set to 0 to disable buffering.",
 	)
 
-	flagSet.UintVar(
+	flagSet.IntVar(
 		&c.WorkerCount,
 		"worker",
 		lookupEnvOrDefault("worker", c.WorkerCount),
-		"Number of workers to process syslog messages. Default is number of CPU cores.",
+		"Number of workers to process syslog messages. 0 or below means number of available CPU cores.",
 	)
 
 	flagSet.StringVar(
@@ -54,16 +54,10 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 //goland:noinspection GoMixedReceiverTypes
 func (c *Config) flagSetDebug(flagSet *flag.FlagSet) {
 	flagSet.BoolVar(
-		&c.Debug.Pprof,
-		"debug.pprof",
-		lookupEnvOrDefault("debug.pprof", c.Debug.Pprof),
+		&c.Debug.Enable,
+		"debug.enable",
+		lookupEnvOrDefault("debug.enable", c.Debug.Enable),
 		"Enables go profiling endpoint. This should be never exposed.",
-	)
-	flagSet.StringVar(
-		&c.Debug.ListenAddress,
-		"debug.listen",
-		lookupEnvOrDefault("debug.listen", c.Debug.ListenAddress),
-		"listen address for go profiling endpoint",
 	)
 }
 
@@ -73,13 +67,7 @@ func (c *Config) flagSetWeb(flagSet *flag.FlagSet) {
 		&c.Web.ListenAddress,
 		"web.listen-address",
 		lookupEnvOrDefault("web.listen-address", c.Web.ListenAddress),
-		"Addresses on which to expose metrics. Examples: `:9100` or `[::1]:9100` for http, `vsock://:9100` for vsock.",
-	)
-	flagSet.StringVar(
-		&c.Web.ConfigFile,
-		"web.config",
-		lookupEnvOrDefault("web.config", c.Web.ConfigFile),
-		"Path to configuration file that can enable TLS or authentication. See: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md",
+		"Addresses on which to expose metrics. Examples: `:4041` or `[::1]:4041` for http",
 	)
 }
 

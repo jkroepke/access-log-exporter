@@ -2,18 +2,15 @@ package config
 
 import (
 	"log/slog"
-	"runtime"
 )
 
 //nolint:gochecknoglobals
 var Defaults = Config{
 	ConfigFile:  "config.yaml",
 	BufferSize:  1000,
-	WorkerCount: uint(runtime.NumCPU()),
+	WorkerCount: 0,
 	Preset:      "simple",
-	Debug: Debug{
-		ListenAddress: ":9001",
-	},
+	Debug:       Debug{},
 	Log: Log{
 		Format: "console",
 		Level:  slog.LevelInfo,

@@ -38,7 +38,6 @@ import (
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
-	"github.com/prometheus/exporter-toolkit/web"
 )
 
 type ReturnCode = int
@@ -92,13 +91,6 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	stopChan := make(chan bool, 1)
-
-	// Start debug listener if enabled
-	if conf.Debug.Pprof {
-		startDebugListener(ctx, cancel, wg, logger, conf)
-	}
-
 	prometheusCollector, err := collector.New(ctx, logger, conf)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
@@ -134,8 +126,17 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		},
 	)))
 
+	// Start debug listener if enabled
+	if conf.Debug.Enable {
+		mux.Handle("GET /", http.RedirectHandler("/debug/pprof/", http.StatusTemporaryRedirect))
+		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+	}
+
 	server := &http.Server{
-		Addr:              conf.Debug.ListenAddress,
 		ReadHeaderTimeout: 3 * time.Second,
 		ReadTimeout:       3 * time.Second,
 		WriteTimeout:      1 * time.Minute,
@@ -143,38 +144,12 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		Handler:           mux,
 	}
 
-	//nolint:contextcheck
-	defer func() {
-		defer wg.Done()
-
-		wg.Add(1)
-
-		prometheusCollector.Close()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		server.RegisterOnShutdown(cancel)
-
-		//nolint:contextcheck
-		if err := server.Shutdown(ctx); err != nil {
-			logger.LogAttrs(ctx, slog.LevelError, "error shutting down server", slog.Any("error", err))
-		} else {
-			logger.LogAttrs(ctx, slog.LevelInfo, "server shutdown gracefully")
-		}
-	}()
-
-	webConfig := &web.FlagConfig{
-		WebListenAddresses: &([]string{conf.Web.ListenAddress}),
-		WebConfigFile:      &conf.Web.ConfigFile,
-	}
-
 	go func() {
 		defer wg.Done()
 
 		wg.Add(1)
 
-		if err := web.ListenAndServe(server, webConfig, logger); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			cancel(err)
 		}
 	}()
@@ -182,7 +157,20 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	for {
 		select {
 		case <-ctx.Done():
-			stopChan <- true
+			prometheusCollector.Close()
+
+			serverShutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+			server.RegisterOnShutdown(cancel)
+
+			//nolint:contextcheck
+			if err := server.Shutdown(serverShutdownCtx); err != nil {
+				logger.LogAttrs(ctx, slog.LevelError, "error shutting down server", slog.Any("error", err))
+			} else {
+				logger.LogAttrs(ctx, slog.LevelInfo, "server shutdown gracefully")
+			}
+
+			cancel()
 
 			err := context.Cause(ctx)
 			if err != nil {
@@ -285,52 +273,4 @@ func setupLogger(conf config.Config, writer io.Writer) (*slog.Logger, error) {
 	default:
 		return nil, fmt.Errorf("unknown log format: %s", conf.Log.Format)
 	}
-}
-
-// startDebugListener starts the debug/pprof HTTP server in a goroutine.
-func startDebugListener(ctx context.Context, cancel context.CancelCauseFunc, wg *sync.WaitGroup, logger *slog.Logger, conf config.Config) {
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-
-		cancel(setupDebugListener(ctx, logger, conf))
-	}()
-}
-
-// setupDebugListener sets up an HTTP server for debugging purposes, including pprof endpoints.
-func setupDebugListener(ctx context.Context, logger *slog.Logger, conf config.Config) error {
-	mux := http.NewServeMux()
-	mux.Handle("GET /", http.RedirectHandler("/debug/pprof/", http.StatusTemporaryRedirect))
-	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
-	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
-
-	server := &http.Server{
-		Addr:              conf.Debug.ListenAddress,
-		ReadHeaderTimeout: 3 * time.Second,
-		ReadTimeout:       3 * time.Second,
-		WriteTimeout:      1 * time.Minute,
-		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
-		Handler:           mux,
-	}
-
-	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		server.RegisterOnShutdown(cancel)
-
-		//nolint:contextcheck
-		_ = server.Shutdown(ctx)
-	}()
-
-	err := server.ListenAndServe()
-	if err != nil {
-		return fmt.Errorf("error debug http listener: %w", err)
-	}
-
-	return nil
 }

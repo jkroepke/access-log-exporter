@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-func (c *Collector) lineHandler(ctx context.Context, workerCount uint) {
+func (c *Collector) lineHandler(ctx context.Context, workerCount int) {
+	if workerCount <= 0 {
+		workerCount = runtime.NumCPU()
+	}
+
 	for range workerCount {
 		c.wg.Add(1)
 

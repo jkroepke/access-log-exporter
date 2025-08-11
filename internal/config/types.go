@@ -14,10 +14,10 @@ type Config struct {
 	ConfigFile   string  `json:"config"      yaml:"config"`
 	Syslog       Syslog  `json:"syslog"      yaml:"syslog"`
 	Preset       string  `json:"preset"      yaml:"preset"`
-	Debug        Debug   `json:"debug"       yaml:"debug"`
 	Log          Log     `json:"log"         yaml:"log"`
-	WorkerCount  uint    `json:"workerCount" yaml:"workerCount"`
+	WorkerCount  int     `json:"workerCount" yaml:"workerCount"`
 	BufferSize   uint    `json:"bufferSize"  yaml:"bufferSize"`
+	Debug        Debug   `json:"debug"       yaml:"debug"`
 	VerifyConfig bool    `json:"-"`
 }
 
@@ -31,13 +31,11 @@ type Syslog struct {
 }
 
 type Debug struct {
-	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
-	Pprof         bool   `json:"pprof"         yaml:"pprof"`
+	Enable bool `json:"enable" yaml:"enable"`
 }
 
 type Web struct {
 	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
-	ConfigFile    string `json:"config"        yaml:"config"`
 }
 
 type Presets map[string]Preset
