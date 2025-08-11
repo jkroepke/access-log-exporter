@@ -1,0 +1,341 @@
+# bufferSize: 1000
+# syslog:
+#   listenAddress: "udp://[::]:8514"
+# web:
+#   listenAddress: ":4040"
+#   config: ""
+# workerCount: 0
+# preset: "simple"
+# log:
+#   level: "info"
+#   format: "console"
+# debug:
+#   enabled: false
+presets:
+  # apache
+  # LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" accesslog_exporter
+  # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
+  # nginx
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  simple:
+    metrics:
+      - name: "http_requests_total"
+        type: "counter"
+        help: "The total number of client requests."
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_request_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The request length (including request line, header, and request body)"
+        valueIndex: 4
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The response length (including request line, header, and request body)"
+        valueIndex: 5
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving the response from the upstream server"
+        valueIndex: 3
+        math:
+          enabled: true
+          div: 1000
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+  # apache
+  # not supported
+  # nginx
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  simple_upstream:
+    metrics:
+      - name: "http_requests_total"
+        type: "counter"
+        help: "The total number of client requests."
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_request_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The request length (including request line, header, and request body)"
+        valueIndex: 4
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The response length (including request line, header, and request body)"
+        valueIndex: 5
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving and response the response to the client"
+        valueIndex: 3
+        math:
+          enabled: true
+          div: 1000
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_connect_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on establishing a connection with the upstream server"
+        valueIndex: 7
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          excludes: []
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_header_duration_seconds"
+        type: "histogram"
+        help: "The time spent on receiving the response header from the upstream server"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        valueIndex: 8
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          excludes: []
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_response_duration_seconds"
+        type: "histogram"
+        help: "The time spent on receiving the response from the upstream server"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        valueIndex: 9
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          excludes: []
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+  # apache
+  # not supported
+  # nginx
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$upstream_cache_status\t$remote_user\t$https\t$server_protocol\t$http_user_agent';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  all:
+    metrics:
+      - name: "http_requests_total"
+        type: "counter"
+        help: "The total number of client requests."
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+          - name: "remote_user"
+            lineIndex: 11
+          - name: "ssl"
+            lineIndex: 12
+            replacements:
+              - regexp: "^$"
+                replacement: "off"
+          - name: "ssl_protocol"
+            lineIndex: 13
+          - name: "user_agent"
+            lineIndex: 14
+            userAgent: true
+
+      - name: "http_request_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The request length (including request line, header, and request body)"
+        valueIndex: 4
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_size_bytes"
+        type: "histogram"
+        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        help: "The response length (including request line, header, and request body)"
+        valueIndex: 5
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving and response the response to the client"
+        valueIndex: 3
+        math:
+          enabled: true
+          div: 1000
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_connect_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on establishing a connection with the upstream server"
+        valueIndex: 7
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          label: true
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_header_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving the response header from the upstream server"
+        valueIndex: 8
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          label: true
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_response_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving the response from the upstream server"
+        valueIndex: 9
+        math:
+          enabled: true
+          div: 1000
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          label: true
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_upstream_status"
+        type: "counter"
+        help: "The time spent on receiving the response from the upstream server"
+        upstream:
+          enabled: true
+          addrLineIndex: 6
+          label: true
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 10

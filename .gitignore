@@ -21,8 +21,8 @@ tests/*
 !tests/systemd/
 tests/systemd/prometheus-nginx-exporter.conf
 
-/prometheus-nginxlog-exporter
-/prometheus-nginxlog-exporter.exe
+/access-log-exporter
+/access-log-exporter.exe
 dist/
 bin/
 
@@ -88,3 +88,4 @@ Test*.te*
 *.test
 *.gpg
 venv/
+kodata/

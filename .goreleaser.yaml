@@ -1,0 +1,162 @@
+version: 2
+before:
+  hooks:
+    - rm -rf 3rdpartylicenses
+    - go run github.com/google/go-licenses@latest save ./cmd/access-log-exporter --save_path=3rdpartylicenses
+    - mkdir -p cmd/access-log-exporter/kodata/
+    - cp ./packaging/etc/access-log-exporter/config.yaml ./cmd/access-log-exporter/kodata/config.yaml
+
+builds:
+  - id: "access-log-exporter"
+    main: ./cmd/access-log-exporter
+    binary: access-log-exporter
+    goos:
+      - linux
+      - freebsd
+      - openbsd
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - >-
+        -s -w
+        -X github.com/prometheus/common/version.Version={{.Version}}
+        -X github.com/prometheus/common/version.Revision={{.Commit}}
+        -X github.com/prometheus/common/version.Branch={{.Branch}}
+        -X github.com/prometheus/common/version.BuildDate={{.Date}}
+
+archives:
+  - id: access-log-exporter
+    ids:
+        - access-log-exporter
+    formats: ['tar.xz']
+    files:
+        - LICENSE.txt
+        - 3rdpartylicenses/**/*
+
+nfpms:
+  - id: access-log-exporter
+    ids:
+      - access-log-exporter
+    homepage: https://github.com/jkroepke/access-log-exporter
+    maintainer: Jan-Otto Kröpke <github@jkroepke.de>
+    section: net
+    description: |
+      access-log-exporter is a management client for OpenVPN that handles the authentication of connecting users against OIDC providers like Azure AD or Keycloak.
+    license: MIT License
+    formats:
+      - deb
+      - rpm
+    provides:
+      - access-log-exporter
+    recommends:
+      - openvpn
+    contents:
+      - src: packaging/usr/lib/sysusers.d/
+        dst: /usr/lib/sysusers.d/
+      - src: packaging/usr/lib/systemd/system/
+        dst: /usr/lib/systemd/system/
+      - dst: /etc/access-log-exporter/
+        type: dir
+        file_info:
+          owner: root
+          group: access-log-exporter
+          mode: 0750
+      - dst: /etc/access-log-exporter/client-config/
+        type: dir
+        file_info:
+          owner: root
+          group: access-log-exporter
+          mode: 0750
+      - src: packaging/etc/access-log-exporter/config.yaml
+        dst: /etc/access-log-exporter/config.yaml
+        type: "config|noreplace"
+        file_info:
+          owner: root
+          group: access-log-exporter
+          mode: 0640
+      - src: 3rdpartylicenses/
+        dst: /usr/share/doc/access-log-exporter/3rdpartylicenses/
+        type: tree
+        file_info:
+          owner: root
+          group: root
+          mode: 0644
+    scripts:
+      preinstall: "packaging/scripts/preinst.sh"
+      postinstall: "packaging/scripts/postinst.sh"
+      preremove: "packaging/scripts/preremove.sh"
+      postremove: "packaging/scripts/postremove.sh"
+    rpm:
+      compression: xz
+      signature:
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
+    deb:
+      #compression: xz
+      signature:
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
+
+kos:
+  - repositories:
+      - ghcr.io/jkroepke/access-log-exporter
+    tags:
+      - '{{ .Version }}'
+      - '{{ if and .Tag (not .Prerelease) }}latest{{end}}'
+      - '{{ if eq .Branch "main" }}main{{end}}'
+    bare: true
+    base_image: cgr.dev/chainguard/static:latest # scratch is not supported, see https://github.com/ko-build/ko/pull/1350
+    preserve_import_paths: false
+    creation_time: "{{.CommitTimestamp}}"
+    ko_data_creation_time: "{{.CommitTimestamp}}"
+    sbom: spdx
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.authors: "Jan-Otto Kröpke https://github.com/jkroepke/"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Version}}"
+      org.opencontainers.image.source: "https://github.com/jkroepke/access-log-exporter"
+      org.opencontainers.image.description: "Export metrics from Nginx access log files to Prometheus"
+      org.opencontainers.image.vendor: "Jan-Otto Kröpke"
+      org.opencontainers.image.licenses: "Apache-2.0"
+      org.opencontainers.image.documentation: "https://github.com/jkroepke/access-log-exporter/wiki"
+
+docker_signs:
+  - artifacts: manifests
+    output: true
+    cmd: cosign
+    env:
+     - COSIGN_EXPERIMENTAL=1
+    args:
+     - sign
+     - '--oidc-issuer={{if index .Env "CI"}}https://token.actions.githubusercontent.com{{else}}https://oauth2.sigstore.dev/auth{{end}}'
+     - '--yes'
+     - '${artifact}'
+
+checksum:
+  name_template: "checksums.txt"
+
+report_sizes: true
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"
+
+gomod:
+  proxy: true
+
+release:
+  prerelease: auto
+
+changelog:
+  use: github-native
+
+sboms:
+  - artifacts: archive

@@ -1,0 +1,11 @@
+---
+coverage:
+  status:
+    project: false
+    patch: off
+
+ignore:
+  - "docs/**/*"
+  - "tests/**/*"
+  - "pkg/**/*"
+  - "wiki/**/*"
