@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (c *Collector) lineHandler(ctx context.Context, workerCount uint) error {
+func (c *Collector) lineHandler(ctx context.Context, workerCount uint) {
 	for range workerCount {
 		c.wg.Add(1)
 
@@ -19,8 +19,6 @@ func (c *Collector) lineHandler(ctx context.Context, workerCount uint) error {
 	}
 
 	c.logger.InfoContext(ctx, "line handler started", slog.Int("workers", runtime.NumCPU()))
-
-	return nil
 }
 
 func (c *Collector) lineHandlerWorker(ctx context.Context) {

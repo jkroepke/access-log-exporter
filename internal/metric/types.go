@@ -8,6 +8,5 @@ import (
 type Metric struct {
 	metric prometheus.Collector
 
-	labelLineIndexMap map[uint]string
-	cfg               config.Metric
+	cfg config.Metric
 }

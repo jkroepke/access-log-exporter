@@ -44,10 +44,7 @@ func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collect
 		return nil, fmt.Errorf("could not start syslog pump: %w", err)
 	}
 
-	err = collector.lineHandler(ctx, conf.WorkerCount)
-	if err != nil {
-		return nil, fmt.Errorf("could not start syslog pump: %w", err)
-	}
+	collector.lineHandler(ctx, conf.WorkerCount)
 
 	return collector, nil
 }

@@ -31,18 +31,18 @@ func (c *Collector) pumpSyslog(ctx context.Context, conf config.Syslog) error {
 	server.SetFormat(syslog.RFC3164)
 	server.SetHandler(c)
 
-	u, err := url.Parse(conf.ListenAddress)
+	uri, err := url.Parse(conf.ListenAddress)
 	if err != nil {
 		return fmt.Errorf("could not parse syslog listen address '%s': %w", conf.ListenAddress, err)
 	}
 
-	switch u.Scheme {
+	switch uri.Scheme {
 	case "tcp":
-		err = server.ListenTCP(u.Host)
+		err = server.ListenTCP(uri.Host)
 	case "udp":
-		err = server.ListenUDP(u.Host)
+		err = server.ListenUDP(uri.Host)
 	case "unix":
-		err = server.ListenUnixgram(u.Host + u.Path)
+		err = server.ListenUnixgram(uri.Host + uri.Path)
 	default:
 		return errors.New("syslog server should be in format unix/tcp/udp://127.0.0.1:5533")
 	}
@@ -63,6 +63,7 @@ func (c *Collector) pumpSyslog(ctx context.Context, conf config.Syslog) error {
 
 	go func() {
 		defer c.wg.Done()
+
 		<-ctx.Done()
 
 		c.logger.InfoContext(ctx, "shutting down syslog server", slog.String("address", conf.ListenAddress))
@@ -71,8 +72,8 @@ func (c *Collector) pumpSyslog(ctx context.Context, conf config.Syslog) error {
 
 		server.Wait()
 
-		if u.Scheme == "unix" {
-			_ = os.Remove(u.Host + u.Path)
+		if uri.Scheme == "unix" {
+			_ = os.Remove(uri.Host + uri.Path)
 		}
 
 		c.logger.InfoContext(ctx, "syslog server shutdown complete", slog.String("address", conf.ListenAddress))

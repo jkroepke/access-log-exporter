@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//nolint:cyclop
 func New(cfg config.Metric) (*Metric, error) {
 	var metric prometheus.Collector
 
@@ -35,6 +36,7 @@ func New(cfg config.Metric) (*Metric, error) {
 		if label.Name == "" {
 			return nil, errors.New("metric label name cannot be empty")
 		}
+
 		labelKeys[i] = label.Name
 	}
 
@@ -90,6 +92,7 @@ func (m *Metric) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
+//nolint:cyclop
 func (m *Metric) Parse(line []string) error {
 	lineLength := uint(len(line))
 
@@ -103,7 +106,7 @@ func (m *Metric) Parse(line []string) error {
 	}
 
 	// BCE (Bound Check Elimination)
-	//https://go101.org/optimizations/5-bce.html
+	// https://go101.org/optimizations/5-bce.html
 	_ = line[lineLength-1]
 
 	// Calculate exact capacity including potential upstream label
@@ -134,7 +137,7 @@ func (m *Metric) Parse(line []string) error {
 		}
 
 		// This should never happen due to validation in New(), but be defensive
-		return fmt.Errorf("valueIndex is nil but metric type is not counter")
+		return errors.New("valueIndex is nil but metric type is not counter")
 	}
 
 	value := line[*m.cfg.ValueIndex]
@@ -158,8 +161,10 @@ func (m *Metric) Parse(line []string) error {
 	return nil
 }
 
+//nolint:cyclop
 func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels prometheus.Labels) error {
 	valueElements := strings.Split(value, ",")
+
 	var upstreams []string
 
 	// Get upstreams if we need them for excludes or labels
@@ -209,6 +214,7 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 	return nil
 }
 
+//nolint:cyclop
 func (m *Metric) setMetric(value string, labels prometheus.Labels) error {
 	// Early return for empty values before trimming
 	if value == "" {
@@ -242,6 +248,7 @@ func (m *Metric) setMetric(value string, labels prometheus.Labels) error {
 		if valueFloat < 0 {
 			return fmt.Errorf("counter value cannot be negative: %f", valueFloat)
 		}
+
 		metric.With(labels).Add(valueFloat)
 	case *prometheus.GaugeVec:
 		metric.With(labels).Set(valueFloat)

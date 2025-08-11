@@ -133,9 +133,8 @@ linters:
     tagliatelle:
       case:
         rules:
-          yaml: kebab
-          json: kebab
-          koanf: kebab
+          yaml: camel
+          json: camel
     varnamelen:
       ignore-names:
         - tc

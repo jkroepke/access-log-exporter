@@ -10,19 +10,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	ErrNoSource = errors.New("no source data configured, cannot start collector")
-)
+var ErrNoSource = errors.New("no source data configured, cannot start collector")
 
 type Collector struct {
-	preset config.Preset
-	logger *slog.Logger
-
-	buffer chan string
-
-	// Metrics
-	metrics          []*metric.Metric
 	parseErrorMetric prometheus.Counter
-
-	wg *sync.WaitGroup
+	logger           *slog.Logger
+	buffer           chan string
+	wg               *sync.WaitGroup
+	preset           config.Preset
+	metrics          []*metric.Metric
 }

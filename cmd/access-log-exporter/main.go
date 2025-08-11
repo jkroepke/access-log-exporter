@@ -35,7 +35,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
-	versionCollector "github.com/prometheus/client_golang/prometheus/collectors/version"
+	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -75,6 +75,8 @@ func execute(args []string, stdout io.Writer, termCh <-chan os.Signal) int {
 }
 
 // run runs the main program logic of the daemon.
+//
+//nolint:cyclop
 func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.Signal) ReturnCode {
 	conf, logger, rc := initializeConfigAndLogger(args, stdout)
 	if rc != ReturnCodeNoError {
@@ -100,6 +102,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	prometheusCollector, err := collector.New(ctx, logger, conf)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
+
 		return ReturnCodeError
 	}
 
@@ -112,13 +115,13 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		collectors.NewGoCollector(),
 		collectors.NewBuildInfoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versionCollector.NewCollector("prometheus_nginxlog_exporter"),
+		versioncollector.NewCollector("prometheus_nginxlog_exporter"),
 		prometheusCollector,
 	)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	})
 
 	mux.Handle("GET /metrics", promhttp.InstrumentMetricHandler(reg, promhttp.HandlerFor(
@@ -140,8 +143,10 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		Handler:           mux,
 	}
 
+	//nolint:contextcheck
 	defer func() {
 		defer wg.Done()
+
 		wg.Add(1)
 
 		prometheusCollector.Close()
@@ -150,6 +155,8 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		defer cancel()
 
 		server.RegisterOnShutdown(cancel)
+
+		//nolint:contextcheck
 		if err := server.Shutdown(ctx); err != nil {
 			logger.LogAttrs(ctx, slog.LevelError, "error shutting down server", slog.Any("error", err))
 		} else {
@@ -164,6 +171,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 	go func() {
 		defer wg.Done()
+
 		wg.Add(1)
 
 		if err := web.ListenAndServe(server, webConfig, logger); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -175,6 +183,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		select {
 		case <-ctx.Done():
 			stopChan <- true
+
 			err := context.Cause(ctx)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
@@ -314,6 +323,7 @@ func setupDebugListener(ctx context.Context, logger *slog.Logger, conf config.Co
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		server.RegisterOnShutdown(cancel)
 
+		//nolint:contextcheck
 		_ = server.Shutdown(ctx)
 	}()
 

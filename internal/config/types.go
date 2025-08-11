@@ -9,81 +9,78 @@ import (
 )
 
 type Config struct {
-	VerifyConfig bool
-
-	ConfigFile string `yaml:"config"`
-
-	Web    Web    `yaml:"web"`
-	Debug  Debug  `yaml:"debug"`
-	Log    Log    `yaml:"log"`
-	Syslog Syslog `yaml:"syslog"`
-
-	WorkerCount uint    `yaml:"workerCount"`
-	BufferSize  uint    `yaml:"bufferSize"`
-	Preset      string  `yaml:"preset"`
-	Presets     Presets `yaml:"presets"`
+	Presets      Presets `json:"presets"     yaml:"presets"`
+	Web          Web     `json:"web"         yaml:"web"`
+	ConfigFile   string  `json:"config"      yaml:"config"`
+	Syslog       Syslog  `json:"syslog"      yaml:"syslog"`
+	Preset       string  `json:"preset"      yaml:"preset"`
+	Debug        Debug   `json:"debug"       yaml:"debug"`
+	Log          Log     `json:"log"         yaml:"log"`
+	WorkerCount  uint    `json:"workerCount" yaml:"workerCount"`
+	BufferSize   uint    `json:"bufferSize"  yaml:"bufferSize"`
+	VerifyConfig bool    `json:"-"`
 }
 
 type Log struct {
-	Format string     `yaml:"format"`
-	Level  slog.Level `yaml:"level"`
+	Format string     `json:"format" yaml:"format"`
+	Level  slog.Level `json:"level"  yaml:"level"`
 }
 
 type Syslog struct {
-	ListenAddress string `yaml:"listenAddress"`
+	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
 }
 
 type Debug struct {
-	ListenAddress string `json:"listen-address" yaml:"listen-address"`
-	Pprof         bool   `json:"pprof"  yaml:"pprof"`
+	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
+	Pprof         bool   `json:"pprof"         yaml:"pprof"`
 }
 
 type Web struct {
-	ListenAddress string `json:"listen-address" yaml:"listen-address"`
-	ConfigFile    string `json:"config" yaml:"config"`
+	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
+	ConfigFile    string `json:"config"        yaml:"config"`
 }
 
 type Presets map[string]Preset
 
 type Preset struct {
-	Metrics []Metric `yaml:"metrics"`
+	Metrics []Metric `json:"metrics" yaml:"metrics"`
 }
 
 type Metric struct {
-	Name        string             `yaml:"name"`
-	Type        string             `yaml:"type"`
-	Help        string             `yaml:"help"`
-	ConstLabels map[string]string  `yaml:"constLabels"`
-	Buckets     types.Float64Slice `yaml:"buckets,omitempty"`
-	ValueIndex  *uint              `yaml:"valueIndex,omitempty"`
-	Math        Math               `yaml:"math"`
-	Upstream    Upstream           `yaml:"upstream"`
-	Labels      []Label            `yaml:"labels"`
+	ConstLabels map[string]string  `json:"constLabels"          yaml:"constLabels"`
+	ValueIndex  *uint              `json:"valueIndex,omitempty" yaml:"valueIndex,omitempty"`
+	Name        string             `json:"name"                 yaml:"name"`
+	Type        string             `json:"type"                 yaml:"type"`
+	Help        string             `json:"help"                 yaml:"help"`
+	Buckets     types.Float64Slice `json:"buckets,omitempty"    yaml:"buckets,omitempty"`
+	Labels      []Label            `json:"labels"               yaml:"labels"`
+	Upstream    Upstream           `json:"upstream"             yaml:"upstream"`
+	Math        Math               `json:"math"                 yaml:"math"`
 }
 
 type Math struct {
-	Enabled bool    `yaml:"enabled"`
-	Mul     float64 `yaml:"mul"`
-	Div     float64 `yaml:"div"`
+	Enabled bool    `json:"enabled" yaml:"enabled"`
+	Mul     float64 `json:"mul"     yaml:"mul"`
+	Div     float64 `json:"div"     yaml:"div"`
 }
 
 type Upstream struct {
-	Enabled       bool     `yaml:"enabled"`
-	AddrLineIndex uint     `yaml:"addrLineIndex"`
-	Excludes      []string `yaml:"excludes"`
-	Label         bool     `yaml:"label"`
+	Excludes      []string `json:"excludes"      yaml:"excludes"`
+	AddrLineIndex uint     `json:"addrLineIndex" yaml:"addrLineIndex"`
+	Enabled       bool     `json:"enabled"       yaml:"enabled"`
+	Label         bool     `json:"label"         yaml:"label"`
 }
 
 type Label struct {
-	Name         string        `yaml:"name"`
-	LineIndex    uint          `yaml:"lineIndex"`
-	Replacements []Replacement `yaml:"replacements,omitempty"`
-	UserAgent    bool          `yaml:"userAgent"`
+	Name         string        `json:"name"                   yaml:"name"`
+	Replacements []Replacement `json:"replacements,omitempty" yaml:"replacements,omitempty"`
+	LineIndex    uint          `json:"lineIndex"              yaml:"lineIndex"`
+	UserAgent    bool          `json:"userAgent"              yaml:"userAgent"`
 }
 
 type Replacement struct {
-	Regexp      regexp.Regexp `yaml:"regexp"`
-	Replacement string        `yaml:"replacement"`
+	Replacement string        `json:"replacement" yaml:"replacement"`
+	Regexp      regexp.Regexp `json:"regexp"      yaml:"regexp"`
 }
 
 //goland:noinspection GoMixedReceiverTypes
