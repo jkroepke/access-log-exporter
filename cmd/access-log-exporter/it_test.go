@@ -33,7 +33,7 @@ http {
 	access_log syslog:server=host.docker.internal:8514,nohostname accesslog_exporter;
 
 	server {
-		listen       80;
+		listen       8080;
 		server_name  localhost;
 
 		location = /200 {
@@ -96,7 +96,7 @@ func TestIT(t *testing.T) {
 				}
 			},
 			ExposedPorts: []string{
-				"80/tcp",
+				"8080/tcp",
 			},
 			Env: map[string]string{
 				"NGINX_ENTRYPOINT_QUIET_LOGS": "true",
@@ -114,7 +114,7 @@ func TestIT(t *testing.T) {
 					FileMode:          0o644,
 				},
 			},
-			WaitingFor: wait.ForListeningPort("80/tcp").WithStartupTimeout(time.Second * 5),
+			WaitingFor: wait.ForListeningPort("8080/tcp").WithStartupTimeout(time.Second * 5),
 		},
 		Started: true,
 	})
