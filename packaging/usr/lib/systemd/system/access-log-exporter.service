@@ -1,5 +1,5 @@
 [Unit]
-Description=OpenVPN authenticator
+Description=Access log exporter service
 Documentation=https://github.com/jkroepke/access-log-exporter
 Wants=network-online.target
 After=network-online.target
