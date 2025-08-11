@@ -1,0 +1,90 @@
+*.iml
+*.out
+
+/.idea/*
+!/.idea/inspectionProfiles/
+/.idea/inspectionProfiles/*
+!/.idea/inspectionProfiles/Project_Default.xml
+!/.idea/dictionaries/
+/.idea/dictionaries/*
+!/.idea/dictionaries/project.xml
+/.idea/copyright/*
+!/.idea/copyright/profiles_settings.xml
+!/.idea/copyright/windows_exporter.xml
+!/.idea/vcs.xml
+!/.idea/go.imports.xml
+
+tests/*
+!tests/docker-compose.yaml
+!tests/Dockerfile
+!tests/.dockerignore
+!tests/systemd/
+tests/systemd/prometheus-nginx-exporter.conf
+
+/prometheus-nginxlog-exporter
+/prometheus-nginxlog-exporter.exe
+dist/
+bin/
+
+### macOS template
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+### Windows template
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+/3rdpartylicenses/
+/local/
+/tests/**/*.sysconfig
+Test*.te*
+*.test.exe
+*.test
+*.gpg
+venv/
