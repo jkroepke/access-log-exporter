@@ -172,6 +172,7 @@ jobs:
           GPG_KEY_PATH: "${{ secrets.GPG_KEY_PATH }}"
 
       - name: Run GoReleaser
+        id: goreleaser
         uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
         with:
           # renovate: github=goreleaser/goreleaser
@@ -198,12 +199,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.NFPM_PASSPHRASE }}
 
+      # parse artifacts to the format required for image attestation
+      # https://github.com/goreleaser/goreleaser/issues/4852#issuecomment-2122790132
+      - run: |
+          echo "$ARTIFACTS"
+          echo "digest=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|select(.name|test(":[0-9]"))|.extra.Digest')" >> "$GITHUB_OUTPUT"
+          echo "name=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|select(.name|test(":[0-9]"))|.name|split(":")[0]')" >> "$GITHUB_OUTPUT"
+        id: image_metadata
+        env:
+          ARTIFACTS: ${{steps.goreleaser.outputs.artifacts}}
+
       - uses: actions/attest-build-provenance@v2.4.0
         with:
           subject-checksums: ./dist/checksums.txt
 
-#      - uses: actions/attest-build-provenance@v2
-#        with:
-#          subject-name: ghcr.io/${{ github.repository }}
-#          subject-digest: ${{ steps.push.outputs.digest }}
-#          push-to-registry: true
+      # attest image
+      #- uses: actions/attest-build-provenance@v2.4.0
+      #  with:
+      #    subject-digest: ${{steps.image_metadata.outputs.digest}}
+      #    subject-name: ${{steps.image_metadata.outputs.name}}
+      #    push-to-registry: true
