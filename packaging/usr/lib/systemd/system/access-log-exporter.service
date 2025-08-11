@@ -8,7 +8,6 @@ After=network-online.target
 # Run as an unprivileged user with random user id.
 DynamicUser=true
 User=access-log-exporter-dynamic
-Group=access-log-exporter-dynamic
 SupplementaryGroups=access-log-exporter
 
 ExecStart=/usr/bin/access-log-exporter -config-file ${CONFIG_FILE}
