@@ -176,7 +176,7 @@ func MetricsToText(tb testing.TB, met prometheus.Collector) (string, error) {
 	request, err := http.NewRequestWithContext(tb.Context(), http.MethodGet, "/", nil)
 	require.NoError(tb, err)
 
-	request.Header.Add("Accept", "test/plain")
+	request.Header.Add("Accept", "text/plain")
 
 	writer := httptest.NewRecorder()
 
