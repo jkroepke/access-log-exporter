@@ -141,7 +141,6 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		ReadHeaderTimeout: 3 * time.Second,
 		ReadTimeout:       3 * time.Second,
 		WriteTimeout:      10 * time.Second,
-		MaxHeaderBytes:    10 * 1024,
 		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		Handler:           mux,
 	}
