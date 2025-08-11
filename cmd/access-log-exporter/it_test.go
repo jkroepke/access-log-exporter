@@ -72,7 +72,7 @@ func TestIT(t *testing.T) {
 
 	go func() {
 		returnCodeCh <- run(t.Context(), []string{
-			"--config=" + moduleRoot + "/packaging/etc/prometheus-nginxlog-exporter/config.yaml",
+			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
 		}, stdout, termCh)
 	}()
 

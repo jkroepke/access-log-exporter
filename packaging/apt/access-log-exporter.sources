@@ -1,5 +1,5 @@
 Types: deb
-URIs: https://github.com/jkroepke/prometheus-nginxlog-exporter/releases/latest/download
+URIs: https://github.com/jkroepke/access-log-exporter/releases/latest/download
 Suites: ./
 Signed-By:
     -----BEGIN PGP PUBLIC KEY BLOCK-----

@@ -13,7 +13,7 @@ case $1 in
     exit 0
   fi
 
-  systemctl stop prometheus-nginxlog-exporter.service || true
+  systemctl stop access-log-exporter.service || true
   systemctl daemon-reload
   systemctl reset-failed
   ;;

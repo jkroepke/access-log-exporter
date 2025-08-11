@@ -9,8 +9,8 @@ case $1 in
   ;;
 
 *)
-  if id -g prometheus-nginxlog-exporter >/dev/null 2>&1; then
-    groupdel prometheus-nginxlog-exporter >/dev/null || true
+  if id -g access-log-exporter >/dev/null 2>&1; then
+    groupdel access-log-exporter >/dev/null || true
   fi
 
   if ! command -v systemctl >/dev/null 2>&1; then

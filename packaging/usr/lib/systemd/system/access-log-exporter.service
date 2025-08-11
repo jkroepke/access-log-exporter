@@ -1,22 +1,22 @@
 [Unit]
 Description=OpenVPN authenticator
-Documentation=https://github.com/jkroepke/prometheus-nginxlog-exporter
+Documentation=https://github.com/jkroepke/access-log-exporter
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 # Run as an unprivileged user with random user id.
 DynamicUser=true
-User=prometheus-nginxlog-exporter-dynamic
-Group=prometheus-nginxlog-exporter-dynamic
-SupplementaryGroups=prometheus-nginxlog-exporter
+User=access-log-exporter-dynamic
+Group=access-log-exporter-dynamic
+SupplementaryGroups=access-log-exporter
 
-ExecStart=/usr/bin/prometheus-nginxlog-exporter -config-file ${CONFIG_FILE}
+ExecStart=/usr/bin/access-log-exporter -config-file ${CONFIG_FILE}
 NoExecPaths=/
-ExecPaths=/usr/bin/prometheus-nginxlog-exporter /usr/bin/env /usr/bin/kill
+ExecPaths=/usr/bin/access-log-exporter /usr/bin/env /usr/bin/kill
 ExecReload=/usr/bin/env kill -USR1 $MAINPID
 
-Environment=CONFIG_FILE=/etc/prometheus-nginxlog-exporter/config.yaml
+Environment=CONFIG_FILE=/etc/access-log-exporter/config.yaml
 
 RestartSec=5s
 Restart=always

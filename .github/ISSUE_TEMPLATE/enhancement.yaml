@@ -48,5 +48,5 @@ body:
         - required: true
           #language=markdown
           label: |
-            I could not find a solution in the [documentation](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki),
-            the [FAQ](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki/FAQ), the existing issues or discussions.
+            I could not find a solution in the [documentation](https://github.com/jkroepke/access-log-exporter/wiki),
+            the [FAQ](https://github.com/jkroepke/access-log-exporter/wiki/FAQ), the existing issues or discussions.

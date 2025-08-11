@@ -2,14 +2,14 @@ version: 2
 before:
   hooks:
     - rm -rf 3rdpartylicenses
-    - go run github.com/google/go-licenses@latest save ./cmd/prometheus-nginxlog-exporter --save_path=3rdpartylicenses
-    - mkdir -p cmd/prometheus-nginxlog-exporter/kodata/
-    - ln -sf packaging/etc/prometheus-nginxlog-exporter/config.yaml ./cmd/app/kodata/config.yaml
+    - go run github.com/google/go-licenses@latest save ./cmd/access-log-exporter --save_path=3rdpartylicenses
+    - mkdir -p cmd/access-log-exporter/kodata/
+    - ln -sf packaging/etc/access-log-exporter/config.yaml ./cmd/app/kodata/config.yaml
 
 builds:
-  - id: "prometheus-nginxlog-exporter"
-    main: ./cmd/prometheus-nginxlog-exporter
-    binary: prometheus-nginxlog-exporter
+  - id: "access-log-exporter"
+    main: ./cmd/access-log-exporter
+    binary: access-log-exporter
     goos:
       - linux
       - freebsd
@@ -31,29 +31,29 @@ builds:
         -X github.com/prometheus/common/version.BuildDate={{.Date}}
 
 archives:
-  - id: prometheus-nginxlog-exporter
+  - id: access-log-exporter
     ids:
-        - prometheus-nginxlog-exporter
+        - access-log-exporter
     formats: ['tar.xz']
     files:
         - LICENSE.txt
         - 3rdpartylicenses/**/*
 
 nfpms:
-  - id: prometheus-nginxlog-exporter
+  - id: access-log-exporter
     ids:
-      - prometheus-nginxlog-exporter
-    homepage: https://github.com/jkroepke/prometheus-nginxlog-exporter
+      - access-log-exporter
+    homepage: https://github.com/jkroepke/access-log-exporter
     maintainer: Jan-Otto Kröpke <github@jkroepke.de>
     section: net
     description: |
-      prometheus-nginxlog-exporter is a management client for OpenVPN that handles the authentication of connecting users against OIDC providers like Azure AD or Keycloak.
+      access-log-exporter is a management client for OpenVPN that handles the authentication of connecting users against OIDC providers like Azure AD or Keycloak.
     license: MIT License
     formats:
       - deb
       - rpm
     provides:
-      - prometheus-nginxlog-exporter
+      - access-log-exporter
     recommends:
       - openvpn
     contents:
@@ -61,27 +61,27 @@ nfpms:
         dst: /usr/lib/sysusers.d/
       - src: packaging/usr/lib/systemd/system/
         dst: /usr/lib/systemd/system/
-      - dst: /etc/prometheus-nginxlog-exporter/
+      - dst: /etc/access-log-exporter/
         type: dir
         file_info:
           owner: root
-          group: prometheus-nginxlog-exporter
+          group: access-log-exporter
           mode: 0750
-      - dst: /etc/prometheus-nginxlog-exporter/client-config/
+      - dst: /etc/access-log-exporter/client-config/
         type: dir
         file_info:
           owner: root
-          group: prometheus-nginxlog-exporter
+          group: access-log-exporter
           mode: 0750
-      - src: packaging/etc/prometheus-nginxlog-exporter/config.yaml
-        dst: /etc/prometheus-nginxlog-exporter/config.yaml
+      - src: packaging/etc/access-log-exporter/config.yaml
+        dst: /etc/access-log-exporter/config.yaml
         type: "config|noreplace"
         file_info:
           owner: root
-          group: prometheus-nginxlog-exporter
+          group: access-log-exporter
           mode: 0640
       - src: 3rdpartylicenses/
-        dst: /usr/share/doc/prometheus-nginxlog-exporter/3rdpartylicenses/
+        dst: /usr/share/doc/access-log-exporter/3rdpartylicenses/
         type: tree
         file_info:
           owner: root
@@ -103,7 +103,7 @@ nfpms:
 
 kos:
   - repositories:
-      - ghcr.io/jkroepke/prometheus-nginxlog-exporter
+      - ghcr.io/jkroepke/access-log-exporter
     tags:
       - '{{ .Version }}'
       - '{{ if and .Tag (not .Prerelease) }}latest{{end}}'
@@ -118,12 +118,16 @@ kos:
       - linux/amd64
       - linux/arm64
     labels:
+      org.opencontainers.image.authors: "Jan-Otto Kröpke https://github.com/jkroepke/"
       org.opencontainers.image.created: "{{.Date}}"
       org.opencontainers.image.title: "{{.ProjectName}}"
       org.opencontainers.image.revision: "{{.FullCommit}}"
       org.opencontainers.image.version: "{{.Version}}"
-      org.opencontainers.image.source: "https://github.com/jkroepke/prometheus-nginxlog-exporter"
+      org.opencontainers.image.source: "https://github.com/jkroepke/access-log-exporter"
       org.opencontainers.image.description: "Export metrics from Nginx access log files to Prometheus"
+      org.opencontainers.image.vendor: "Jan-Otto Kröpke"
+      org.opencontainers.image.licenses: "Apache-2.0"
+      org.opencontainers.image.documentation: "https://github.com/jkroepke/access-log-exporter/wiki"
 
 docker_signs:
   - artifacts: manifests

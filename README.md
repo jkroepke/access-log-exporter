@@ -1,15 +1,24 @@
-[![CI](https://github.com/jkroepke/prometheus-nginxlog-exporter/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/jkroepke/prometheus-nginxlog-exporter/actions/workflows/ci.yaml)
-[![GitHub license](https://img.shields.io/github/license/jkroepke/prometheus-nginxlog-exporter)](https://github.com/jkroepke/prometheus-nginxlog-exporter/blob/master/LICENSE.txt)
-[![Current Release](https://img.shields.io/github/release/jkroepke/prometheus-nginxlog-exporter.svg?logo=github)](https://github.com/jkroepke/prometheus-nginxlog-exporter/releases/latest)
-[![GitHub Repo stars](https://img.shields.io/github/stars/jkroepke/prometheus-nginxlog-exporter?style=flat&logo=github)](https://github.com/jkroepke/prometheus-nginxlog-exporter/stargazers)
-[![GitHub all releases](https://img.shields.io/github/downloads/jkroepke/prometheus-nginxlog-exporter/total?logo=github)](https://github.com/jkroepke/prometheus-nginxlog-exporter/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jkroepke/prometheus-nginxlog-exporter)](https://goreportcard.com/report/github.com/jkroepke/prometheus-nginxlog-exporter)
-[![codecov](https://codecov.io/gh/jkroepke/prometheus-nginxlog-exporter/graph/badge.svg?token=66VT000UYO)](https://codecov.io/gh/jkroepke/prometheus-nginxlog-exporter)
+[![CI](https://github.com/jkroepke/access-log-exporter/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/jkroepke/access-log-exporter/actions/workflows/ci.yaml)
+[![GitHub license](https://img.shields.io/github/license/jkroepke/access-log-exporter)](https://github.com/jkroepke/access-log-exporter/blob/master/LICENSE.txt)
+[![Current Release](https://img.shields.io/github/release/jkroepke/access-log-exporter.svg?logo=github)](https://github.com/jkroepke/access-log-exporter/releases/latest)
+[![GitHub Repo stars](https://img.shields.io/github/stars/jkroepke/access-log-exporter?style=flat&logo=github)](https://github.com/jkroepke/access-log-exporter/stargazers)
+[![GitHub all releases](https://img.shields.io/github/downloads/jkroepke/access-log-exporter/total?logo=github)](https://github.com/jkroepke/access-log-exporter/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jkroepke/access-log-exporter)](https://goreportcard.com/report/github.com/jkroepke/access-log-exporter)
+[![codecov](https://codecov.io/gh/jkroepke/access-log-exporter/graph/badge.svg?token=66VT000UYO)](https://codecov.io/gh/jkroepke/access-log-exporter)
 
 # access-log-exporter
 
 ⭐ Don't forget to star this repository! ⭐
 
+access-log-exporter functions as a Prometheus exporter
+that receives access logs through the [syslog](https://nginx.org/en/docs/syslog.html) protocol
+and converts them into metrics.
+
+It processes logs from multiple sources and has undergone testing with nginx and Apache HTTP Server 2.4.
+
+## Documentation
+
+For detailed documentation, please refer to the [Wiki](https://github.com/jkroepke/access-log-exporter/wiki).
 
 ## Copyright and license
 

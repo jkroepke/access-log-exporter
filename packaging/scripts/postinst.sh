@@ -8,12 +8,12 @@ fi
 
 systemctl --system daemon-reload >/dev/null || true
 
-if systemctl is-active --quiet prometheus-nginxlog-exporter; then
-  systemctl restart prometheus-nginxlog-exporter >/dev/null || true
+if systemctl is-active --quiet access-log-exporter; then
+  systemctl restart access-log-exporter >/dev/null || true
 fi
 
-systemd-sysusers /usr/lib/sysusers.d/prometheus-nginxlog-exporter.conf >/dev/null || true
+systemd-sysusers /usr/lib/sysusers.d/access-log-exporter.conf >/dev/null || true
 
-if [ -d /etc/prometheus-nginxlog-exporter ]; then
-  chown -R root:prometheus-nginxlog-exporter /etc/prometheus-nginxlog-exporter/ >/dev/null || true
+if [ -d /etc/access-log-exporter ]; then
+  chown -R root:access-log-exporter /etc/access-log-exporter/ >/dev/null || true
 fi

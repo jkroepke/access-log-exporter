@@ -20,7 +20,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - run: go build ./cmd/prometheus-nginxlog-exporter
+      - run: go build ./cmd/access-log-exporter
       - run: go test ./... -timeout 20s -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./...
       - run: go test ./... -timeout 20s -run='^$' -bench=. -benchmem -count 3
 
