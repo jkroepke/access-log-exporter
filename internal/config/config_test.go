@@ -32,7 +32,7 @@ func TestConfig(t *testing.T) {
 			// language=yaml
 			`
 web:
-  listen-address: ":9000"
+  listenAddress: ":9000"
 `,
 			func() config.Config {
 				conf := config.Defaults

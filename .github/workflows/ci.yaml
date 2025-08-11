@@ -191,3 +191,9 @@ jobs:
       - uses: actions/attest-build-provenance@v2.4.0
         with:
           subject-checksums: ./dist/checksums.txt
+
+#      - uses: actions/attest-build-provenance@v2
+#        with:
+#          subject-name: ghcr.io/${{ github.repository }}
+#          subject-digest: ${{ steps.push.outputs.digest }}
+#          push-to-registry: true
