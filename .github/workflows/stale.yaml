@@ -18,4 +18,5 @@ jobs:
           days-before-stale: 30
           days-before-close: 5
           enable-statistics: true
-          exempt-issue-labels: 'keep'
+          exempt-issue-labels: 'lifecycle/frozen'
+          stale-issue-label: 'lifecycle/stale'
