@@ -4,7 +4,7 @@ before:
     - rm -rf 3rdpartylicenses
     - go run github.com/google/go-licenses@latest save ./cmd/access-log-exporter --save_path=3rdpartylicenses
     - mkdir -p cmd/access-log-exporter/kodata/
-    - ln -sf packaging/etc/access-log-exporter/config.yaml ./cmd/access-log-exporter/kodata/config.yaml
+    - ln -sf {{ .Path }}/packaging/etc/access-log-exporter/config.yaml ./cmd/access-log-exporter/kodata/config.yaml
 
 builds:
   - id: "access-log-exporter"
