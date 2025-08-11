@@ -124,7 +124,7 @@ func TestIT(t *testing.T) {
 	containerLogs, _ := getContainerLogs(t, nginx)
 	require.NoError(t, err, containerLogs)
 
-	endpoint, err := nginx.PortEndpoint(t.Context(), "80/tcp", "http")
+	endpoint, err := nginx.PortEndpoint(t.Context(), "8080/tcp", "http")
 	require.NoError(t, err, containerLogs)
 
 	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete} {
