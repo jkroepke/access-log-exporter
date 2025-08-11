@@ -1,0 +1,55 @@
+[Unit]
+Description=OpenVPN authenticator
+Documentation=https://github.com/jkroepke/prometheus-nginxlog-exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# Run as an unprivileged user with random user id.
+DynamicUser=true
+User=prometheus-nginxlog-exporter-dynamic
+Group=prometheus-nginxlog-exporter-dynamic
+SupplementaryGroups=prometheus-nginxlog-exporter
+
+ExecStart=/usr/bin/prometheus-nginxlog-exporter -config-file ${CONFIG_FILE}
+NoExecPaths=/
+ExecPaths=/usr/bin/prometheus-nginxlog-exporter /usr/bin/env /usr/bin/kill
+ExecReload=/usr/bin/env kill -USR1 $MAINPID
+
+Environment=CONFIG_FILE=/etc/prometheus-nginxlog-exporter/config.yaml
+
+RestartSec=5s
+Restart=always
+
+# We don't need write access anywhere.
+AmbientCapabilities=
+CapabilityBoundingSet=
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+LockPersonality=true
+PrivateDevices=true
+PrivateTmp=true
+PrivateUsers=true
+ProcSubset=pid
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=noaccess
+ProtectSystem=strict
+RemoveIPC=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@io-event @file-system @basic-io @system-service
+SystemCallFilter=~@clock @debug @module @mount @obsolete @privileged @reboot @resources @setuid @swap
+SystemCallErrorNumber=EPERM
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,155 @@
+version: 2
+before:
+  hooks:
+    - rm -rf 3rdpartylicenses
+    - go run github.com/google/go-licenses@latest save ./cmd/prometheus-nginxlog-exporter --save_path=3rdpartylicenses
+    - mkdir -p cmd/prometheus-nginxlog-exporter/kodata/
+    - ln -sf packaging/etc/prometheus-nginxlog-exporter/config.yaml ./cmd/app/kodata/config.yaml
+
+builds:
+  - id: "prometheus-nginxlog-exporter"
+    main: ./cmd/prometheus-nginxlog-exporter
+    binary: prometheus-nginxlog-exporter
+    goos:
+      - linux
+      - freebsd
+      - openbsd
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - >-
+        -s -w
+        -X github.com/prometheus/common/version.Version={{.Version}}
+        -X github.com/prometheus/common/version.Revision={{.Commit}}
+        -X github.com/prometheus/common/version.Branch={{.Branch}}
+        -X github.com/prometheus/common/version.BuildDate={{.Date}}
+
+archives:
+  - id: prometheus-nginxlog-exporter
+    ids:
+        - prometheus-nginxlog-exporter
+    formats: ['tar.xz']
+    files:
+        - LICENSE.txt
+        - 3rdpartylicenses/**/*
+
+nfpms:
+  - id: prometheus-nginxlog-exporter
+    ids:
+      - prometheus-nginxlog-exporter
+    homepage: https://github.com/jkroepke/prometheus-nginxlog-exporter
+    maintainer: Jan-Otto Kröpke <github@jkroepke.de>
+    section: net
+    description: |
+      prometheus-nginxlog-exporter is a management client for OpenVPN that handles the authentication of connecting users against OIDC providers like Azure AD or Keycloak.
+    license: MIT License
+    formats:
+      - deb
+      - rpm
+    provides:
+      - prometheus-nginxlog-exporter
+    recommends:
+      - openvpn
+    contents:
+      - src: packaging/usr/lib/sysusers.d/
+        dst: /usr/lib/sysusers.d/
+      - src: packaging/usr/lib/systemd/system/
+        dst: /usr/lib/systemd/system/
+      - dst: /etc/prometheus-nginxlog-exporter/
+        type: dir
+        file_info:
+          owner: root
+          group: prometheus-nginxlog-exporter
+          mode: 0750
+      - dst: /etc/prometheus-nginxlog-exporter/client-config/
+        type: dir
+        file_info:
+          owner: root
+          group: prometheus-nginxlog-exporter
+          mode: 0750
+      - src: packaging/etc/prometheus-nginxlog-exporter/config.yaml
+        dst: /etc/prometheus-nginxlog-exporter/config.yaml
+        type: "config|noreplace"
+        file_info:
+          owner: root
+          group: prometheus-nginxlog-exporter
+          mode: 0640
+      - src: 3rdpartylicenses/
+        dst: /usr/share/doc/prometheus-nginxlog-exporter/3rdpartylicenses/
+        type: tree
+        file_info:
+          owner: root
+          group: root
+          mode: 0644
+    scripts:
+      preinstall: "packaging/scripts/preinst.sh"
+      postinstall: "packaging/scripts/postinst.sh"
+      preremove: "packaging/scripts/preremove.sh"
+      postremove: "packaging/scripts/postremove.sh"
+    rpm:
+      compression: xz
+      signature:
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
+    deb:
+      #compression: xz
+      signature:
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
+
+kos:
+  - repositories:
+      - ghcr.io/jkroepke/prometheus-nginxlog-exporter
+    tags:
+      - '{{ .Version }}'
+      - '{{ if and .Tag (not .Prerelease) }}latest{{end}}'
+      - '{{ if eq .Branch "main" }}main{{end}}'
+    bare: true
+    base_image: cgr.dev/chainguard/static:latest # scratch is not supported, see https://github.com/ko-build/ko/pull/1350
+    preserve_import_paths: false
+    creation_time: "{{.CommitTimestamp}}"
+    ko_data_creation_time: "{{.CommitTimestamp}}"
+    sbom: spdx
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Version}}"
+      org.opencontainers.image.source: "https://github.com/jkroepke/prometheus-nginxlog-exporter"
+      org.opencontainers.image.description: "Export metrics from Nginx access log files to Prometheus"
+
+docker_signs:
+  - artifacts: manifests
+    output: true
+    cmd: cosign
+    env:
+     - COSIGN_EXPERIMENTAL=1
+    args:
+     - sign
+     - '--oidc-issuer={{if index .Env "CI"}}https://token.actions.githubusercontent.com{{else}}https://oauth2.sigstore.dev/auth{{end}}'
+     - '--yes'
+     - '${artifact}'
+
+checksum:
+  name_template: "checksums.txt"
+
+report_sizes: true
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"
+
+gomod:
+  proxy: true
+
+release:
+  prerelease: auto
+
+changelog:
+  use: github-native

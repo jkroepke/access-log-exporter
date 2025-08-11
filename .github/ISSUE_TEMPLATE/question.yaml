@@ -1,0 +1,55 @@
+name: ❓ Question
+description: Something is not clear.
+labels: [ ❓ question ]
+body:
+  - type: textarea
+    attributes:
+      label: Problem Statement
+      description: Without specifying a solution, describe what the project is missing today.
+      placeholder: |
+        The rotating project logo has a fixed size and color.
+        There is no way to make it larger and more shiny.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: prometheus-nginxlog-exporter logs
+      description: |
+        Log of prometheus-nginxlog-exporter. Output of `journalctl -flu prometheus-nginxlog-exporter` and `dmesg | grep openvpn`, if prometheus-nginxlog-exporter is installed as linux package.
+        ⚠️ Without proving logs, I unable to assist in case of issues. ⚠️
+      render: shell
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: Please not that prometheus-nginxlog-exporter requires an OpenVPN server version 2.6.2 or higher.
+
+  - type: textarea
+    attributes:
+      label: Environment
+      description: |
+        examples:
+        - **prometheus-nginxlog-exporter Version**: 1.5.1
+        - **OpenVPN Server Version**: 2.6.2
+        - **Server OS**: Linux
+        - **OpenVPN Client (flavor, OS)**: Tunnelblick 4.0.0beta10 / MacOD
+      value: |
+        - prometheus-nginxlog-exporter Version:
+        - OpenVPN Server Version:
+        - Server OS:
+        - OpenVPN Client (flavor, OS):
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Preflight Checklist
+      options:
+        - required: true
+          #language=markdown
+          label: |
+            I could not find a solution in the [documentation](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki),
+            the [FAQ](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki/FAQ), the existing issues or discussions.

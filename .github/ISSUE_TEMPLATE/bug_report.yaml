@@ -1,0 +1,105 @@
+name: 🐞 Bug
+description: Something is not working as indended.
+labels: [ 🐞 bug ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        Before you submit this issue, please make sure you have read the documentation and searched for similar issues.
+        If you have done that, please fill out the template below.
+
+  - type: textarea
+    attributes:
+      label: Current Behavior
+      description: A concise description of what you're experiencing.
+      placeholder: |
+        When I do <X>, <Y> happens and I see the error message attached below:
+        ```...```
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: A concise description of what you expected to happen.
+      placeholder: When I do <X>, <Z> should happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. In this environment...
+        2. With this config...
+        3. Run '...'
+        4. See error...
+      render: Markdown
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: Please not that prometheus-nginxlog-exporter requires an OpenVPN server version 2.6.2 or higher.
+
+  - type: textarea
+    attributes:
+      label: Environment
+      description: |
+        examples:
+        - **prometheus-nginxlog-exporter Version**: 1.5.1
+        - **OpenVPN Server Version**: 2.6.2
+        - **Server OS**: Linux
+        - **OpenVPN Client (flavor, OS)**: Tunnelblick 4.0.0beta10 / MacOS
+        - **OIDC Provider**: Entra ID
+      value: |
+        - prometheus-nginxlog-exporter Version:
+        - OpenVPN Server Version:
+        - Server OS:
+        - OpenVPN Client (flavor, OS):
+        - OIDC Provider:
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: prometheus-nginxlog-exporter logs
+      description: |
+        Log of prometheus-nginxlog-exporter. Output of `journalctl -flu prometheus-nginxlog-exporter` and `dmesg | grep openvpn`, if prometheus-nginxlog-exporter is installed as linux package.
+        ⚠️ Without proving logs, I unable to assist here. ⚠️
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: openvpn server logs
+      description: |
+        Log of OpenVPN server
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: |
+        Links? References? Anything that will give us more context about the issue you are encountering!
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Preflight Checklist
+      options:
+        - required: true
+          #language=markdown
+          label: |
+            I could not find a solution in the [documentation](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki),
+            the [FAQ](https://github.com/jkroepke/prometheus-nginxlog-exporter/wiki/FAQ), the existing issues or discussions.

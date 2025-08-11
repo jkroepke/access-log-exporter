@@ -1,0 +1,38 @@
+name: Push to GH Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
+      - .github/workflows/wiki.yaml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki.git
+
+      - name: sync wiki
+        run: rsync -av --delete --exclude=README.md --exclude=.git docs/ wiki.git/
+
+      - name: remove header line
+        run: sed -i '1d' wiki.git/*.md
+
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Automatically publish wiki" && git push
+        working-directory: wiki.git
