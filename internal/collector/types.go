@@ -21,7 +21,7 @@ type Collector struct {
 	buffer chan string
 
 	// Metrics
-	metrics          []metric.Metric
+	metrics          []*metric.Metric
 	parseErrorMetric prometheus.Counter
 
 	wg *sync.WaitGroup

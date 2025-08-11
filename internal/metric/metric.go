@@ -11,16 +11,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func New(cfg config.Metric) (Metric, error) {
+func New(cfg config.Metric) (*Metric, error) {
 	var metric prometheus.Collector
 
 	// Validate metric configuration
 	if cfg.Name == "" {
-		return Metric{}, errors.New("metric name cannot be empty")
+		return nil, errors.New("metric name cannot be empty")
 	}
 
 	if cfg.ValueIndex == nil && cfg.Type != "counter" {
-		return Metric{}, errors.New("valueIndex must be set for non-counter metrics")
+		return nil, errors.New("valueIndex must be set for non-counter metrics")
 	}
 
 	labelCount := len(cfg.Labels)
@@ -33,7 +33,7 @@ func New(cfg config.Metric) (Metric, error) {
 
 	for i, label := range cfg.Labels {
 		if label.Name == "" {
-			return Metric{}, errors.New("metric label name cannot be empty")
+			return nil, errors.New("metric label name cannot be empty")
 		}
 		labelKeys[i] = label.Name
 	}
@@ -69,10 +69,10 @@ func New(cfg config.Metric) (Metric, error) {
 			Buckets:     buckets,
 		}, labelKeys)
 	default:
-		return Metric{}, fmt.Errorf("unsupported metric type: %s", cfg.Type)
+		return nil, fmt.Errorf("unsupported metric type: %s", cfg.Type)
 	}
 
-	return Metric{
+	return &Metric{
 		cfg:    cfg,
 		metric: metric,
 	}, nil
@@ -93,6 +93,10 @@ func (m *Metric) Collect(ch chan<- prometheus.Metric) {
 func (m *Metric) Parse(line []string) error {
 	lineLength := uint(len(line))
 
+	if lineLength == 0 || line[0] == "" {
+		return nil // Skip empty lines silently
+	}
+
 	// Check bounds early for the value index if it exists.
 	if m.cfg.ValueIndex != nil && *m.cfg.ValueIndex >= lineLength {
 		return fmt.Errorf("line index out of range for value index %d, line length is %d", *m.cfg.ValueIndex, lineLength)
@@ -102,8 +106,14 @@ func (m *Metric) Parse(line []string) error {
 	//https://go101.org/optimizations/5-bce.html
 	_ = line[lineLength-1]
 
+	// Calculate exact capacity including potential upstream label
+	labelCapacity := len(m.cfg.Labels)
+	if m.cfg.Upstream.Enabled && m.cfg.Upstream.Label {
+		labelCapacity++
+	}
+
 	// Pre-allocate labels map with exact capacity
-	labels := make(prometheus.Labels, len(m.cfg.Labels))
+	labels := make(prometheus.Labels, labelCapacity)
 
 	// Process labels first and validate line indices
 	for _, label := range m.cfg.Labels {
@@ -163,6 +173,12 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 
 	// Process each value element
 	for i, valueElement := range valueElements {
+		// Create a copy of labels for this iteration with capacity for upstream label
+		iterationLabels := make(prometheus.Labels, len(labels)+1)
+		for k, v := range labels {
+			iterationLabels[k] = v
+		}
+
 		// Handle upstream processing if we have upstreams
 		if len(upstreams) > 0 {
 			// If we have fewer upstreams than values, use the last upstream for remaining values
@@ -180,11 +196,11 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 
 			// Add upstream label if enabled
 			if m.cfg.Upstream.Label {
-				labels["upstream"] = upstream
+				iterationLabels["upstream"] = upstream
 			}
 		}
 
-		err := m.setMetric(valueElement, labels)
+		err := m.setMetric(valueElement, iterationLabels)
 		if err != nil {
 			return fmt.Errorf("failed to set metric %s with value %q: %w", m.cfg.Name, valueElement, err)
 		}
@@ -194,6 +210,11 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 }
 
 func (m *Metric) setMetric(value string, labels prometheus.Labels) error {
+	// Early return for empty values before trimming
+	if value == "" {
+		return nil
+	}
+
 	// Handle special case for empty values after trimming whitespace
 	value = strings.TrimSpace(value)
 	if value == "" {

@@ -19,7 +19,7 @@ func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collect
 		return nil, fmt.Errorf("preset '%s' not found in configuration", conf.Preset)
 	}
 
-	metrics := make([]metric.Metric, len(preset.Metrics))
+	metrics := make([]*metric.Metric, len(preset.Metrics))
 	for i, metricConfig := range preset.Metrics {
 		metrics[i], err = metric.New(metricConfig)
 		if err != nil {
