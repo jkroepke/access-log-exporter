@@ -22,6 +22,6 @@ var Defaults = Config{
 		ListenAddress: ":4040",
 	},
 	Syslog: Syslog{
-		ListenAddress: "tcp://[::]:8514",
+		ListenAddress: "udp://[::]:8514",
 	},
 }

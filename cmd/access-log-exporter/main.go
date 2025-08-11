@@ -115,7 +115,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		collectors.NewGoCollector(),
 		collectors.NewBuildInfoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versioncollector.NewCollector("prometheus_nginxlog_exporter"),
+		versioncollector.NewCollector("prometheus_accesslog_exporter"),
 		prometheusCollector,
 	)
 
@@ -267,7 +267,7 @@ func printVersion(writer io.Writer) {
 		}
 	}
 
-	_, _ = fmt.Fprintln(writer, version.Print("prometheus_nginxlog_exporter"))
+	_, _ = fmt.Fprintln(writer, version.Print("prometheus_accesslog_exporter"))
 }
 
 // setupLogger initializes the logger based on the configuration.

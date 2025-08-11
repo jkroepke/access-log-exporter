@@ -12,11 +12,11 @@
 
 presets:
   # apache
-  # LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" nginxlog_exporter
-  # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" nginxlog_exporter
+  # LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" accesslog_exporter
+  # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
   # nginx
-  # log_format nginxlog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
-  # access_log syslog:server=127.0.0.1:8514 nginxlog_exporter,nohostname;
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
   simple:
     metrics:
       - name: "http_requests_total"
@@ -75,8 +75,8 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format nginxlog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
-  # access_log syslog:server=127.0.0.1:8514 nginxlog_exporter,nohostname;
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
   simple_upstream:
     metrics:
       - name: "http_requests_total"
@@ -195,8 +195,8 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format nginxlog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$upstream_cache_status\t$remote_user\t$https\t$server_protocol\t$http_user_agent';
-  # access_log syslog:server=127.0.0.1:8514 nginxlog_exporter,nohostname;
+  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$upstream_cache_status\t$remote_user\t$https\t$server_protocol\t$http_user_agent';
+  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
   all:
     metrics:
       - name: "http_requests_total"
