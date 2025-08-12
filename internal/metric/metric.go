@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
-	"github.com/mileusna/useragent"
+	"github.com/medama-io/go-useragent"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -33,9 +33,15 @@ func New(cfg config.Metric) (*Metric, error) {
 	// Pre-allocate labelKeys with exact capacity
 	labelKeys := make([]string, labelCount)
 
+	var userAgent *useragent.Parser
+
 	for i, label := range cfg.Labels {
 		if label.Name == "" {
 			return nil, errors.New("metric label name cannot be empty")
+		}
+
+		if label.UserAgent {
+			userAgent = useragent.NewParser()
 		}
 
 		labelKeys[i] = label.Name
@@ -78,6 +84,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	return &Metric{
 		cfg:    cfg,
 		metric: metric,
+		ua:     userAgent,
 	}, nil
 }
 
@@ -137,9 +144,9 @@ func (m *Metric) Parse(line []string) error {
 		labelValue := line[label.LineIndex]
 
 		if label.UserAgent {
-			uaInfo := useragent.Parse(labelValue)
+			uaInfo := m.ua.Parse(labelValue)
 
-			labelValue = uaInfo.Name
+			labelValue = uaInfo.Browser().String()
 		}
 
 		labelValue = m.labelValueReplacements(label.Replacements, labelValue)
