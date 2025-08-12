@@ -77,8 +77,8 @@ type Label struct {
 }
 
 type Replacement struct {
-	Replacement string        `json:"replacement" yaml:"replacement"`
-	Regexp      regexp.Regexp `json:"regexp"      yaml:"regexp"`
+	Replacement string         `json:"replacement" yaml:"replacement"`
+	Regexp      *regexp.Regexp `json:"regexp"      yaml:"regexp"`
 }
 
 //goland:noinspection GoMixedReceiverTypes
