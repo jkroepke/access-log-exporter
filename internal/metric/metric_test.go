@@ -117,6 +117,19 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			parseErr: "line index out of range for label status, line length is 2",
 		},
 		{
+			name: "simple metric with out of range value index",
+			cfg: config.Metric{
+				Name:       "http_requests_total",
+				Type:       "counter",
+				Help:       "The total number of client requests.",
+				ValueIndex: ptr(uint(4)),
+			},
+			logLines: []string{
+				"example.com\tGET",
+			},
+			parseErr: "line index out of range for value index 4, line length is 2",
+		},
+		{
 			name: "simple metric with empty log line",
 			cfg: config.Metric{
 				Name: "http_requests_total",
