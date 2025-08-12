@@ -140,6 +140,54 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			},
 			err: "",
 		},
+		{
+			name: "simple preset",
+			cfg: config.Metric{
+				Name:       "http_response_duration_seconds",
+				Type:       "histogram",
+				Help:       "The time spent on receiving the response from the upstream server",
+				ValueIndex: ptr(uint(3)),
+				Buckets:    []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+				Math: config.Math{
+					Enabled: true,
+					Div:     1000,
+				},
+				Labels: []config.Label{
+					{
+						Name:      "host",
+						LineIndex: 0,
+					},
+					{
+						Name:      "method",
+						LineIndex: 1,
+					},
+					{
+						Name:      "status",
+						LineIndex: 2,
+					},
+				},
+			},
+			logLines: []string{
+				"app.example.net\tPUT\t500\t1.234\t4096\t512",
+			},
+			metrics: `
+# HELP http_response_duration_seconds The time spent on receiving the response from the upstream server
+# TYPE http_response_duration_seconds histogram
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
+http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
+http_response_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
+http_response_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -191,4 +239,8 @@ func MetricsToText(tb testing.TB, met prometheus.Collector) (string, error) {
 	}
 
 	return strings.TrimSpace(string(allMetrics)), nil
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }
