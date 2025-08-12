@@ -171,6 +171,18 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			metricErr: `unsupported metric type: "". Must be one of counter, gauge, or histogram`,
 		},
 		{
+			name: "metric with empty label name",
+			cfg: config.Metric{
+				Name:       "http_requests_total",
+				ValueIndex: ptr(uint(0)),
+				Labels: []config.Label{
+					{},
+				},
+			},
+			logLines:  make([]string, 0),
+			metricErr: `metric label name cannot be empty`,
+		},
+		{
 			name: "metric with invalid type",
 			cfg: config.Metric{
 				Name:       "http_requests_total",
@@ -253,6 +265,19 @@ http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status
 http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
 http_response_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
 http_response_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
+		},
+		{
+			name: "metric with empty value",
+			cfg: config.Metric{
+				Name:       "http_response_duration_seconds",
+				Type:       "counter",
+				Help:       "The time spent on receiving the response from the upstream server",
+				ValueIndex: ptr(uint(3)),
+			},
+			logLines: []string{
+				"app.example.net\tPUT\t500\t-\t4096\t512",
+			},
+			metrics: ``,
 		},
 		{
 			name: "simple preset",
