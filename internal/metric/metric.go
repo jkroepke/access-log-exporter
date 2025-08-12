@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
+	"github.com/mileusna/useragent"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -124,7 +125,16 @@ func (m *Metric) Parse(line []string) error {
 			return fmt.Errorf("line index out of range for label %s, line length is %d", label.Name, lineLength)
 		}
 
-		labelValue := m.labelValueReplacements(label.Replacements, line[label.LineIndex])
+		labelValue := line[label.LineIndex]
+
+		if label.UserAgent {
+			uaInfo := useragent.Parse(labelValue)
+
+			labelValue = uaInfo.Name
+		}
+
+		labelValue = m.labelValueReplacements(label.Replacements, labelValue)
+
 		labels[label.Name] = labelValue
 	}
 
