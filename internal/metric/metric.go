@@ -101,9 +101,18 @@ func (m *Metric) Parse(line []string) error {
 		return nil // Skip empty lines silently
 	}
 
+	var value string
+
 	// Check bounds early for the value index if it exists.
-	if m.cfg.ValueIndex != nil && *m.cfg.ValueIndex >= lineLength {
-		return fmt.Errorf("line index out of range for value index %d, line length is %d", *m.cfg.ValueIndex, lineLength)
+	if m.cfg.ValueIndex != nil {
+		if *m.cfg.ValueIndex >= lineLength {
+			return fmt.Errorf("line index out of range for value index %d, line length is %d", *m.cfg.ValueIndex, lineLength)
+		}
+
+		value = line[*m.cfg.ValueIndex]
+		if value == "" || value == "-" {
+			return nil // Skip empty values silently
+		}
 	}
 
 	// BCE (Bound Check Elimination)
@@ -148,11 +157,6 @@ func (m *Metric) Parse(line []string) error {
 
 		// This should never happen due to validation in New(), but be defensive
 		return errors.New("valueIndex is nil but metric type is not counter")
-	}
-
-	value := line[*m.cfg.ValueIndex]
-	if value == "" {
-		return nil // Skip empty values silently
 	}
 
 	if m.cfg.Upstream.Enabled {
