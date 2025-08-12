@@ -204,10 +204,11 @@ jobs:
       - run: |
           echo "$ARTIFACTS"
           echo "digest=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|select(.name|test(":[0-9]"))|.extra.Digest')" >> "$GITHUB_OUTPUT"
-          echo "name=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|select(.name|test(":[0-9]"))|.name|split("@")[0]')" >> "$GITHUB_OUTPUT"
+          echo "name=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|select(.name|test(":[0-9]"))|.name|split("@")[0]|split(":")[0]'):${TAG/v}" >> "$GITHUB_OUTPUT"
         id: image_metadata
         env:
           ARTIFACTS: ${{steps.goreleaser.outputs.artifacts}}
+          TAG: ${{ github.ref_name }}
 
       - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
