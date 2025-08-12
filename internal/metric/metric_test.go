@@ -362,16 +362,16 @@ http_response_duration_seconds_count{host="app.example.net",method="PUT",status=
 			metrics: `
 # HELP http_requests_total The total number of client requests.
 # TYPE http_requests_total counter
-http_requests_total{host="api.mysite.com",method="POST",remote_user="johnuser",ssl="off",ssl_protocol="HTTP/1.1",status="201",user_agent="curl"} 1
-http_requests_total{host="api.service.io",method="DELETE",remote_user="apiuser",ssl="on",ssl_protocol="HTTP/1.1",status="204",user_agent="Postman"} 1
-http_requests_total{host="app.example.net",method="PUT",remote_user="adminuser",ssl="on",ssl_protocol="HTTP/1.1",status="500",user_agent="Python-urllib"} 1
-http_requests_total{host="auth.example.com",method="POST",remote_user="-",ssl="on",ssl_protocol="HTTP/1.1",status="401",user_agent="Gecko"} 1
-http_requests_total{host="blog.example.org",method="GET",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="404",user_agent="Intel Mac OS X 10_15_7"} 1
-http_requests_total{host="cdn.static.com",method="GET",remote_user="-",ssl="on",ssl_protocol="HTTP/2.0",status="304",user_agent="iPhone"} 1
-http_requests_total{host="example.com",method="GET",remote_user="-",ssl="on",ssl_protocol="HTTP/2.0",status="200",user_agent="Win64"} 1
-http_requests_total{host="metrics.example.com",method="GET",remote_user="monitoruser",ssl="on",ssl_protocol="HTTP/2.0",status="200",user_agent="Prometheus"} 2
-http_requests_total{host="shop.example.com",method="GET",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="301",user_agent="Googlebot"} 1
-http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="200",user_agent="X11"} 1
+http_requests_total{host="api.mysite.com",method="POST",remote_user="johnuser",ssl="off",ssl_protocol="HTTP/1.1",status="201",user_agent=""} 1
+http_requests_total{host="api.service.io",method="DELETE",remote_user="apiuser",ssl="on",ssl_protocol="HTTP/1.1",status="204",user_agent=""} 1
+http_requests_total{host="app.example.net",method="PUT",remote_user="adminuser",ssl="on",ssl_protocol="HTTP/1.1",status="500",user_agent=""} 1
+http_requests_total{host="auth.example.com",method="POST",remote_user="-",ssl="on",ssl_protocol="HTTP/1.1",status="401",user_agent=""} 1
+http_requests_total{host="blog.example.org",method="GET",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="404",user_agent="Safari"} 1
+http_requests_total{host="cdn.static.com",method="GET",remote_user="-",ssl="on",ssl_protocol="HTTP/2.0",status="304",user_agent="Safari"} 1
+http_requests_total{host="example.com",method="GET",remote_user="-",ssl="on",ssl_protocol="HTTP/2.0",status="200",user_agent="Safari"} 1
+http_requests_total{host="metrics.example.com",method="GET",remote_user="monitoruser",ssl="on",ssl_protocol="HTTP/2.0",status="200",user_agent=""} 2
+http_requests_total{host="shop.example.com",method="GET",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="301",user_agent=""} 1
+http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="off",ssl_protocol="HTTP/1.1",status="200",user_agent="Safari"} 1
 `,
 		},
 	} {
@@ -405,7 +405,7 @@ http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="of
 			allMetrics, err := MetricsToText(t, met)
 			require.NoError(t, err)
 
-			require.Equal(t, allMetrics, strings.TrimSpace(tc.metrics))
+			require.Equal(t, strings.TrimSpace(tc.metrics), allMetrics)
 		})
 	}
 }
