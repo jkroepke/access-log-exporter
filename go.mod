@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/goccy/go-yaml v1.17.1
+	github.com/medama-io/go-useragent v1.2.1
 	github.com/prometheus/client_golang v1.23.0
 	github.com/prometheus/common v0.65.0
 	github.com/stretchr/testify v1.10.0
@@ -39,8 +40,6 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20250317134145-8bc96cf8fc35 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
-	github.com/medama-io/go-useragent v1.2.1 // indirect
-	github.com/mileusna/useragent v1.3.5 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
