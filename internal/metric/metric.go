@@ -184,8 +184,6 @@ func (m *Metric) Parse(line []string) error {
 
 //nolint:cyclop
 func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels prometheus.Labels) error {
-	valueElements := strings.Split(value, ",")
-
 	var upstreams []string
 
 	// Get upstreams if we need them for excludes or labels
@@ -195,41 +193,70 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 		}
 
 		upstreams = strings.Split(line[m.cfg.Upstream.AddrLineIndex], ",")
+
+		// Trim whitespace from upstreams
+		for i, upstream := range upstreams {
+			upstreams[i] = strings.TrimSpace(upstream)
+		}
 	}
 
-	// Process each value element
-	for i, valueElement := range valueElements {
-		// Create a copy of labels for this iteration with capacity for upstream label
-		iterationLabels := make(prometheus.Labels, len(labels)+1)
-		for k, v := range labels {
-			iterationLabels[k] = v
+	valueIndex := 0
+	for {
+		var valueElement string
+		var remaining string
+
+		if comma := strings.IndexByte(value, ','); comma >= 0 {
+			valueElement = strings.TrimSpace(value[:comma])
+			remaining = value[comma+1:]
+		} else {
+			valueElement = strings.TrimSpace(value)
+			remaining = ""
 		}
 
-		// Handle upstream processing if we have upstreams
-		if len(upstreams) > 0 {
-			// If we have fewer upstreams than values, use the last upstream for remaining values
-			upstreamIndex := i
-			if upstreamIndex >= len(upstreams) {
-				upstreamIndex = len(upstreams) - 1
+		if valueElement != "" && valueElement != "-" {
+			// Create a copy of labels for this iteration with capacity for upstream label
+			iterationLabels := make(prometheus.Labels, len(labels)+1)
+			for k, v := range labels {
+				iterationLabels[k] = v
 			}
 
-			upstream := strings.TrimSpace(upstreams[upstreamIndex])
+			// Handle upstream processing if we have upstreams
+			if len(upstreams) > 0 {
+				// If we have fewer upstreams than values, use the last upstream for remaining values
+				upstreamIndex := valueIndex
+				if upstreamIndex >= len(upstreams) {
+					upstreamIndex = len(upstreams) - 1
+				}
 
-			// Skip if upstream is in exclude list
-			if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
-				continue
+				upstream := upstreams[upstreamIndex]
+
+				// Skip if upstream is in exclude list
+				if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
+					valueIndex++
+					if remaining == "" {
+						break
+					}
+					value = remaining
+					continue
+				}
+
+				// Add upstream label if enabled
+				if m.cfg.Upstream.Label {
+					iterationLabels["upstream"] = upstream
+				}
 			}
 
-			// Add upstream label if enabled
-			if m.cfg.Upstream.Label {
-				iterationLabels["upstream"] = upstream
+			err := m.setMetric(valueElement, iterationLabels)
+			if err != nil {
+				return fmt.Errorf("failed to set metric %s with value %q: %w", m.cfg.Name, valueElement, err)
 			}
 		}
 
-		err := m.setMetric(valueElement, iterationLabels)
-		if err != nil {
-			return fmt.Errorf("failed to set metric %s with value %q: %w", m.cfg.Name, valueElement, err)
+		valueIndex++
+		if remaining == "" {
+			break
 		}
+		value = remaining
 	}
 
 	return nil
@@ -242,7 +269,7 @@ func (m *Metric) setMetric(value string, labels prometheus.Labels) error {
 		return nil
 	}
 
-	// Handle special case for empty values after trimming whitespace
+	// Handle special case for empty values after trimming
 	value = strings.TrimSpace(value)
 	if value == "" {
 		return nil // Skip empty values silently
