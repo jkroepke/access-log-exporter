@@ -215,7 +215,7 @@ jobs:
           subject-checksums: ./dist/checksums.txt
 
       # attest image
-      - uses: actions/attest-build-provenance@v2.4.0
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-digest: ${{steps.image_metadata.outputs.digest}}
           subject-name: ${{steps.image_metadata.outputs.name}}
