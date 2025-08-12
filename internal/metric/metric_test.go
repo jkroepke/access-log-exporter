@@ -19,11 +19,12 @@ func TestMetrics(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		name     string
-		cfg      config.Metric
-		logLines []string
-		metrics  string
-		err      string
+		name      string
+		cfg       config.Metric
+		logLines  []string
+		metrics   string
+		metricErr string
+		parseErr  string
 	}{
 		{
 			name: "simple metric",
@@ -112,7 +113,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			logLines: []string{
 				"example.com\tGET",
 			},
-			err: "line index out of range for label status, line length is 2",
+			parseErr: "line index out of range for label status, line length is 2",
 		},
 		{
 			name: "simple metric with empty log line",
@@ -138,7 +139,46 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			logLines: []string{
 				"",
 			},
-			err: "",
+			parseErr: "",
+		},
+		{
+			name:      "metric without name",
+			cfg:       config.Metric{},
+			logLines:  []string{},
+			metricErr: "metric name cannot be empty",
+		},
+		{
+			name: "metric without type",
+			cfg: config.Metric{
+				Name: "http_requests_total",
+			},
+			logLines:  []string{},
+			metricErr: "type must be one of counter, gauge, or histogram",
+		},
+		{
+			name: "non-counter metrics without valueIndex",
+			cfg: config.Metric{
+				Name: "http_requests_total",
+				Type: "gauge",
+			},
+			logLines:  []string{},
+			metricErr: "valueIndex must be set for non-counter metrics",
+		},
+		{
+			name: "gauge metrics",
+			cfg: config.Metric{
+				Name:       "http_requests_total",
+				Type:       "gauge",
+				ValueIndex: ptr(uint(2)),
+			},
+			logLines: []string{
+				"example.com\tGET\t200",
+			},
+			metrics: `
+# HELP http_requests_total 
+# TYPE http_requests_total gauge
+http_requests_total 200
+`,
 		},
 		{
 			name: "simple preset",
@@ -193,16 +233,26 @@ http_response_duration_seconds_count{host="app.example.net",method="PUT",status=
 			t.Parallel()
 
 			met, err := metric.New(tc.cfg)
-			require.NoError(t, err)
+			if err != nil {
+				if tc.metricErr != "" {
+					require.EqualError(t, err, tc.metricErr)
+				} else {
+					require.NoError(t, err)
+				}
+
+				return
+			}
 
 			for _, line := range tc.logLines {
 				err := met.Parse(strings.Split(line, "\t"))
 				if err != nil {
-					if tc.err != "" {
-						require.EqualError(t, err, tc.err)
+					if tc.parseErr != "" {
+						require.EqualError(t, err, tc.parseErr)
 					} else {
 						require.NoError(t, err)
 					}
+
+					return
 				}
 			}
 
