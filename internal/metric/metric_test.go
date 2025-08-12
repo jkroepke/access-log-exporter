@@ -150,10 +150,21 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 		{
 			name: "metric without type",
 			cfg: config.Metric{
-				Name: "http_requests_total",
+				Name:       "http_requests_total",
+				ValueIndex: ptr(uint(0)),
 			},
 			logLines:  []string{},
-			metricErr: "type must be one of counter, gauge, or histogram",
+			metricErr: `unsupported metric type: "". Must be one of counter, gauge, or histogram`,
+		},
+		{
+			name: "metric with invalid type",
+			cfg: config.Metric{
+				Name:       "http_requests_total",
+				Type:       "info",
+				ValueIndex: ptr(uint(0)),
+			},
+			logLines:  []string{},
+			metricErr: `unsupported metric type: "info". Must be one of counter, gauge, or histogram`,
 		},
 		{
 			name: "non-counter metrics without valueIndex",
@@ -168,6 +179,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			name: "gauge metrics",
 			cfg: config.Metric{
 				Name:       "http_requests_total",
+				Help:       "The total number of client requests.",
 				Type:       "gauge",
 				ValueIndex: ptr(uint(2)),
 			},
@@ -175,7 +187,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 				"example.com\tGET\t200",
 			},
 			metrics: `
-# HELP http_requests_total 
+# HELP http_requests_total The total number of client requests.
 # TYPE http_requests_total gauge
 http_requests_total 200
 `,

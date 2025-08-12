@@ -20,10 +20,6 @@ func New(cfg config.Metric) (*Metric, error) {
 		return nil, errors.New("metric name cannot be empty")
 	}
 
-	if !slices.Contains([]string{"counter", "gauge", "histogram"}, cfg.Type) {
-		return nil, errors.New("type must be one of counter, gauge, or histogram")
-	}
-
 	if cfg.ValueIndex == nil && cfg.Type != "counter" {
 		return nil, errors.New("valueIndex must be set for non-counter metrics")
 	}
@@ -75,7 +71,7 @@ func New(cfg config.Metric) (*Metric, error) {
 			Buckets:     buckets,
 		}, labelKeys)
 	default:
-		return nil, fmt.Errorf("unsupported metric type: %s", cfg.Type)
+		return nil, fmt.Errorf("unsupported metric type: %q. Must be one of counter, gauge, or histogram", cfg.Type)
 	}
 
 	return &Metric{
