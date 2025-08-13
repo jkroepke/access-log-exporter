@@ -27,7 +27,7 @@ func New(args []string, writer io.Writer) (Config, error) {
 		configFilePath := lookupConfigArgument(args)
 		if err := config.ReadFromConfigFile(configFilePath); err != nil {
 			if errors.Is(err, io.EOF) {
-				err = errors.New("configuration file is empty")
+				err = ErrEmptyConfigFile
 			}
 
 			return Config{}, err

@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 			"empty file",
 			"",
 			config.Defaults,
-			nil,
+			config.ErrEmptyConfigFile,
 		},
 		{
 			"minimal file",

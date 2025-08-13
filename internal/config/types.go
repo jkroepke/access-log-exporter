@@ -2,10 +2,15 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"regexp"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
+)
+
+var (
+	ErrEmptyConfigFile = errors.New("configuration file is empty")
 )
 
 type Config struct {
