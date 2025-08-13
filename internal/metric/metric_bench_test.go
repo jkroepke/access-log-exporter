@@ -47,7 +47,7 @@ func BenchmarkMetricParseUpstream(b *testing.B) {
 		Name:       "http_upstream_connect_duration_seconds",
 		Type:       "histogram",
 		Help:       "The time spent on establishing a connection with the upstream server",
-		ValueIndex: func() *uint { v := uint(7); return &v }(),
+		ValueIndex: ptr(uint(7)),
 		Buckets:    types.Float64Slice{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
 		Math: config.Math{
 			Enabled: true,

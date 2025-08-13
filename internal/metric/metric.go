@@ -186,7 +186,7 @@ func (m *Metric) Parse(line []string) error {
 	return nil
 }
 
-//nolint:cyclop
+//nolint:cyclop,gocognit,nestif
 func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels prometheus.Labels) error {
 	var upstreams []string
 

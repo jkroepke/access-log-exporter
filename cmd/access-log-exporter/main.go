@@ -77,7 +77,7 @@ func execute(args []string, stdout io.Writer, termCh <-chan os.Signal) int {
 
 // run runs the main program logic of the daemon.
 //
-//nolint:cyclop
+//nolint:cyclop,gocognit
 func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.Signal) ReturnCode {
 	conf, logger, rc := initializeConfigAndLogger(args, stdout)
 	if rc != ReturnCodeNoError {
