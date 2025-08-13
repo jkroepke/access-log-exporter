@@ -23,9 +23,11 @@ var ErrVersion = errors.New("flag: version requested")
 func New(args []string, writer io.Writer) (Config, error) {
 	config := Defaults
 
-	if configFilePath := lookupConfigArgument(args); configFilePath != "" {
-		if err := config.ReadFromConfigFile(configFilePath); err != nil && !errors.Is(err, io.EOF) {
-			return Config{}, err
+	if !lookupVersionOrHelpArgument(args) {
+		if configFilePath := lookupConfigArgument(args); configFilePath != "" {
+			if err := config.ReadFromConfigFile(configFilePath); err != nil && !errors.Is(err, io.EOF) {
+				return Config{}, err
+			}
 		}
 	}
 
@@ -96,28 +98,35 @@ func (c *Config) ReadFromFlagAndEnvironment(args []string, writer io.Writer) err
 }
 
 func lookupConfigArgument(args []string) string {
-	configFile := ""
-
 	for i, arg := range args {
 		if !strings.HasPrefix(arg, "--config") {
 			continue
 		}
 
 		if strings.HasPrefix(arg, "--config=") {
-			configFile = strings.TrimPrefix(arg, "--config=")
-
-			break
+			return strings.TrimPrefix(arg, "--config=")
 		}
 
 		// check if the argument is --config without value and look for the next argument
 		if len(args) > i+1 {
-			configFile = args[i+1]
-
-			break
+			return args[i+1]
 		}
 	}
 
-	return configFile
+	return lookupEnvOrDefault("config", "config.yaml")
+}
+
+func lookupVersionOrHelpArgument(args []string) bool {
+	for _, arg := range args {
+		switch arg {
+		case "-h", "--help", "-help":
+			return true
+		case "-v", "--version":
+			return true
+		}
+	}
+
+	return false
 }
 
 // lookupEnvOrDefault looks up the environment variable by the flag name and returns the value.
@@ -210,5 +219,9 @@ func lookupEnvOrDefault[T any](key string, defaultValue T) T {
 // It replaces all dots with underscores and all dashes with double underscores.
 // It also converts the flag name to uppercase.
 func getEnvironmentVariableByFlagName(flagName string) string {
+	if flagName == "config" {
+		return "CONFIG_FILE"
+	}
+
 	return "CONFIG_" + strings.ReplaceAll(strings.ReplaceAll(strings.ToUpper(flagName), ".", "_"), "-", "__")
 }

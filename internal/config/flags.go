@@ -8,7 +8,7 @@ import (
 func (c *Config) flagSet(flagSet *flag.FlagSet) {
 	flagSet.String(
 		"config",
-		"",
+		lookupEnvOrDefault("config", "config.yaml"),
 		"path to one .yaml config file",
 	)
 

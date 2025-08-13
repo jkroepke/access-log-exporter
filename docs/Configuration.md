@@ -51,7 +51,7 @@ access-log-exporter uses YAML configuration files for advanced configuration opt
 The default configuration file location depends on your installation method:
 
 - **Package installation:** `/etc/access-log-exporter/config.yaml`
-- **Container location:** `/config.yaml`
+- **Container location:** `/var/run/ko/config.yaml`
 - **Manual installation:** `config.yaml` in the current directory
 - **Custom location:** Use the `--config` flag to specify a different path
 
