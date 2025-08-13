@@ -24,10 +24,13 @@ func New(args []string, writer io.Writer) (Config, error) {
 	config := Defaults
 
 	if !lookupVersionOrHelpArgument(args) {
-		if configFilePath := lookupConfigArgument(args); configFilePath != "" {
-			if err := config.ReadFromConfigFile(configFilePath); err != nil && !errors.Is(err, io.EOF) {
-				return Config{}, err
+		configFilePath := lookupConfigArgument(args)
+		if err := config.ReadFromConfigFile(configFilePath); err != nil {
+			if errors.Is(err, io.EOF) {
+				err = errors.New("configuration file is empty")
 			}
+
+			return Config{}, err
 		}
 	}
 
