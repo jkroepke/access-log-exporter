@@ -1,6 +1,6 @@
 # Installation
 
-This document provides detailed instructions on how to install `access-log-exporter`.
+This document provides detailed instructions for installing `access-log-exporter`.
 
 ## Installing via Linux Packages
 
@@ -8,7 +8,7 @@ DEB/RPM packages for Linux distributions exist. You can download the latest pack
 
 ### For Debian-based distributions:
 
-`access-log-exporter` provides an APT repository for Debian-based distributions. Addition of the repository and installation of the package occurs via the following commands:
+`access-log-exporter` provides an APT repository for Debian-based distributions. Add the repository and install the package using the following commands:
 
 ```bash
 curl -L https://raw.githubusercontent.com/jkroepke/access-log-exporter/refs/heads/main/packaging/apt/access-log-exporter.sources | sudo tee /etc/apt/sources.list.d/access-log-exporter.sources
@@ -16,7 +16,7 @@ sudo apt update
 sudo apt install access-log-exporter
 ```
 
-Note: The apt repository exclusively locates to the latest release.
+Note: The APT repository contains only the latest release.
 To pin a specific version, use `https://github.com/jkroepke/access-log-exporter/releases/download/vX.Y.Z` as URIs in the sources file.
 
 **Alternatively, you can install the DEB package manually:**
@@ -32,13 +32,12 @@ sudo dpkg -i <package_file>.deb
 
 Replace `<package_file>` with the name of the downloaded file.
 
-### For RedHat based distributions:
+### For RedHat-based distributions:
 
 1. Download the RPM package from the releases page.
 2. Open a terminal.
 3. Navigate to the directory where you downloaded the package.
 4. Install the package using the following command:
-
 
 ```bash
 sudo yum localinstall <package_file>.rpm
@@ -48,11 +47,11 @@ Replace `<package_file>` with the name of the downloaded file.
 
 ## Running as Kubernetes Sidecar
 
-If you are using Kubernetes, you can run `access-log-exporter` as a sidecar container in your pod. This allows it to access the logs of your main application container.
+When using Kubernetes, you can run `access-log-exporter` as a sidecar container in your pod. This allows it to access the logs of your main application container.
 
 To do this, add the following configuration to your pod's YAML file. The configuration varies slightly depending on your Kubernetes version.
 
-### Kubernetes 1.33 and higher: Run as sidecar container
+### Kubernetes 1.33 and higher: Run as a sidecar container
 
 <details>
 
@@ -148,7 +147,7 @@ spec:
 
 ## Manual Installation
 
-If you prefer to build the binary yourself, follow these steps:
+To build the binary yourself, follow these steps:
 1. Ensure you have [Go](https://go.dev/doc/install) and Make installed on your system.
 2. Download the source code from our [releases page](https://github.com/jkroepke/access-log-exporter/releases/latest).
 3. Open a terminal.
@@ -157,7 +156,7 @@ If you prefer to build the binary yourself, follow these steps:
     ```bash
     make build
     ```
-    This will create a binary file named access-log-exporter.
+    This creates a binary file named access-log-exporter.
 6. Move the `access-log-exporter` binary to /usr/bin/ using the following command:
     ```bash
     sudo mv access-log-exporter /usr/bin/

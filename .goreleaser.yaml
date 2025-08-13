@@ -114,6 +114,8 @@ kos:
     creation_time: "{{.CommitTimestamp}}"
     ko_data_creation_time: "{{.CommitTimestamp}}"
     sbom: spdx
+    env:
+      - CONFIG=/var/run/ko/config.yaml
     platforms:
       - linux/amd64
       - linux/arm64
@@ -134,12 +136,12 @@ docker_signs:
     output: true
     cmd: cosign
     env:
-     - COSIGN_EXPERIMENTAL=1
+      - COSIGN_EXPERIMENTAL=1
     args:
-     - sign
-     - '--oidc-issuer={{if index .Env "CI"}}https://token.actions.githubusercontent.com{{else}}https://oauth2.sigstore.dev/auth{{end}}'
-     - '--yes'
-     - '${artifact}'
+      - sign
+      - '--oidc-issuer={{if index .Env "CI"}}https://token.actions.githubusercontent.com{{else}}https://oauth2.sigstore.dev/auth{{end}}'
+      - '--yes'
+      - '${artifact}'
 
 checksum:
   name_template: "checksums.txt"

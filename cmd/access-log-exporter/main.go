@@ -26,6 +26,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"syscall"
@@ -248,15 +249,15 @@ func setupConfiguration(args []string, logWriter io.Writer) (config.Config, erro
 
 func printVersion(writer io.Writer) {
 	//goland:noinspection GoBoolExpressions
-	if version.Version == "dev" {
+	if version.Version == "" {
 		if buildInfo, ok := debug.ReadBuildInfo(); ok {
-			_, _ = fmt.Fprintf(writer, "version: %s\ngo: %s\n", buildInfo.Main.Version, buildInfo.GoVersion)
+			_, _ = fmt.Fprintf(writer, "version: %s\ncommit: %v\ngo: %s\n", buildInfo.Main.Version, version.GetRevision(), buildInfo.GoVersion)
 
 			return
 		}
 	}
 
-	_, _ = fmt.Fprintln(writer, version.Print("prometheus_accesslog_exporter"))
+	_, _ = fmt.Fprintf(writer, "version: %s\ncommit: %s\ndate: %s\ngo: %s\n", version.Version, version.GetRevision(), version.BuildDate, runtime.Version())
 }
 
 // setupLogger initializes the logger based on the configuration.
