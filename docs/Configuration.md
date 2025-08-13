@@ -225,8 +225,12 @@ This helps reduce label cardinality and standardize values.
 **Regular expression engine limitations:**
 
 access-log-exporter uses Google's RE2 regular expression engine,
-which is fast and safe but has some limitations compared to PCRE or Perl regex:
+which is fast and safe but has some limitations compared to PCRE or Perl regular expression engines:
 
+- **No lookahead assertions**: `(?=pattern)` not supported
+- **No lookbehind assertions**: `(?<=pattern)` not supported
+- **No named capture groups**: `(?P<name>pattern)` not supported
+- **No non-capturing groups**: `(?:pattern)` not supported
 - **No negative lookahead**: `(?!pattern)` not supported
 - **No negative lookbehind**: `(?<!pattern)` not supported
 - **No backreferences**: `\1`, `\2` not supported
