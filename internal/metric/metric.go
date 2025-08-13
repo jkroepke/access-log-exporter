@@ -213,43 +213,46 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 			remaining = ""
 		}
 
-		if valueElement != "" && valueElement != "-" {
-			// Create a copy of labels for this iteration with capacity for upstream label
-			iterationLabels := make(prometheus.Labels, len(labels)+1)
-			for k, v := range labels {
-				iterationLabels[k] = v
+		if valueElement == "-" {
+			continue
+		}
+
+		// Create a copy of labels for this iteration with capacity for upstream label
+		iterationLabels := make(prometheus.Labels, len(labels)+1)
+		for k, v := range labels {
+			iterationLabels[k] = v
+		}
+
+		// Handle upstream processing if we have upstreams
+		if len(upstreams) > 0 {
+			// If we have fewer upstreams than values, use the last upstream for remaining values
+			upstreamIndex := valueIndex
+			if upstreamIndex >= len(upstreams) {
+				upstreamIndex = len(upstreams) - 1
 			}
 
-			// Handle upstream processing if we have upstreams
-			if len(upstreams) > 0 {
-				// If we have fewer upstreams than values, use the last upstream for remaining values
-				upstreamIndex := valueIndex
-				if upstreamIndex >= len(upstreams) {
-					upstreamIndex = len(upstreams) - 1
-				}
+			upstream := upstreams[upstreamIndex]
 
-				upstream := upstreams[upstreamIndex]
-
-				// Skip if upstream is in exclude list
-				if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
-					valueIndex++
-					if remaining == "" {
-						break
-					}
-					value = remaining
-					continue
+			// Skip if upstream is in exclude list
+			if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
+				valueIndex++
+				if remaining == "" {
+					break
 				}
+				value = remaining
 
-				// Add upstream label if enabled
-				if m.cfg.Upstream.Label {
-					iterationLabels["upstream"] = upstream
-				}
+				continue
 			}
 
-			err := m.setMetric(valueElement, iterationLabels)
-			if err != nil {
-				return fmt.Errorf("failed to set metric %s with value %q: %w", m.cfg.Name, valueElement, err)
+			// Add upstream label if enabled
+			if m.cfg.Upstream.Label {
+				iterationLabels["upstream"] = upstream
 			}
+		}
+
+		err := m.setMetric(valueElement, iterationLabels)
+		if err != nil {
+			return fmt.Errorf("failed to set metric %s with value %q: %w", m.cfg.Name, valueElement, err)
 		}
 
 		valueIndex++

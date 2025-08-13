@@ -19,12 +19,25 @@ func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collect
 		return nil, fmt.Errorf("preset '%s' not found in configuration", conf.Preset)
 	}
 
+	var userAgent bool
+
 	metrics := make([]*metric.Metric, len(preset.Metrics))
 	for i, metricConfig := range preset.Metrics {
 		metrics[i], err = metric.New(metricConfig)
 		if err != nil {
 			return nil, fmt.Errorf("could not create metric '%s': %w", metricConfig.Name, err)
 		}
+
+		for _, label := range metricConfig.Labels {
+			if label.UserAgent {
+				userAgent = true
+			}
+		}
+	}
+
+	if userAgent {
+		logger.WarnContext(ctx, "The user agent parser is currently experimental and changed in the future or may not work as expected. "+
+			"Please report any issues you encounter.")
 	}
 
 	collector := &Collector{
