@@ -11,13 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collector, error) {
+func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerCount int, messageCh <-chan string) (*Collector, error) {
 	var err error
-
-	preset, ok := conf.Presets[conf.Preset]
-	if !ok {
-		return nil, fmt.Errorf("preset '%s' not found in configuration", conf.Preset)
-	}
 
 	var userAgent bool
 
@@ -41,23 +36,16 @@ func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collect
 	}
 
 	collector := &Collector{
-		preset:  preset,
 		logger:  logger,
-		buffer:  make(chan string, conf.BufferSize),
 		wg:      &sync.WaitGroup{},
 		metrics: metrics,
 		parseErrorMetric: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "nginxlog_parse_errors_total",
+			Name: "log_parse_errors_total",
 			Help: "Total number of parse errors",
 		}),
 	}
 
-	err = collector.startPump(ctx, conf.Syslog)
-	if err != nil {
-		return nil, fmt.Errorf("could not start syslog pump: %w", err)
-	}
-
-	collector.lineHandler(ctx, conf.WorkerCount)
+	collector.lineHandlerWorkers(ctx, workerCount, messageCh)
 
 	return collector, nil
 }
@@ -80,8 +68,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
+// Close stops the collector and waits for all workers to finish.
 func (c *Collector) Close() {
 	c.wg.Wait()
-
-	close(c.buffer)
 }

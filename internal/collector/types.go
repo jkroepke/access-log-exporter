@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"errors"
 	"log/slog"
 	"sync"
 
@@ -10,12 +9,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var ErrNoSource = errors.New("no source data configured, cannot start collector")
-
 type Collector struct {
 	parseErrorMetric prometheus.Counter
 	logger           *slog.Logger
-	buffer           chan string
 	wg               *sync.WaitGroup
 	preset           config.Preset
 	metrics          []*metric.Metric

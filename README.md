@@ -14,8 +14,6 @@ A Prometheus exporter that receives web server access logs via syslog and conver
 
 access-log-exporter processes logs from multiple web servers and has undergone testing with Nginx and Apache HTTP Server 2.4. It supports flexible metric configuration through presets and provides comprehensive monitoring capabilities for web traffic analysis.
 
-Inspired by the [prometheus-nginxlog-exporter](https://github.com/martin-helmich/prometheus-nginxlog-exporter).
-
 ## Features
 
 - **Multi-server support**: Works with Nginx and Apache HTTP Server,
@@ -141,6 +139,11 @@ For detailed documentation, please refer to:
 ## Contributing
 
 Contributions welcome! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and submit pull requests to help improve the project.
+
+## Related Projects
+
+* [martin-helmich/prometheus-nginxlog-exporter](https://github.com/martin-helmich/prometheus-nginxlog-exporter).
+* [ozonru/accesslog-exporter](https://github.com/ozonru/accesslog-exporter)
 
 ## Copyright and license
 
