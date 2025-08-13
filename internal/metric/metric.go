@@ -100,6 +100,10 @@ func (m *Metric) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
+func (m *Metric) Name() string {
+	return m.cfg.Name
+}
+
 //nolint:cyclop
 func (m *Metric) Parse(line []string) error {
 	lineLength := uint(len(line))

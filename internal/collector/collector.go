@@ -12,9 +12,10 @@ import (
 )
 
 func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerCount int, messageCh <-chan string) (*Collector, error) {
-	var err error
-
-	var userAgent bool
+	var (
+		err       error
+		userAgent bool
+	)
 
 	metrics := make([]*metric.Metric, len(preset.Metrics))
 	for i, metricConfig := range preset.Metrics {
@@ -36,7 +37,6 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 	}
 
 	collector := &Collector{
-		logger:  logger,
 		wg:      &sync.WaitGroup{},
 		metrics: metrics,
 		parseErrorMetric: prometheus.NewCounter(prometheus.CounterOpts{
@@ -45,7 +45,7 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 		}),
 	}
 
-	collector.lineHandlerWorkers(ctx, workerCount, messageCh)
+	collector.lineHandlerWorkers(ctx, logger, workerCount, messageCh)
 
 	return collector, nil
 }
