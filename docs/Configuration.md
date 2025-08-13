@@ -206,7 +206,7 @@ This creates these indexed fields:
   - **`name`**: Label name
   - **`lineIndex`**: Index of the log field for this label
   - **`userAgent`**: Enable user agent parsing (boolean)
-  - **`replacements`**: Array of regex replacements for label values. Only the first matching replacement applies.
+  - **`replacements`**: Array of regular expressions replacements for label values. Only the first matching replacement applies.
 
 <details>
 <summary>Understanding `replacements`</summary>
@@ -220,11 +220,12 @@ This helps reduce label cardinality and standardize values.
 - Only the **first matching** replacement applies
 - If no replacements match, the original value remains unchanged
 - Empty matches can transform empty/null values into meaningful labels
-- **Uses RE2 regex engine**: Does not support negative lookahead/lookbehind assertions
+- **Uses RE2 regular expression engine**: Does not support negative lookahead/lookbehind assertions
 
-**Regex engine limitations:**
+**Regular expression engine limitations:**
 
-access-log-exporter uses Google's RE2 regex engine, which is fast and safe but has some limitations compared to PCRE or Perl regex:
+access-log-exporter uses Google's RE2 regular expression engine,
+which is fast and safe but has some limitations compared to PCRE or Perl regex:
 
 - **No negative lookahead**: `(?!pattern)` not supported
 - **No negative lookbehind**: `(?<!pattern)` not supported
@@ -327,8 +328,8 @@ This transforms empty SSL values (when HTTPS is not used) into the explicit labe
 - Order replacements from most specific to most general
 - Always include a catch-all pattern (`.*`) as the last replacement
 - Use replacements to reduce label cardinality (group similar values)
-- Test regex patterns to ensure they match expected log values
-- Consider the performance impact of complex regex patterns on high-traffic logs
+- Test regular expression patterns to ensure they match expected log values
+- Consider the performance impact of complex regular expression patterns on high-traffic logs
 - **Remember RE2 limitations** - use ordering instead of negative lookahead/lookbehind
 
 </details>
