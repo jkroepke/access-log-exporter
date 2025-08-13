@@ -57,7 +57,7 @@ func BenchmarkMetricParseUpstream(b *testing.B) {
 		Upstream: config.Upstream{
 			Enabled:       true,
 			AddrLineIndex: 6,
-			Excludes:      []string{},
+			Excludes:      make([]string, 0),
 			Label:         false, // default value
 		},
 		Labels: []config.Label{

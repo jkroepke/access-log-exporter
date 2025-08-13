@@ -121,6 +121,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 		return ReturnCodeError
 	}
+
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(
 		collectors.NewGoCollector(),

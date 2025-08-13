@@ -14,12 +14,10 @@ import (
 )
 
 type Syslog struct {
-	server *syslog.Server
-	logger *slog.Logger
-
+	server     *syslog.Server
+	logger     *slog.Logger
+	msgCh      chan<- string
 	listenAddr string
-
-	msgCh chan<- string
 }
 
 func New(logger *slog.Logger, listenAddr string, msgCh chan<- string) (Syslog, error) {

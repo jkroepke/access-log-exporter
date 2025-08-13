@@ -205,9 +205,12 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 	}
 
 	valueIndex := 0
+
 	for {
-		var valueElement string
-		var remaining string
+		var (
+			valueElement string
+			remaining    string
+		)
 
 		if comma := strings.IndexByte(value, ','); comma >= 0 {
 			valueElement = strings.TrimSpace(value[:comma])
@@ -240,9 +243,11 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 			// Skip if upstream is in exclude list
 			if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
 				valueIndex++
+
 				if remaining == "" {
 					break
 				}
+
 				value = remaining
 
 				continue
@@ -260,9 +265,11 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 		}
 
 		valueIndex++
+
 		if remaining == "" {
 			break
 		}
+
 		value = remaining
 	}
 
