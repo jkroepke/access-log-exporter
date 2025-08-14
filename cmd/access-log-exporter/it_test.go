@@ -79,6 +79,7 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	t.Cleanup(func() {
+		termCh <- os.Interrupt
 		require.Equal(t, ReturnCodeOK, <-returnCodeCh, stdout.String())
 	})
 
