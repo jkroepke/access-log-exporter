@@ -122,6 +122,9 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeError
 	}
 
+	prometheus.DefaultGatherer = nil   // Disable default gatherer to avoid conflicts with custom registry
+	prometheus.DefaultRegisterer = nil // Disable default registerer to avoid conflicts with custom registry
+
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(
 		collectors.NewGoCollector(),
