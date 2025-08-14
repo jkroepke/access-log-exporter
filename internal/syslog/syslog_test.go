@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	syslogclient "log/syslog"
+	"net"
 	"testing"
 
 	"github.com/jkroepke/access-log-exporter/internal/syslog"
@@ -35,6 +36,32 @@ func TestSyslogServer(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, logMessage, <-logBuffer)
+}
+
+func TestSyslogServerWithInvalidMessages(t *testing.T) {
+	t.Parallel()
+
+	unixSocket, err := nettest.LocalPath()
+	require.NoError(t, err)
+
+	logBuffer := make(chan string, 1)
+
+	server, err := syslog.New(slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, server.Shutdown(t.Context()))
+	})
+
+	syslogClient, err := net.Dial("unixgram", unixSocket)
+	require.NoError(t, err)
+
+	logMessage := "<34>Oct 11 22:14:15"
+
+	_, err = fmt.Fprint(syslogClient, logMessage)
+	require.NoError(t, err)
+
+	require.Equal(t, 0, len(logBuffer))
 }
 
 func TestSyslogInvalidListenAddr(t *testing.T) {
