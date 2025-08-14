@@ -36,3 +36,22 @@ func TestSyslogServer(t *testing.T) {
 
 	require.Equal(t, logMessage, <-logBuffer)
 }
+
+func TestSyslogInvalidListenAddr(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []string{
+		"://address",
+		"invalid://address",
+		"tcp://invalid:1234",
+		"udp://invalid:1234",
+		"udp://0.0.0.1:1000000",
+	} {
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := syslog.New(slog.New(slog.DiscardHandler), tc, nil)
+			require.Error(t, err)
+		})
+	}
+}

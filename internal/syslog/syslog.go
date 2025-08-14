@@ -44,7 +44,7 @@ func New(logger *slog.Logger, listenAddr string, msgCh chan<- string) (Syslog, e
 	case "unix":
 		err = syslogServer.server.ListenUnixgram(uri.Host + uri.Path)
 	default:
-		return Syslog{}, errors.New("syslog listen address must be start with tcp://, udp:// or unix://")
+		err = errors.New("syslog listen address must be start with tcp://, udp:// or unix://")
 	}
 
 	if err != nil {
