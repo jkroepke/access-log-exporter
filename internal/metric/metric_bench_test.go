@@ -42,12 +42,49 @@ func BenchmarkMetricParseSimple(b *testing.B) {
 	b.ReportAllocs()
 }
 
+func BenchmarkMetricParseUserAgent(b *testing.B) {
+	met, err := metric.New(config.Metric{
+		Name: "http_requests_total",
+		Type: "counter",
+		Help: "The total number of client requests.",
+		Labels: []config.Label{
+			{
+				Name:      "host",
+				LineIndex: 0,
+			},
+			{
+				Name:      "method",
+				LineIndex: 1,
+			},
+			{
+				Name:      "status",
+				LineIndex: 2,
+			},
+			{
+				Name:      "user_agent",
+				LineIndex: 3,
+				UserAgent: true,
+			},
+		},
+	})
+
+	require.NoError(b, err)
+
+	logLine := strings.Split("example.com\tGET\t200\tMozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15", "\t")
+
+	for b.Loop() {
+		_ = met.Parse(logLine)
+	}
+
+	b.ReportAllocs()
+}
+
 func BenchmarkMetricParseUpstream(b *testing.B) {
 	met, err := metric.New(config.Metric{
 		Name:       "http_upstream_connect_duration_seconds",
 		Type:       "histogram",
 		Help:       "The time spent on establishing a connection with the upstream server",
-		ValueIndex: func() *uint { v := uint(7); return &v }(),
+		ValueIndex: ptr(uint(7)),
 		Buckets:    types.Float64Slice{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
 		Math: config.Math{
 			Enabled: true,
@@ -57,7 +94,7 @@ func BenchmarkMetricParseUpstream(b *testing.B) {
 		Upstream: config.Upstream{
 			Enabled:       true,
 			AddrLineIndex: 6,
-			Excludes:      []string{},
+			Excludes:      make([]string, 0),
 			Label:         false, // default value
 		},
 		Labels: []config.Label{

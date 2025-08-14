@@ -34,6 +34,7 @@ import (
 
 	"github.com/jkroepke/access-log-exporter/internal/collector"
 	"github.com/jkroepke/access-log-exporter/internal/config"
+	"github.com/jkroepke/access-log-exporter/internal/syslog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -76,7 +77,7 @@ func execute(args []string, stdout io.Writer, termCh <-chan os.Signal) int {
 
 // run runs the main program logic of the daemon.
 //
-//nolint:cyclop
+//nolint:cyclop,gocognit
 func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.Signal) ReturnCode {
 	conf, logger, rc := initializeConfigAndLogger(args, stdout)
 	if rc != ReturnCodeNoError {
@@ -92,9 +93,9 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	prometheusCollector, err := collector.New(ctx, logger, conf)
-	if err != nil {
-		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
+	preset, ok := conf.Presets[conf.Preset]
+	if !ok {
+		logger.LogAttrs(ctx, slog.LevelError, fmt.Sprintf("preset '%s' not found in configuration", conf.Preset))
 
 		return ReturnCodeError
 	}
@@ -102,6 +103,27 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	if conf.VerifyConfig {
 		return ReturnCodeOK
 	}
+
+	syslogMessageBuffer := make(chan string, conf.BufferSize)
+
+	syslogServer, err := syslog.New(logger, conf.Syslog.ListenAddress, syslogMessageBuffer)
+	if err != nil {
+		logger.LogAttrs(ctx, slog.LevelError, "error creating syslog server", slog.Any("error", err))
+
+		return ReturnCodeError
+	}
+
+	logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
+
+	prometheusCollector, err := collector.New(ctx, logger, preset, conf.WorkerCount, syslogMessageBuffer)
+	if err != nil {
+		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
+
+		return ReturnCodeError
+	}
+
+	prometheus.DefaultGatherer = nil   // Disable default gatherer to avoid conflicts with custom registry
+	prometheus.DefaultRegisterer = nil // Disable default registerer to avoid conflicts with custom registry
 
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(
@@ -159,7 +181,21 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	for {
 		select {
 		case <-ctx.Done():
+			err := syslogServer.Shutdown(ctx)
+			if err != nil {
+				logger.ErrorContext(ctx, "error shutting down syslog server",
+					slog.String("address", conf.Syslog.ListenAddress),
+					slog.Any("error", err),
+				)
+			}
+
 			prometheusCollector.Close()
+
+			logger.InfoContext(ctx, "shutting down syslog server",
+				slog.String("address", conf.Syslog.ListenAddress),
+			)
+
+			close(syslogMessageBuffer)
 
 			serverShutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
@@ -174,7 +210,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 			cancel()
 
-			err := context.Cause(ctx)
+			err = context.Cause(ctx)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
 					return ReturnCodeOK

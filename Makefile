@@ -66,6 +66,7 @@ lint: golangci  ## Run linter
 .PHONY: fmt  ## Format code
 fmt:
 	@-go fmt ./...
+	@-go mod tidy
 	@-go run github.com/daixiang0/gci@v0.13.7 write .
 	@-go run mvdan.cc/gofumpt@v0.8.0 -l -w .
 	@-go run golang.org/x/tools/cmd/goimports@v0.36.0 -l -w .

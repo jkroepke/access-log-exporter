@@ -64,3 +64,34 @@ func TestEmptyConfigFile(t *testing.T) {
 	require.Equal(t, ReturnCodeError, rt, stdout)
 	require.Contains(t, stdout.String(), "configuration file is empty")
 }
+
+func TestInvalidPreset(t *testing.T) {
+	t.Parallel()
+
+	stdout := &bytes.Buffer{}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	moduleRoot, err := findModuleRoot(wd)
+	require.NoError(t, err)
+
+	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--preset", "invalid"}, stdout, nil)
+	require.Equal(t, ReturnCodeError, rt, stdout)
+	require.Contains(t, stdout.String(), "preset 'invalid' not found in configuration")
+}
+
+func TestVerifyConfig(t *testing.T) {
+	t.Parallel()
+
+	stdout := &bytes.Buffer{}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	moduleRoot, err := findModuleRoot(wd)
+	require.NoError(t, err)
+
+	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--verify-config"}, stdout, nil)
+	require.Equal(t, ReturnCodeOK, rt, stdout)
+}

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -174,6 +175,8 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
 	require.Equal(t, 1332, strings.Count(metrics, "http_"))
+
+	termCh <- syscall.SIGTERM
 }
 
 func findModuleRoot(start string) (string, error) {

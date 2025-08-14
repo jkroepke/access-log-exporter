@@ -9,9 +9,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 )
 
-var (
-	ErrEmptyConfigFile = errors.New("configuration file is empty")
-)
+var ErrEmptyConfigFile = errors.New("configuration file is empty")
 
 type Config struct {
 	Presets      Presets `json:"presets"     yaml:"presets"`
@@ -82,8 +80,8 @@ type Label struct {
 }
 
 type Replacement struct {
-	Replacement string         `json:"replacement" yaml:"replacement"`
 	Regexp      *regexp.Regexp `json:"regexp"      yaml:"regexp"`
+	Replacement string         `json:"replacement" yaml:"replacement"`
 }
 
 //goland:noinspection GoMixedReceiverTypes

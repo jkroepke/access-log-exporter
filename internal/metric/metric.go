@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
-	"github.com/medama-io/go-useragent"
+	"github.com/jkroepke/access-log-exporter/internal/useragent"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -33,15 +33,9 @@ func New(cfg config.Metric) (*Metric, error) {
 	// Pre-allocate labelKeys with exact capacity
 	labelKeys := make([]string, labelCount)
 
-	var userAgent *useragent.Parser
-
 	for i, label := range cfg.Labels {
 		if label.Name == "" {
 			return nil, errors.New("metric label name cannot be empty")
-		}
-
-		if label.UserAgent {
-			userAgent = useragent.NewParser()
 		}
 
 		labelKeys[i] = label.Name
@@ -84,7 +78,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	return &Metric{
 		cfg:    cfg,
 		metric: metric,
-		ua:     userAgent,
+		ua:     useragent.New(),
 	}, nil
 }
 
@@ -98,6 +92,10 @@ func (m *Metric) Collect(ch chan<- prometheus.Metric) {
 	if m.metric != nil {
 		m.metric.Collect(ch)
 	}
+}
+
+func (m *Metric) Name() string {
+	return m.cfg.Name
 }
 
 //nolint:cyclop
@@ -146,7 +144,7 @@ func (m *Metric) Parse(line []string) error {
 		if label.UserAgent {
 			uaInfo := m.ua.Parse(labelValue)
 
-			labelValue = uaInfo.Browser().String()
+			labelValue = uaInfo.UserAgent.Family
 		}
 
 		labelValue = m.labelValueReplacements(label.Replacements, labelValue)
@@ -182,7 +180,7 @@ func (m *Metric) Parse(line []string) error {
 	return nil
 }
 
-//nolint:cyclop
+//nolint:cyclop,gocognit,nestif
 func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels prometheus.Labels) error {
 	var upstreams []string
 
@@ -201,9 +199,12 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 	}
 
 	valueIndex := 0
+
 	for {
-		var valueElement string
-		var remaining string
+		var (
+			valueElement string
+			remaining    string
+		)
 
 		if comma := strings.IndexByte(value, ','); comma >= 0 {
 			valueElement = strings.TrimSpace(value[:comma])
@@ -213,7 +214,7 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 			remaining = ""
 		}
 
-		if valueElement != "" && valueElement != "-" {
+		if valueElement != "-" {
 			// Create a copy of labels for this iteration with capacity for upstream label
 			iterationLabels := make(prometheus.Labels, len(labels)+1)
 			for k, v := range labels {
@@ -233,10 +234,13 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 				// Skip if upstream is in exclude list
 				if len(m.cfg.Upstream.Excludes) != 0 && slices.Contains(m.cfg.Upstream.Excludes, upstream) {
 					valueIndex++
+
 					if remaining == "" {
 						break
 					}
+
 					value = remaining
+
 					continue
 				}
 
@@ -253,9 +257,11 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 		}
 
 		valueIndex++
+
 		if remaining == "" {
 			break
 		}
+
 		value = remaining
 	}
 

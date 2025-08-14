@@ -11,13 +11,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collector, error) {
-	var err error
-
-	preset, ok := conf.Presets[conf.Preset]
-	if !ok {
-		return nil, fmt.Errorf("preset '%s' not found in configuration", conf.Preset)
-	}
+func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerCount int, messageCh <-chan string) (*Collector, error) {
+	var (
+		err       error
+		userAgent bool
+	)
 
 	metrics := make([]*metric.Metric, len(preset.Metrics))
 	for i, metricConfig := range preset.Metrics {
@@ -25,26 +23,29 @@ func New(ctx context.Context, logger *slog.Logger, conf config.Config) (*Collect
 		if err != nil {
 			return nil, fmt.Errorf("could not create metric '%s': %w", metricConfig.Name, err)
 		}
+
+		for _, label := range metricConfig.Labels {
+			if label.UserAgent {
+				userAgent = true
+			}
+		}
+	}
+
+	if userAgent {
+		logger.WarnContext(ctx, "The user agent parser is currently experimental and changed in the future or may not work as expected. "+
+			"Please report any issues you encounter.")
 	}
 
 	collector := &Collector{
-		preset:  preset,
-		logger:  logger,
-		buffer:  make(chan string, conf.BufferSize),
 		wg:      &sync.WaitGroup{},
 		metrics: metrics,
 		parseErrorMetric: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "nginxlog_parse_errors_total",
+			Name: "log_parse_errors_total",
 			Help: "Total number of parse errors",
 		}),
 	}
 
-	err = collector.startPump(ctx, conf.Syslog)
-	if err != nil {
-		return nil, fmt.Errorf("could not start syslog pump: %w", err)
-	}
-
-	collector.lineHandler(ctx, conf.WorkerCount)
+	collector.lineHandlerWorkers(ctx, logger, workerCount, messageCh)
 
 	return collector, nil
 }
@@ -67,8 +68,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
+// Close stops the collector and waits for all workers to finish.
 func (c *Collector) Close() {
 	c.wg.Wait()
-
-	close(c.buffer)
 }

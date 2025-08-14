@@ -6,5 +6,6 @@
         <function importPath="github.com/testcontainers/testcontainers-go" name="GenericContainer" />
       </functions>
     </inspection_tool>
+    <inspection_tool class="GoLinter" enabled="true" level="WARNING" enabled_by_default="true" />
   </profile>
 </component>
