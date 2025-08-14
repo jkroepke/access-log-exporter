@@ -79,7 +79,6 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	t.Cleanup(func() {
-		termCh <- os.Interrupt
 		require.Equal(t, ReturnCodeOK, <-returnCodeCh, stdout.String())
 	})
 
@@ -175,6 +174,8 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
 	require.Equal(t, 1332, strings.Count(metrics, "http_"))
+
+	termCh <- os.Interrupt
 }
 
 func findModuleRoot(start string) (string, error) {
