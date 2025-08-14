@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
-	"github.com/medama-io/go-useragent"
+	"github.com/jkroepke/access-log-exporter/internal/useragent"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -33,15 +33,9 @@ func New(cfg config.Metric) (*Metric, error) {
 	// Pre-allocate labelKeys with exact capacity
 	labelKeys := make([]string, labelCount)
 
-	var userAgent *useragent.Parser
-
 	for i, label := range cfg.Labels {
 		if label.Name == "" {
 			return nil, errors.New("metric label name cannot be empty")
-		}
-
-		if label.UserAgent {
-			userAgent = useragent.NewParser()
 		}
 
 		labelKeys[i] = label.Name
@@ -84,7 +78,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	return &Metric{
 		cfg:    cfg,
 		metric: metric,
-		ua:     userAgent,
+		ua:     useragent.New(),
 	}, nil
 }
 
@@ -150,7 +144,7 @@ func (m *Metric) Parse(line []string) error {
 		if label.UserAgent {
 			uaInfo := m.ua.Parse(labelValue)
 
-			labelValue = uaInfo.Browser().String()
+			labelValue = uaInfo.UserAgent.Family
 		}
 
 		labelValue = m.labelValueReplacements(label.Replacements, labelValue)
@@ -221,7 +215,6 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 		}
 
 		if valueElement != "-" {
-
 			// Create a copy of labels for this iteration with capacity for upstream label
 			iterationLabels := make(prometheus.Labels, len(labels)+1)
 			for k, v := range labels {

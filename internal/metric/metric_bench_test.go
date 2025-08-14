@@ -42,6 +42,43 @@ func BenchmarkMetricParseSimple(b *testing.B) {
 	b.ReportAllocs()
 }
 
+func BenchmarkMetricParseUserAgent(b *testing.B) {
+	met, err := metric.New(config.Metric{
+		Name: "http_requests_total",
+		Type: "counter",
+		Help: "The total number of client requests.",
+		Labels: []config.Label{
+			{
+				Name:      "host",
+				LineIndex: 0,
+			},
+			{
+				Name:      "method",
+				LineIndex: 1,
+			},
+			{
+				Name:      "status",
+				LineIndex: 2,
+			},
+			{
+				Name:      "user_agent",
+				LineIndex: 3,
+				UserAgent: true,
+			},
+		},
+	})
+
+	require.NoError(b, err)
+
+	logLine := strings.Split("example.com\tGET\t200\tMozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15", "\t")
+
+	for b.Loop() {
+		_ = met.Parse(logLine)
+	}
+
+	b.ReportAllocs()
+}
+
 func BenchmarkMetricParseUpstream(b *testing.B) {
 	met, err := metric.New(config.Metric{
 		Name:       "http_upstream_connect_duration_seconds",
