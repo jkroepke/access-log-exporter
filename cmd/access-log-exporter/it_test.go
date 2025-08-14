@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -175,7 +176,7 @@ func TestIT(t *testing.T) {
 
 	require.Equal(t, 1332, strings.Count(metrics, "http_"))
 
-	termCh <- os.Interrupt
+	termCh <- syscall.SIGTERM
 }
 
 func findModuleRoot(start string) (string, error) {
