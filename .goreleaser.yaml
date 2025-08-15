@@ -119,10 +119,21 @@ kos:
     platforms:
       - linux/amd64
       - linux/arm64
+    annotations:
+      org.opencontainers.image.authors: "Jan-Otto Kröpke https://github.com/jkroepke/"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.description: "A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics."
+      org.opencontainers.image.documentation: "https://github.com/jkroepke/access-log-exporter/wiki"
+      org.opencontainers.image.licenses: "Apache-2.0"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.source: "https://github.com/jkroepke/access-log-exporter"
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.vendor: "Jan-Otto Kröpke"
+      org.opencontainers.image.version: "{{.Version}}"
     labels:
       org.opencontainers.image.authors: "Jan-Otto Kröpke https://github.com/jkroepke/"
       org.opencontainers.image.created: "{{.Date}}"
-      org.opencontainers.image.description: "Export metrics from Nginx access log files to Prometheus"
+      org.opencontainers.image.description: "A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics."
       org.opencontainers.image.documentation: "https://github.com/jkroepke/access-log-exporter/wiki"
       org.opencontainers.image.licenses: "Apache-2.0"
       org.opencontainers.image.revision: "{{.FullCommit}}"
