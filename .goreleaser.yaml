@@ -115,7 +115,7 @@ kos:
     ko_data_creation_time: "{{.CommitTimestamp}}"
     sbom: spdx
     env:
-      - CONFIG=/var/run/ko/config.yaml
+      - CONFIG_FILE=/var/run/ko/config.yaml
     platforms:
       - linux/amd64
       - linux/arm64

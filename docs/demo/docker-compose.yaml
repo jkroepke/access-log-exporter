@@ -1,0 +1,11 @@
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "4040:4040/tcp"
+      - "8080:8080/tcp"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+  access-log-exporter:
+    image: ghcr.io/jkroepke/access-log-exporter:latest
+    network_mode: service:nginx
