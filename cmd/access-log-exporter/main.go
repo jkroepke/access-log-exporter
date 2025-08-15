@@ -130,7 +130,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		collectors.NewGoCollector(),
 		collectors.NewBuildInfoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versioncollector.NewCollector("access-log-exporter"),
+		versioncollector.NewCollector("access_log_exporter"),
 		prometheusCollector,
 	)
 
