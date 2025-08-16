@@ -157,7 +157,7 @@ server {
 
 **Important:** Ensure the stub_status endpoint is only accessible from localhost or trusted networks for security.
 
-For detailed information about the metrics exposed and configuration options, see the [Nginx Status Metrics section](https://github.com/jkroepke/access-log-exporter/wiki/Configuration.md#nginx-status-metrics) in the Configuration Guide.
+For detailed information about the metrics exposed and configuration options, see the [Nginx Status Metrics section](https://github.com/jkroepke/access-log-exporter/wiki/Configuration#nginx-status-metrics) in the Configuration Guide.
 
 ### Configuration File Example
 
@@ -180,7 +180,7 @@ For detailed documentation, please refer to:
 
 - **[Installation Guide](https://github.com/jkroepke/access-log-exporter/wiki/Installation)**: Package installation, manual builds, Kubernetes deployment
 - **[Configuration Guide](https://github.com/jkroepke/access-log-exporter/wiki/Configuration)**: Complete configuration reference and custom presets
-- **[Webserver Setup](https://github.com/jkroepke/access-log-exporter/wiki/Webserver.md)**: Nginx and Apache configuration examples
+- **[Webserver Setup](https://github.com/jkroepke/access-log-exporter/wiki/Webserver)**: Nginx and Apache configuration examples
 - **[Wiki](https://github.com/jkroepke/access-log-exporter/wiki)**: Additional guides and examples
 
 ## Requirements
