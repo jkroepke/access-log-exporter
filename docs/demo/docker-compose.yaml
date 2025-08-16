@@ -1,17 +1,77 @@
 services:
   nginx:
     image: nginx
-    ports:
-      - "4040:4040/tcp"
-      - "8080:8080/tcp"
+    depends_on:
+      - httpbin
+    networks:
+      access-log-exporter:
+        aliases:
+          - nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
   httpbin:
-    image: kennethreitz/httpbin
-    network_mode: service:nginx
+    image: mccutchen/go-httpbin
+    networks:
+      access-log-exporter:
+        aliases:
+          - httpbin
+    environment:
+      PORT: 8080
   access-log-exporter:
     image: ghcr.io/jkroepke/access-log-exporter:latest
-    network_mode: service:nginx
+    networks:
+      access-log-exporter:
+        aliases:
+          - access-log-exporter
+    ports:
+      - "4040:4040/tcp"
     command:
       - --preset=simple_upstream
-      - --nginx.scrape-uri=http://127.0.0.1:8080/stub_status
+      - --nginx.scrape-url=http://nginx:8090/stub_status
+  load-generator:
+    image: golang:1.25
+    networks:
+      access-log-exporter:
+    environment:
+      BASE_URL: http://nginx:8090
+    command:
+      - go
+      - run
+      - /main.go
+    volumes:
+      - ./load-generator/main.go:/main.go
+  prometheus:
+    image: prom/prometheus
+    networks:
+      access-log-exporter:
+        aliases:
+          - prometheus
+    ports:
+      - "9090:9090/tcp"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+  grafana:
+    image: grafana/grafana
+    networks:
+      access-log-exporter:
+        aliases:
+          - grafana
+    ports:
+      - "3000:3000/tcp"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./../../contrib/grafana-dashboard.json:/var/lib/grafana/dashboards/access-log-exporter.json
+networks:
+  access-log-exporter:
+    driver: bridge
+
+volumes:
+  prometheus-data:

@@ -2,15 +2,17 @@ package main
 
 import (
 	"bytes"
+	crypt "crypto/rand"
 	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
-const baseURL = "http://localhost:8090"
+var baseURL = os.Getenv("BASE_URL")
 
 var (
 	directEndpoints = []string{
@@ -208,7 +210,7 @@ func generateRandomFormData(targetSize int) []byte {
 
 func generateRandomBytes(size int) []byte {
 	data := make([]byte, size)
-	if _, err := rand.Read(data); err != nil {
+	if _, err := crypt.Read(data); err != nil {
 		log.Printf("Error generating random bytes: %v", err)
 		// Fallback to pseudo-random data
 		for i := range data {
