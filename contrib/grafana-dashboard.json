@@ -1818,7 +1818,8 @@
         },
         "cellGap": 1,
         "cellValues": {
-          "unit": ""
+          "decimals": 0,
+          "unit": "short"
         },
         "color": {
           "exponent": 0.5,
@@ -1862,7 +1863,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(http_request_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
+          "expr": "sum(increase(http_request_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
           "format": "heatmap",
           "instant": false,
           "legendFormat": "__auto",
@@ -1917,7 +1918,8 @@
         },
         "cellGap": 1,
         "cellValues": {
-          "unit": ""
+          "decimals": 0,
+          "unit": "short"
         },
         "color": {
           "exponent": 0.5,
@@ -1961,7 +1963,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(http_response_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
+          "expr": "sum(increase(http_response_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
           "format": "heatmap",
           "instant": false,
           "legendFormat": "__auto",
@@ -2435,7 +2437,9 @@
         "allValue": ".*",
         "allowCustomValue": false,
         "current": {
-          "text": "All",
+          "text": [
+            "All"
+          ],
           "value": [
             "$__all"
           ]
