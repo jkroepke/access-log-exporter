@@ -33,14 +33,14 @@ func TestCollector(t *testing.T) {
 				}
 			},
 			metrics: `# HELP nginx_connections_accepted Accepted client connections.
-# TYPE nginx_connections_accepted counter
-nginx_connections_accepted 10
+# TYPE nginx_connections_accepted_total counter
+nginx_connections_accepted_total 10
 # HELP nginx_connections_active Active client connections.
 # TYPE nginx_connections_active gauge
 nginx_connections_active 1
-# HELP nginx_connections_handled Handled client connections.
-# TYPE nginx_connections_handled counter
-nginx_connections_handled 10
+# HELP nginx_connections_handled_total Handled client connections.
+# TYPE nginx_connections_handled_total counter
+nginx_connections_handled_total 10
 # HELP nginx_connections_reading Connections where NGINX is reading the request header.
 # TYPE nginx_connections_reading gauge
 nginx_connections_reading 0

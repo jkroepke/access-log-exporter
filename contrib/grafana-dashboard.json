@@ -2073,7 +2073,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(nginx_connections_accepted{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"}[$__interval]))",
+          "expr": "sum(increase(nginx_connections_accepted_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"}[$__interval]))",
           "legendFormat": "Connections",
           "range": true,
           "refId": "A"
