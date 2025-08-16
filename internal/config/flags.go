@@ -46,9 +46,20 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 		"Preset configuration to use. Available presets: simple, simple_upstream, all. Custom presets can be defined via config file. Default is simple.",
 	)
 
+	c.flagSetNginx(flagSet)
 	c.flagSetDebug(flagSet)
 	c.flagSetWeb(flagSet)
 	c.flagSetSyslog(flagSet)
+}
+
+//goland:noinspection GoMixedReceiverTypes
+func (c *Config) flagSetNginx(flagSet *flag.FlagSet) {
+	flagSet.TextVar(
+		&c.Nginx.ScrapeUrl,
+		"nginx.scrape-url",
+		lookupEnvOrDefault("nginx.scrape-url", c.Nginx.ScrapeUrl),
+		"A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status",
+	)
 }
 
 //goland:noinspection GoMixedReceiverTypes

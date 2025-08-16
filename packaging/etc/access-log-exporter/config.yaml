@@ -33,7 +33,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -46,7 +46,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
@@ -57,7 +57,7 @@ presets:
           - name: "status"
             lineIndex: 2
 
-      - name: "http_response_duration_seconds"
+      - name: "http_request_duration_seconds"
         type: "histogram"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving the response from the upstream server"
@@ -93,7 +93,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -106,7 +106,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
@@ -117,7 +117,7 @@ presets:
           - name: "status"
             lineIndex: 2
 
-      - name: "http_response_duration_seconds"
+      - name: "http_request_duration_seconds"
         type: "histogram"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving and response the response to the client"
@@ -173,7 +173,7 @@ presets:
           - name: "status"
             lineIndex: 2
 
-      - name: "http_upstream_response_duration_seconds"
+      - name: "http_upstream_request_duration_seconds"
         type: "histogram"
         help: "The time spent on receiving the response from the upstream server"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
@@ -225,7 +225,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -238,7 +238,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
@@ -249,7 +249,7 @@ presets:
           - name: "status"
             lineIndex: 2
 
-      - name: "http_response_duration_seconds"
+      - name: "http_request_duration_seconds"
         type: "histogram"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving and response the response to the client"
@@ -305,7 +305,7 @@ presets:
           - name: "status"
             lineIndex: 2
 
-      - name: "http_upstream_response_duration_seconds"
+      - name: "http_upstream_request_duration_seconds"
         type: "histogram"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving the response from the upstream server"

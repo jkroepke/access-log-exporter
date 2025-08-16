@@ -115,19 +115,72 @@ With the `simple` preset, you get metrics like:
 # TYPE http_requests_total counter
 http_requests_total{host="example.com",method="GET",status="200"} 1234
 
-# HELP http_response_duration_seconds The time spent on receiving and response the response to the client
-# TYPE http_response_duration_seconds histogram
-http_response_duration_seconds_bucket{host="example.com",method="GET",status="200",le="0.005"} 123
-http_response_duration_seconds_bucket{host="example.com",method="GET",status="200",le="0.01"} 234
+# HELP http_request_duration_seconds The time spent on receiving and response the response to the client
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{host="example.com",method="GET",status="200",le="0.005"} 123
+http_request_duration_seconds_bucket{host="example.com",method="GET",status="200",le="0.01"} 234
+```
+
+## Nginx Status Metrics
+
+In addition to processing access logs, access-log-exporter can also collect Nginx server status metrics by scraping the `stub_status` module. This provides additional insights into your Nginx server's performance and connection handling.
+
+### Enabling Nginx Status Collection
+
+To enable Nginx status metrics collection, use the `--nginx.scrape-url` flag:
+
+```bash
+# HTTP endpoint
+access-log-exporter --nginx.scrape-url http://127.0.0.1/stub_status
+
+# Unix domain socket
+access-log-exporter --nginx.scrape-url unix:///var/run/nginx-status.sock
+```
+
+### Nginx Configuration
+
+First, enable the `stub_status` module in your Nginx configuration:
+
+```nginx
+server {
+    listen 127.0.0.1:8080;
+    server_name localhost;
+
+    location /stub_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
+    }
+}
+```
+
+**Important:** Ensure the stub_status endpoint is only accessible from localhost or trusted networks for security.
+
+For detailed information about the metrics exposed and configuration options, see the [Nginx Status Metrics section](https://github.com/jkroepke/access-log-exporter/wiki/Configuration.md#nginx-status-metrics) in the Configuration Guide.
+
+### Configuration File Example
+
+You can also configure the Nginx scrape URL in your YAML configuration file:
+
+```yaml
+nginx:
+  scrape-uri: "http://127.0.0.1:8080/stub_status"
+
+preset: "simple"
+syslog:
+  listenAddress: "udp://[::]:8514"
+web:
+  listenAddress: ":4040"
 ```
 
 ## Documentation
 
 For detailed documentation, please refer to:
 
-- **[Installation Guide](docs/Installation.md)**: Package installation, manual builds, Kubernetes deployment
-- **[Configuration Guide](docs/Configuration.md)**: Complete configuration reference and custom presets
-- **[Webserver Setup](docs/Webserver.md)**: Nginx and Apache configuration examples
+- **[Installation Guide](https://github.com/jkroepke/access-log-exporter/wiki/Installation)**: Package installation, manual builds, Kubernetes deployment
+- **[Configuration Guide](https://github.com/jkroepke/access-log-exporter/wiki/Configuration)**: Complete configuration reference and custom presets
+- **[Webserver Setup](https://github.com/jkroepke/access-log-exporter/wiki/Webserver.md)**: Nginx and Apache configuration examples
 - **[Wiki](https://github.com/jkroepke/access-log-exporter/wiki)**: Additional guides and examples
 
 ## Requirements

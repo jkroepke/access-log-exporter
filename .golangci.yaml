@@ -155,6 +155,9 @@ linters:
         - mu sync.Mutex
   exclusions:
     generated: lax
+    paths:
+      - "^examples/"
+      - "^docs/"
     presets:
       - comments
       - common-false-positives

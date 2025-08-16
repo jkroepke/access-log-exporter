@@ -25,9 +25,11 @@ Usage of access-log-exporter:
   --buffer-size uint
     	Size of the buffer for syslog messages. Default is 1000. Set to 0 to disable buffering. (env: CONFIG_BUFFER__SIZE) (default 1000)
   --config string
-    	path to one .yaml config file (env: CONFIG_CONFIG)
+    	path to one .yaml config file (env: CONFIG_FILE) (default "config.yaml")
   --debug.enable
     	Enables go profiling endpoint. This should be never exposed. (env: CONFIG_DEBUG_ENABLE)
+  --nginx.scrape-url value
+    	A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status or `unix:///var/run/nginx-status.sock` (env: CONFIG_NGINX_SCRAPE__URL)
   --preset string
     	Preset configuration to use. Available presets: simple, simple_upstream, all. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
   --syslog.listen-address string
@@ -59,6 +61,119 @@ The default configuration file location depends on your installation method:
 
 A example configuration can be found [here](https://github.com/jkroepke/access-log-exporter/blob/main/packaging/etc/access-log-exporter/config.yaml).
 
+## Nginx Status Metrics
+
+access-log-exporter can collect Nginx server status metrics in addition to processing access logs. This feature uses Nginx's `stub_status` module to provide insights into server performance and connection handling.
+
+### Configuration
+
+To enable Nginx status metrics collection, configure the scrape URL using either:
+
+**Command-line flag:**
+```bash
+access-log-exporter --nginx.scrape-url http://127.0.0.1:8080/stub_status
+```
+
+**Environment variable:**
+```bash
+export CONFIG_NGINX_SCRAPE__URL="http://127.0.0.1:8080/stub_status"
+access-log-exporter
+```
+
+**YAML configuration file:**
+```yaml
+nginx:
+  scrape-uri: "http://127.0.0.1:8080/stub_status"
+```
+
+### Supported URL Schemes
+
+The nginx.scrape-url supports these URL schemes:
+
+- **HTTP endpoints:** `http://127.0.0.1:8080/stub_status`
+- **HTTPS endpoints:** `https://nginx.example.com/stub_status`
+- **Unix domain sockets:** `unix:///var/run/nginx-status.sock`
+
+### Nginx Configuration Requirements
+
+To use this feature, you must enable Nginx's `stub_status` module:
+
+```nginx
+server {
+    listen 127.0.0.1:8080;
+    server_name localhost;
+
+    location /stub_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
+    }
+}
+```
+
+**Security considerations:**
+- Restrict access to localhost or trusted networks only
+- Use `allow`/`deny` directives to control access
+- Consider using Unix domain sockets for local-only access
+- Disable access logging for the status endpoint
+
+### Metrics Exposed
+
+When enabled, the following Nginx-specific metrics are collected and exposed:
+
+| Metric Name | Type | Description |
+|-------------|------|-------------|
+| `nginx_up` | Gauge | Whether the NGINX server is up (1) or down (0) |
+| `nginx_connections_accepted` | Counter | Total number of accepted client connections |
+| `nginx_connections_active` | Gauge | Current number of active client connections |
+| `nginx_connections_handled` | Counter | Total number of handled client connections |
+| `nginx_connections_reading` | Gauge | Connections where NGINX is reading the request header |
+| `nginx_connections_writing` | Gauge | Connections where NGINX is writing the response back to the client |
+| `nginx_connections_waiting` | Gauge | Idle client connections (keep-alive) |
+
+### Example Output
+
+```prometheus
+# HELP nginx_up Whether the NGINX server is up (1) or down (0)
+# TYPE nginx_up gauge
+nginx_up 1
+
+# HELP nginx_connections_accepted Accepted client connections
+# TYPE nginx_connections_accepted counter
+nginx_connections_accepted 15234
+
+# HELP nginx_connections_active Active client connections
+# TYPE nginx_connections_active gauge
+nginx_connections_active 3
+
+# HELP nginx_connections_handled Handled client connections
+# TYPE nginx_connections_handled counter
+nginx_connections_handled 15234
+
+# HELP nginx_connections_reading Connections where NGINX is reading the request header
+# TYPE nginx_connections_reading gauge
+nginx_connections_reading 0
+
+# HELP nginx_connections_writing Connections where NGINX is writing the response back to the client
+# TYPE nginx_connections_writing gauge
+nginx_connections_writing 1
+
+# HELP nginx_connections_waiting Idle client connections
+# TYPE nginx_connections_waiting gauge
+nginx_connections_waiting 2
+```
+
+### Error Handling
+
+If the Nginx status endpoint is unreachable or returns invalid data:
+- The `nginx_up` metric will be set to `0`
+- Other Nginx metrics will not be updated
+- Error details are logged for troubleshooting
+- Access log processing continues normally
+
+This allows you to monitor both the availability of your Nginx server and the health of the metrics collection process.
+
 ## Presets
 
 Presets define how incoming log messages transform into Prometheus metrics.
@@ -78,7 +193,7 @@ The `simple` preset provides basic HTTP metrics without upstream server informat
 - `http_requests_total` - Counter of total HTTP requests
 - `http_request_size_bytes` - Histogram of request sizes
 - `http_response_size_bytes` - Histogram of response sizes
-- `http_response_duration_seconds` - Histogram of response times
+- `http_request_duration_seconds` - Histogram of response times
 
 #### `simple_upstream` Preset
 
@@ -91,7 +206,7 @@ Only compatible with nginx, because apache2 does not support upstream metrics in
 **Additional metrics:**
 - `http_upstream_connect_duration_seconds` - Histogram of upstream connection times
 - `http_upstream_header_duration_seconds` - Histogram of upstream header receive times
-- `http_upstream_response_duration_seconds` - Histogram of upstream response times
+- `http_upstream_request_duration_seconds` - Histogram of upstream response times
 
 #### `all` Preset
 
@@ -152,7 +267,7 @@ This creates these indexed fields:
 
 ```yaml
 # Response time histogram - uses field 3 (0.123)
-- name: "http_response_duration_seconds"
+- name: "http_request_duration_seconds"
   type: "histogram"
   valueIndex: 3  # Points to the response time field
   help: "Response duration in seconds"
@@ -265,8 +380,6 @@ For a complete list of supported syntax, see the [RE2 documentation](https://git
     - regexp: "^on$"      # Explicit "on" value
       replacement: "on"
     # Any other value (like SSL protocol names) becomes "on"
-    - regexp: ".*"
-      replacement: "on"
 
 # Simplify user agent strings to browser families
 # Note: Order matters since we can't use negative lookahead
@@ -374,7 +487,7 @@ Prometheus metrics should always use base units for consistency and proper alert
 
 ```yaml
 # Convert milliseconds to seconds (divide by 1000)
-- name: "http_response_duration_seconds"
+- name: "http_request_duration_seconds"
   type: "histogram"
   valueIndex: 3  # Field contains time in milliseconds
   math:
@@ -449,7 +562,7 @@ When `upstream.enabled: true`, access-log-exporter:
 
 ```yaml
 # Basic upstream processing without labels
-- name: "http_upstream_response_duration_seconds"
+- name: "http_upstream_request_duration_seconds"
   type: "histogram"
   valueIndex: 9  # $upstream_response_time field
   upstream:

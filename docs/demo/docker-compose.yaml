@@ -6,6 +6,11 @@ services:
       - "8080:8080/tcp"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+  httpbin:
+    image: kennethreitz/httpbin
+    network_mode: service:nginx
   access-log-exporter:
     image: ghcr.io/jkroepke/access-log-exporter:latest
     network_mode: service:nginx
+    command:
+      - --nginx.scrape-uri=http://127.0.0.1:8080/stub_status

@@ -22,6 +22,7 @@ type Config struct {
 	BufferSize   uint    `json:"bufferSize"  yaml:"bufferSize"`
 	Debug        Debug   `json:"debug"       yaml:"debug"`
 	VerifyConfig bool    `json:"-"`
+	Nginx        Nginx   `json:"nginx" yaml:"nginx"`
 }
 
 type Log struct {
@@ -82,6 +83,10 @@ type Label struct {
 type Replacement struct {
 	Regexp      *regexp.Regexp `json:"regexp"      yaml:"regexp"`
 	Replacement string         `json:"replacement" yaml:"replacement"`
+}
+
+type Nginx struct {
+	ScrapeUrl types.URL `json:"scrape-uri"    yaml:"scrape-uri"`
 }
 
 //goland:noinspection GoMixedReceiverTypes
