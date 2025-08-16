@@ -32,7 +32,7 @@ func TestCollector(t *testing.T) {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				}
 			},
-			metrics: `# HELP nginx_connections_accepted Accepted client connections.
+			metrics: `# HELP nginx_connections_accepted_total Accepted client connections.
 # TYPE nginx_connections_accepted_total counter
 nginx_connections_accepted_total 10
 # HELP nginx_connections_active Active client connections.
