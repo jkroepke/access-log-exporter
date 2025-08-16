@@ -25,7 +25,7 @@ func TestCollector(t *testing.T) {
 	}{
 		{
 			name: "valid URL",
-			handler: func(w http.ResponseWriter, r *http.Request) {
+			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
 				if err != nil {
@@ -56,7 +56,7 @@ nginx_up 1`,
 		},
 		{
 			name: "invalid format",
-			handler: func(w http.ResponseWriter, r *http.Request) {
+			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, err := w.Write([]byte("Invalid format"))
 				if err != nil {
@@ -69,7 +69,7 @@ nginx_up 0`,
 		},
 		{
 			name: "empty response",
-			handler: func(w http.ResponseWriter, r *http.Request) {
+			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, err := w.Write([]byte(""))
 				if err != nil {
@@ -82,7 +82,7 @@ nginx_up 0`,
 		},
 		{
 			name: "access denied",
-			handler: func(w http.ResponseWriter, r *http.Request) {
+			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusForbidden)
 			},
 			metrics: `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.

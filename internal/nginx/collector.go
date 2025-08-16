@@ -17,7 +17,6 @@ Reading: %d Writing: %d Waiting: %d
 `
 
 type Collector struct {
-	scrapeUrl           string
 	upMetric            prometheus.Gauge
 	connectionsAccepted *prometheus.Desc
 	connectionsActive   *prometheus.Desc
@@ -25,8 +24,9 @@ type Collector struct {
 	connectionsReading  *prometheus.Desc
 	connectionsWaiting  *prometheus.Desc
 	connectionsWriting  *prometheus.Desc
-	mu                  sync.Mutex // To protect metrics from concurrent collects
 	logger              *slog.Logger
+	scrapeURL           string
+	mu                  sync.Mutex
 }
 
 // StubStats represents NGINX stub_status metrics.
@@ -45,9 +45,9 @@ type StubConnections struct {
 	Waiting  int64
 }
 
-func New(logger *slog.Logger, scrapeUrl string) *Collector {
+func New(logger *slog.Logger, scrapeURL string) *Collector {
 	return &Collector{
-		scrapeUrl: scrapeUrl,
+		scrapeURL: scrapeURL,
 		logger:    logger.With(slog.String("component", "nginx_collector")),
 		upMetric: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "nginx_up",
@@ -88,23 +88,34 @@ func New(logger *slog.Logger, scrapeUrl string) *Collector {
 
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.upMetric.Desc()
+
 	ch <- c.connectionsAccepted
+
 	ch <- c.connectionsActive
+
 	ch <- c.connectionsHandled
+
 	ch <- c.connectionsReading
+
 	ch <- c.connectionsWaiting
+
 	ch <- c.connectionsWriting
 }
 
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	c.logger.Error("hit Collect method")
+
 	c.mu.Lock() // To protect metrics from concurrent collects
 	defer c.mu.Unlock()
 
-	resp, err := http.Get(c.scrapeUrl)
+	//nolint:noctx
+	resp, err := http.Get(c.scrapeURL)
 	if err != nil {
 		c.upMetric.Set(0)
-		c.logger.Error("Failed to scrape NGINX metrics", slog.String("url", c.scrapeUrl), slog.Any("error", err))
+		c.logger.Error("Failed to scrape NGINX metrics",
+			slog.String("url", c.scrapeURL),
+			slog.Any("error", err),
+		)
 
 		ch <- c.upMetric
 
@@ -119,7 +130,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		c.upMetric.Set(0)
 
 		c.logger.Error("NGINX metrics endpoint returned non-200 status code",
-			slog.String("url", c.scrapeUrl),
+			slog.String("url", c.scrapeURL),
 			slog.Int("status_code", resp.StatusCode),
 		)
 
@@ -131,7 +142,10 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	stats, err := parseStubStats(resp.Body)
 	if err != nil {
 		c.upMetric.Set(0)
-		c.logger.Error("Failed to parse NGINX metrics", slog.String("url", c.scrapeUrl), slog.Any("error", err))
+		c.logger.Error("Failed to parse NGINX metrics",
+			slog.String("url", c.scrapeURL),
+			slog.Any("error", err),
+		)
 
 		ch <- c.upMetric
 
@@ -144,30 +158,35 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 
 	ch <- prometheus.MustNewConstMetric(c.connectionsActive,
 		prometheus.GaugeValue, float64(stats.Connections.Active))
+
 	ch <- prometheus.MustNewConstMetric(c.connectionsAccepted,
 		prometheus.CounterValue, float64(stats.Connections.Accepted))
+
 	ch <- prometheus.MustNewConstMetric(c.connectionsHandled,
 		prometheus.CounterValue, float64(stats.Connections.Handled))
+
 	ch <- prometheus.MustNewConstMetric(c.connectionsReading,
 		prometheus.GaugeValue, float64(stats.Connections.Reading))
+
 	ch <- prometheus.MustNewConstMetric(c.connectionsWriting,
 		prometheus.GaugeValue, float64(stats.Connections.Writing))
+
 	ch <- prometheus.MustNewConstMetric(c.connectionsWaiting,
 		prometheus.GaugeValue, float64(stats.Connections.Waiting))
 }
 
 func parseStubStats(r io.Reader) (*StubStats, error) {
-	var s StubStats
+	var stubStats StubStats
 	if _, err := fmt.Fscanf(r, templateMetrics,
-		&s.Connections.Active,
-		&s.Connections.Accepted,
-		&s.Connections.Handled,
-		&s.Requests,
-		&s.Connections.Reading,
-		&s.Connections.Writing,
-		&s.Connections.Waiting); err != nil {
+		&stubStats.Connections.Active,
+		&stubStats.Connections.Accepted,
+		&stubStats.Connections.Handled,
+		&stubStats.Requests,
+		&stubStats.Connections.Reading,
+		&stubStats.Connections.Writing,
+		&stubStats.Connections.Waiting); err != nil {
 		return nil, fmt.Errorf("failed to scan template metrics: %w", err)
 	}
 
-	return &s, nil
+	return &stubStats, nil
 }

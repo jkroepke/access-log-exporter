@@ -139,8 +139,8 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		prometheusCollector,
 	)
 
-	if !conf.Nginx.ScrapeUrl.IsEmpty() {
-		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeUrl.String()))
+	if !conf.Nginx.ScrapeURL.IsEmpty() {
+		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String()))
 	}
 
 	mux := http.NewServeMux()

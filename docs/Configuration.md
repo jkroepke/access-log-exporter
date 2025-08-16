@@ -83,7 +83,7 @@ access-log-exporter
 **YAML configuration file:**
 ```yaml
 nginx:
-  scrape-uri: "http://127.0.0.1:8080/stub_status"
+  scrapeUri: "http://127.0.0.1:8080/stub_status"
 ```
 
 ### Supported URL Schemes

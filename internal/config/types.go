@@ -13,6 +13,7 @@ var ErrEmptyConfigFile = errors.New("configuration file is empty")
 
 type Config struct {
 	Presets      Presets `json:"presets"     yaml:"presets"`
+	Nginx        Nginx   `json:"nginx"       yaml:"nginx"`
 	Web          Web     `json:"web"         yaml:"web"`
 	ConfigFile   string  `json:"config"      yaml:"config"`
 	Syslog       Syslog  `json:"syslog"      yaml:"syslog"`
@@ -22,7 +23,6 @@ type Config struct {
 	BufferSize   uint    `json:"bufferSize"  yaml:"bufferSize"`
 	Debug        Debug   `json:"debug"       yaml:"debug"`
 	VerifyConfig bool    `json:"-"`
-	Nginx        Nginx   `json:"nginx" yaml:"nginx"`
 }
 
 type Log struct {
@@ -86,7 +86,7 @@ type Replacement struct {
 }
 
 type Nginx struct {
-	ScrapeUrl types.URL `json:"scrape-uri"    yaml:"scrape-uri"`
+	ScrapeURL types.URL `json:"scrapeUri" yaml:"scrapeUri"`
 }
 
 //goland:noinspection GoMixedReceiverTypes

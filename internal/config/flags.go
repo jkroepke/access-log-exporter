@@ -55,10 +55,11 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 //goland:noinspection GoMixedReceiverTypes
 func (c *Config) flagSetNginx(flagSet *flag.FlagSet) {
 	flagSet.TextVar(
-		&c.Nginx.ScrapeUrl,
+		&c.Nginx.ScrapeURL,
 		"nginx.scrape-url",
-		lookupEnvOrDefault("nginx.scrape-url", c.Nginx.ScrapeUrl),
-		"A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status",
+		lookupEnvOrDefault("nginx.scrape-url", c.Nginx.ScrapeURL),
+		"A URI or unix domain socket path for scraping NGINX metrics. "+
+			"For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status",
 	)
 }
 

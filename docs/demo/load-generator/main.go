@@ -73,11 +73,14 @@ func main() {
 }
 
 func makeRandomRequest(client *http.Client) {
-	var url string
-	var method string
-	var body io.Reader
+	var (
+		url    string
+		method string
+		body   io.Reader
+	)
 
 	// Randomly choose endpoint type
+
 	switch rand.Intn(4) {
 	case 0:
 		// Direct endpoints - always GET
@@ -123,6 +126,7 @@ func makeRandomRequest(client *http.Client) {
 		log.Printf("Request failed: %s %s - Error: %v (took %v)", method, url, err, duration)
 		return
 	}
+
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Printf("Error closing response body: %v", err)
@@ -173,11 +177,13 @@ func generateRandomJSON(targetSize int) []byte {
 	if dataSize < 1 {
 		dataSize = 1
 	}
+
 	json := fmt.Sprintf(`{"id": %d, "data": "%s", "timestamp": %d}`,
 		rand.Intn(10000),
 		generateRandomString(dataSize),
 		time.Now().Unix(),
 	)
+
 	return []byte(json)
 }
 
@@ -190,11 +196,13 @@ func generateRandomFormData(targetSize int) []byte {
 	if fieldSize < 1 {
 		fieldSize = 1
 	}
+
 	form := fmt.Sprintf("field1=%s&field2=%d&field3=%s",
 		generateRandomString(fieldSize),
 		rand.Intn(1000),
 		generateRandomString(fieldSize),
 	)
+
 	return []byte(form)
 }
 
@@ -207,6 +215,7 @@ func generateRandomBytes(size int) []byte {
 			data[i] = byte(rand.Intn(256))
 		}
 	}
+
 	return data
 }
 
@@ -216,10 +225,12 @@ func generateRandomString(length int) string {
 	}
 
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 	result := make([]byte, length)
 	for i := range result {
 		result[i] = charset[rand.Intn(len(charset))]
 	}
+
 	return string(result)
 }
 
@@ -250,9 +261,11 @@ func addRandomHeaders(req *http.Request) {
 	if rand.Intn(2) == 0 {
 		req.Header.Set("Accept", "application/json")
 	}
+
 	if rand.Intn(2) == 0 {
 		req.Header.Set("Accept-Encoding", "gzip, deflate")
 	}
+
 	if rand.Intn(3) == 0 {
 		req.Header.Set("X-Request-ID", fmt.Sprintf("req-%d", rand.Intn(100000)))
 	}
