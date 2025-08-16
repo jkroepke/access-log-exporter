@@ -53,6 +53,10 @@ http {
 		location /proxy/ {
 			proxy_pass http://127.0.0.1:8080/;
         }
+
+		location = /stub_status {
+			stub_status;
+		}
 	}
 }
 `
@@ -62,26 +66,6 @@ func TestIT(t *testing.T) {
 
 	termCh := make(chan os.Signal)
 	returnCodeCh := make(chan ReturnCode, 1)
-
-	stdout := &bytes.Buffer{}
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-
-	moduleRoot, err := findModuleRoot(wd)
-	require.NoError(t, err)
-
-	go func() {
-		returnCodeCh <- run(t.Context(), []string{
-			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
-		}, stdout, termCh)
-	}()
-
-	time.Sleep(1 * time.Second)
-
-	t.Cleanup(func() {
-		require.Equal(t, ReturnCodeOK, <-returnCodeCh, stdout.String())
-	})
 
 	dockerImage := "nginx"
 	if dockerImageEnv, ok := os.LookupEnv("DOCKER_IMAGE"); ok {
@@ -128,6 +112,28 @@ func TestIT(t *testing.T) {
 	endpoint, err := nginx.PortEndpoint(t.Context(), "8080/tcp", "http")
 	require.NoError(t, err, containerLogs)
 
+	stdout := &bytes.Buffer{}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	moduleRoot, err := findModuleRoot(wd)
+	require.NoError(t, err)
+
+	go func() {
+		returnCodeCh <- run(t.Context(), []string{
+			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+			"--nginx.scrape-url=" + endpoint + "/stub_status",
+			"--web.listen-address=127.0.0.1:54321",
+		}, stdout, termCh)
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	t.Cleanup(func() {
+		require.Equal(t, ReturnCodeOK, <-returnCodeCh, stdout.String())
+	})
+
 	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete} {
 		for _, code := range []string{"200", "204", "404", "500"} {
 			req, err := http.NewRequestWithContext(t.Context(), method, endpoint+"/"+code, nil)
@@ -158,7 +164,7 @@ func TestIT(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://localhost:4040/metrics", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://127.0.0.1:54321/metrics", nil)
 	require.NoError(t, err)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -174,7 +180,10 @@ func TestIT(t *testing.T) {
 
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
-	require.Equal(t, 1332, strings.Count(metrics, "http_"))
+	require.Equal(t, 3, strings.Count(metrics, "access_log_exporter_build_info"), metrics)
+	require.Equal(t, 1140, strings.Count(metrics, "http_"), metrics)
+	require.Equal(t, 21, strings.Count(metrics, "nginx_"), metrics)
+
 	termCh <- syscall.SIGTERM
 }
 

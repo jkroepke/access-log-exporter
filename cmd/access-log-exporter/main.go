@@ -34,6 +34,7 @@ import (
 
 	"github.com/jkroepke/access-log-exporter/internal/collector"
 	"github.com/jkroepke/access-log-exporter/internal/config"
+	"github.com/jkroepke/access-log-exporter/internal/nginx"
 	"github.com/jkroepke/access-log-exporter/internal/syslog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -137,6 +138,10 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		versioncollector.NewCollector("access_log_exporter"),
 		prometheusCollector,
 	)
+
+	if !conf.Nginx.ScrapeURL.IsEmpty() {
+		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String()))
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {

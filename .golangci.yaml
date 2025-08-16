@@ -138,6 +138,7 @@ linters:
     varnamelen:
       ignore-names:
         - tc
+        - ch
       ignore-decls:
         - i int
         - n int
@@ -155,6 +156,9 @@ linters:
         - mu sync.Mutex
   exclusions:
     generated: lax
+    paths:
+      - "^examples/"
+      - "^docs/"
     presets:
       - comments
       - common-false-positives

@@ -222,7 +222,7 @@ http_requests_total 200
 		{
 			name: "simple preset",
 			cfg: config.Metric{
-				Name:       "http_response_duration_seconds",
+				Name:       "http_request_duration_seconds",
 				Type:       "histogram",
 				Help:       "The time spent on receiving the response from the upstream server",
 				ValueIndex: ptr(uint(3)),
@@ -250,27 +250,27 @@ http_requests_total 200
 				"app.example.net\tPUT\t500\t1.234\t4096\t512",
 			},
 			metrics: `
-# HELP http_response_duration_seconds The time spent on receiving the response from the upstream server
-# TYPE http_response_duration_seconds histogram
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
-http_response_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
-http_response_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
+# HELP http_request_duration_seconds The time spent on receiving the response from the upstream server
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
+http_request_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
+http_request_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
 		},
 		{
 			name: "metric with empty value",
 			cfg: config.Metric{
-				Name:       "http_response_duration_seconds",
+				Name:       "http_request_duration_seconds",
 				Type:       "counter",
 				Help:       "The time spent on receiving the response from the upstream server",
 				ValueIndex: ptr(uint(3)),
@@ -283,7 +283,7 @@ http_response_duration_seconds_count{host="app.example.net",method="PUT",status=
 		{
 			name: "simple preset",
 			cfg: config.Metric{
-				Name:       "http_response_duration_seconds",
+				Name:       "http_request_duration_seconds",
 				Type:       "histogram",
 				Help:       "The time spent on receiving the response from the upstream server",
 				ValueIndex: ptr(uint(3)),
@@ -311,22 +311,22 @@ http_response_duration_seconds_count{host="app.example.net",method="PUT",status=
 				"app.example.net\tPUT\t500\t1.234\t4096\t512",
 			},
 			metrics: `
-# HELP http_response_duration_seconds The time spent on receiving the response from the upstream server
-# TYPE http_response_duration_seconds histogram
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
-http_response_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
-http_response_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
-http_response_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
+# HELP http_request_duration_seconds The time spent on receiving the response from the upstream server
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
+http_request_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
+http_request_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
 		},
 		{
 			name: "counter metric all preset",

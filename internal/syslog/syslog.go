@@ -59,7 +59,7 @@ func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan
 	return syslogServer, nil
 }
 
-//nolint:gocognit
+//nolint:gocognit,cyclop
 func (s *Syslog) Start() error {
 	for {
 		buf, _ := s.poolBuffer.Get().(*[]byte)
