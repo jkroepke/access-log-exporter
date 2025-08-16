@@ -13,4 +13,5 @@ services:
     image: ghcr.io/jkroepke/access-log-exporter:latest
     network_mode: service:nginx
     command:
+      - --preset=simple_upstream
       - --nginx.scrape-uri=http://127.0.0.1:8080/stub_status
