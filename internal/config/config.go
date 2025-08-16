@@ -116,7 +116,14 @@ func lookupConfigArgument(args []string) string {
 		}
 	}
 
-	return lookupEnvOrDefault("config", "config.yaml")
+	defaultConfigFilePath := "config.yaml"
+
+	if koDataPath, ok := os.LookupEnv("KO_DATA_PATH"); ok {
+		// If KO_DATA_PATH is set, use it as the config file path
+		defaultConfigFilePath = fmt.Sprintf("%s/config.yaml", koDataPath)
+	}
+
+	return lookupEnvOrDefault("config", defaultConfigFilePath)
 }
 
 func lookupVersionOrHelpArgument(args []string) bool {
