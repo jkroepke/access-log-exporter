@@ -21,6 +21,7 @@ access-log-exporter processes logs from multiple web servers and has undergone t
 - **Flexible configuration**: Customizable presets for different monitoring needs,
 - **Built-in presets**: Ready-to-use configurations for common scenarios,
 - **Upstream metrics**: Support for Nginx upstream server monitoring,
+- **Nginx status metrics**: Built-in Nginx stub_status scraping eliminates the need for a separate nginx-prometheus-exporter,
 - **Label transformation**: Regex-based label value normalization,
 - **Mathematical operations**: Unit conversion for proper Prometheus base units,
 - **High performance**: Configurable buffering and worker threads.
