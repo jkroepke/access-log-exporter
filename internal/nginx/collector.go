@@ -54,7 +54,7 @@ func New(logger *slog.Logger, scrapeURL string) *Collector {
 			Help: "Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.",
 		}),
 		connectionsAccepted: prometheus.NewDesc(
-			"nginx_connections_accepted",
+			"nginx_connections_accepted_total",
 			"Accepted client connections.",
 			nil, nil,
 		),
@@ -64,7 +64,7 @@ func New(logger *slog.Logger, scrapeURL string) *Collector {
 			nil, nil,
 		),
 		connectionsHandled: prometheus.NewDesc(
-			"nginx_connections_handled",
+			"nginx_connections_handled_total",
 			"Handled client connections.",
 			nil, nil,
 		),

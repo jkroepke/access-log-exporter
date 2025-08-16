@@ -122,15 +122,15 @@ server {
 
 When enabled, the following Nginx-specific metrics are collected and exposed:
 
-| Metric Name | Type | Description |
-|-------------|------|-------------|
-| `nginx_up` | Gauge | Whether the NGINX server is up (1) or down (0) |
-| `nginx_connections_accepted` | Counter | Total number of accepted client connections |
-| `nginx_connections_active` | Gauge | Current number of active client connections |
-| `nginx_connections_handled` | Counter | Total number of handled client connections |
-| `nginx_connections_reading` | Gauge | Connections where NGINX is reading the request header |
-| `nginx_connections_writing` | Gauge | Connections where NGINX is writing the response back to the client |
-| `nginx_connections_waiting` | Gauge | Idle client connections (keep-alive) |
+| Metric Name                        | Type    | Description                                                        |
+|------------------------------------|---------|--------------------------------------------------------------------|
+| `nginx_up`                         | Gauge   | Whether the NGINX server is up (1) or down (0)                     |
+| `nginx_connections_accepted_total` | Counter | Total number of accepted client connections                        |
+| `nginx_connections_active`         | Gauge   | Current number of active client connections                        |
+| `nginx_connections_handled_total`  | Counter | Total number of handled client connections                         |
+| `nginx_connections_reading`        | Gauge   | Connections where NGINX is reading the request header              |
+| `nginx_connections_writing`        | Gauge   | Connections where NGINX is writing the response back to the client |
+| `nginx_connections_waiting`        | Gauge   | Idle client connections (keep-alive)                               |
 
 ### Example Output
 
@@ -139,17 +139,17 @@ When enabled, the following Nginx-specific metrics are collected and exposed:
 # TYPE nginx_up gauge
 nginx_up 1
 
-# HELP nginx_connections_accepted Accepted client connections
-# TYPE nginx_connections_accepted counter
-nginx_connections_accepted 15234
+# HELP nginx_connections_accepted_total Accepted client connections
+# TYPE nginx_connections_accepted_total counter
+nginx_connections_accepted_total 15234
 
 # HELP nginx_connections_active Active client connections
 # TYPE nginx_connections_active gauge
 nginx_connections_active 3
 
-# HELP nginx_connections_handled Handled client connections
-# TYPE nginx_connections_handled counter
-nginx_connections_handled 15234
+# HELP nginx_connections_handled_total Handled client connections
+# TYPE nginx_connections_handled_total counter
+nginx_connections_handled_total 15234
 
 # HELP nginx_connections_reading Connections where NGINX is reading the request header
 # TYPE nginx_connections_reading gauge
