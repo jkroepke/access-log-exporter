@@ -106,12 +106,16 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 	syslogMessageBuffer := make(chan string, conf.BufferSize)
 
-	syslogServer, err := syslog.New(logger, conf.Syslog.ListenAddress, syslogMessageBuffer)
+	syslogServer, err := syslog.New(ctx, logger, conf.Syslog.ListenAddress, syslogMessageBuffer)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating syslog server", slog.Any("error", err))
 
 		return ReturnCodeError
 	}
+
+	go func() {
+		cancel(syslogServer.Start())
+	}()
 
 	logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
 
@@ -181,7 +185,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	for {
 		select {
 		case <-ctx.Done():
-			err := syslogServer.Shutdown(ctx)
+			err := syslogServer.Close(ctx)
 			if err != nil {
 				logger.ErrorContext(ctx, "error shutting down syslog server",
 					slog.String("address", conf.Syslog.ListenAddress),

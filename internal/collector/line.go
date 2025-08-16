@@ -33,7 +33,7 @@ func (c *Collector) lineHandlerWorkers(ctx context.Context, logger *slog.Logger,
 
 // lineHandlerWorker is a worker that will read messages from the message channel
 // and call the lineHandler method to process them.
-// It will log any errors that occur during parsing and increment the parseErrorMetric.
+// It will log any errors that occur during parsing and increment the metricLogParseError.
 // The worker will stop when the context is done or when the message channel is closed.
 func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, messageCh <-chan string) {
 	var err error
@@ -47,6 +47,8 @@ func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, 
 				return
 			}
 
+			c.metricLogLastReceived.SetToCurrentTime()
+
 			err = c.lineHandler(strings.Split(msg, "\t"))
 			if err != nil {
 				logger.LogAttrs(ctx, slog.LevelDebug, "error parsing metric",
@@ -54,7 +56,7 @@ func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, 
 					slog.String("line", msg),
 				)
 
-				c.parseErrorMetric.Inc()
+				c.metricLogParseError.Inc()
 			}
 		}
 	}

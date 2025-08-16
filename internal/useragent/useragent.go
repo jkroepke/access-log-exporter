@@ -7,9 +7,7 @@ import (
 )
 
 //nolint:gochecknoglobals // user agent parser is a global singleton
-var parser = sync.OnceValue(func() *uaparser.Parser {
-	return uaparser.NewFromSaved()
-})
+var parser = sync.OnceValue(uaparser.NewFromSaved)
 
 func New() *uaparser.Parser {
 	return parser()
