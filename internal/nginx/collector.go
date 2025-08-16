@@ -46,13 +46,12 @@ type StubConnections struct {
 }
 
 func New(logger *slog.Logger, scrapeUrl string) *Collector {
-	c := &Collector{
+	return &Collector{
 		scrapeUrl: scrapeUrl,
 		logger:    logger.With(slog.String("component", "nginx_collector")),
 		upMetric: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: "nginx",
-			Name:      "up",
-			Help:      "Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.",
+			Name: "nginx_up",
+			Help: "Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.",
 		}),
 		connectionsAccepted: prometheus.NewDesc(
 			"nginx_connections_accepted",
@@ -85,8 +84,6 @@ func New(logger *slog.Logger, scrapeUrl string) *Collector {
 			nil, nil,
 		),
 	}
-
-	return c
 }
 
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
@@ -100,6 +97,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	c.logger.Error("hit Collect method")
 	c.mu.Lock() // To protect metrics from concurrent collects
 	defer c.mu.Unlock()
 
@@ -116,6 +114,19 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
+	if resp.StatusCode != http.StatusOK {
+		c.upMetric.Set(0)
+
+		c.logger.Error("NGINX metrics endpoint returned non-200 status code",
+			slog.String("url", c.scrapeUrl),
+			slog.Int("status_code", resp.StatusCode),
+		)
+
+		ch <- c.upMetric
+
+		return
+	}
 
 	stats, err := parseStubStats(resp.Body)
 	if err != nil {

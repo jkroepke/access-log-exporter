@@ -33,7 +33,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -46,7 +46,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
@@ -93,7 +93,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -106,7 +106,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
@@ -225,7 +225,7 @@ presets:
 
       - name: "http_request_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The request length (including request line, header, and request body)"
         valueIndex: 4
         labels:
@@ -238,7 +238,7 @@ presets:
 
       - name: "http_response_size_bytes"
         type: "histogram"
-        buckets: [ 10,1000,100000,1e+06,5e+06,5e+07,2e+08 ]
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
         help: "The response length (including request line, header, and request body)"
         valueIndex: 5
         labels:
