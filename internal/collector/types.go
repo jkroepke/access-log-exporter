@@ -8,7 +8,8 @@ import (
 )
 
 type Collector struct {
-	parseErrorMetric prometheus.Counter
-	wg               *sync.WaitGroup
-	metrics          []*metric.Metric
+	metricLogParseError   prometheus.Counter
+	metricLogLastReceived prometheus.Gauge
+	wg                    *sync.WaitGroup
+	metrics               []*metric.Metric
 }

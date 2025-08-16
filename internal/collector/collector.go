@@ -39,9 +39,13 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 	collector := &Collector{
 		wg:      &sync.WaitGroup{},
 		metrics: metrics,
-		parseErrorMetric: prometheus.NewCounter(prometheus.CounterOpts{
+		metricLogParseError: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "log_parse_errors_total",
 			Help: "Total number of parse errors",
+		}),
+		metricLogLastReceived: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "log_last_received_timestamp_seconds",
+			Help: "Timestamp of the last received log message in seconds since epoch",
 		}),
 	}
 
@@ -52,7 +56,7 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 
 // Describe implements the prometheus.Collector interface.
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
-	c.parseErrorMetric.Describe(ch)
+	c.metricLogParseError.Describe(ch)
 
 	for _, met := range c.metrics {
 		met.Describe(ch)
@@ -61,7 +65,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus.Collector interface.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
-	c.parseErrorMetric.Collect(ch)
+	c.metricLogParseError.Collect(ch)
 
 	for _, met := range c.metrics {
 		met.Collect(ch)

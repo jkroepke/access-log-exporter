@@ -140,6 +140,7 @@ linters:
         - tc
       ignore-decls:
         - i int
+        - n int
         - a ...any
         - err error
         - ok bool

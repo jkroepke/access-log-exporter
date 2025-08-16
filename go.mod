@@ -11,7 +11,6 @@ require (
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/ua-parser/uap-go v0.0.0-20250326155420-f7f5a2f9f5bc
 	golang.org/x/net v0.43.0
-	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 )
 
 require (
