@@ -113,6 +113,10 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeError
 	}
 
+	go func() {
+		cancel(syslogServer.Start())
+	}()
+
 	logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
 
 	prometheusCollector, err := collector.New(ctx, logger, preset, conf.WorkerCount, syslogMessageBuffer)

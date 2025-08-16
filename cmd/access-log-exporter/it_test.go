@@ -61,7 +61,7 @@ func TestIT(t *testing.T) {
 	t.Parallel()
 
 	termCh := make(chan os.Signal)
-	returnCodeCh := make(chan ReturnCode)
+	returnCodeCh := make(chan ReturnCode, 1)
 
 	stdout := &bytes.Buffer{}
 
@@ -175,7 +175,6 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
 	require.Equal(t, 1332, strings.Count(metrics, "http_"))
-
 	termCh <- syscall.SIGTERM
 }
 
