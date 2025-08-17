@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// ThrottledReader wraps an io.Reader to introduce artificial latency
+// ThrottledReader wraps an io.Reader to introduce artificial latency.
 type ThrottledReader struct {
 	reader          io.Reader
 	maxBytesPerRead int
@@ -21,7 +21,7 @@ type ThrottledReader struct {
 	maxDelay        time.Duration
 }
 
-// NewThrottledReader creates a reader that introduces random delays and limits bytes per read
+// NewThrottledReader creates a reader that introduces random delays and limits bytes per read.
 func NewThrottledReader(reader io.Reader, maxBytesPerRead int, minDelay, maxDelay time.Duration) *ThrottledReader {
 	return &ThrottledReader{
 		reader:          reader,
@@ -40,6 +40,7 @@ func (t *ThrottledReader) Read(p []byte) (n int, err error) {
 	// Add random delay before reading to simulate network latency
 	if t.maxDelay > 0 {
 		delayRange := t.maxDelay - t.minDelay
+
 		var randomDelay time.Duration
 
 		if delayRange > 0 {
@@ -520,6 +521,7 @@ func makeRandomRequest(client *http.Client) {
 		} else {
 			log.Printf("Error reading response body: %s %s - Status: %d, Error: %v, Read: %d bytes (took %v)", method, url, resp.StatusCode, err, bytesRead, duration)
 		}
+
 		return
 	}
 
@@ -661,7 +663,7 @@ func (r *StreamingFormReader) ActualSize() int64 {
 	return int64(r.actualSize)
 }
 
-// Generate random throttling parameters for network simulation
+// Generate random throttling parameters for network simulation.
 func generateRandomThrottling() (maxBytesPerRead int, minDelay, maxDelay time.Duration) {
 	// Random bandwidth simulation (100 bytes to 64KB per read)
 	maxBytesPerRead = 100 + rand.Intn(65436)
