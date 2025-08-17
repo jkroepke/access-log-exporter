@@ -464,7 +464,7 @@ For a complete list of supported syntax, see the [RE2 documentation](https://git
 - Use `string` replacements for exact matches when possible (better performance)
 - Use `regexp` replacements for pattern matching and complex transformations
 - Order replacements from most specific to most general
-- Always include a catch-all pattern (`.*`) as the last replacement when using regex
+- Always include a catch-all pattern (`.*`) as the last replacement when using regular expressions
 - Use replacements to reduce label cardinality (group similar values)
 - Test regular expression patterns to ensure they match expected log values
 - Consider the performance impact of complex regular expression patterns on high-traffic logs
