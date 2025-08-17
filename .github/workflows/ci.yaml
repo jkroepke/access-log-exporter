@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: 'go.mod'
+          cache: 'true'
+          cache-dependency-path: 'go.sum'
 
       - run: go build ./cmd/access-log-exporter
       - run: go test ./... -timeout 20s -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./...
@@ -39,6 +41,8 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: 'go.mod'
+          cache: 'true'
+          cache-dependency-path: 'go.sum'
 
       - uses: anchore/sbom-action/download-syft@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
 
