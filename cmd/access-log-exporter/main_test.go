@@ -76,8 +76,12 @@ func TestInvalidPreset(t *testing.T) {
 	moduleRoot, err := findModuleRoot(wd)
 	require.NoError(t, err)
 
-	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--preset", "invalid"}, stdout, nil)
-	require.Equal(t, ReturnCodeError, rt, stdout)
+	returnCode := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+		"--preset", "invalid",
+	}, stdout, nil)
+	require.Equal(t, ReturnCodeError, returnCode, stdout)
 	require.Contains(t, stdout.String(), "preset 'invalid' not found in configuration")
 }
 
@@ -92,11 +96,11 @@ func TestVerifyConfig(t *testing.T) {
 	moduleRoot, err := findModuleRoot(wd)
 	require.NoError(t, err)
 
-	rt := run(t.Context(), []string{
+	returnCode := run(t.Context(), []string{
 		"access-log-exporter",
 		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
 		"--log.format=json",
 		"--verify-config",
 	}, stdout, nil)
-	require.Equal(t, ReturnCodeOK, rt, stdout)
+	require.Equal(t, ReturnCodeOK, returnCode, stdout)
 }
