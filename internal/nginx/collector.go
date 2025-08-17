@@ -1,12 +1,14 @@
 package nginx
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -105,15 +107,30 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
-	c.logger.Error("hit Collect method")
-
 	c.mu.Lock() // To protect metrics from concurrent collects
 	defer c.mu.Unlock()
 
 	serverVersion := "N/A"
 
-	//nolint:noctx
-	resp, err := http.Get(c.scrapeURL)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.scrapeURL, nil)
+	if err != nil {
+		c.logger.Error("Failed to create HTTP request for NGINX metrics",
+			slog.String("url", c.scrapeURL),
+			slog.Any("error", err),
+		)
+
+		ch <- prometheus.MustNewConstMetric(c.upMetric,
+			prometheus.GaugeValue, 0, serverVersion)
+
+		return
+	}
+
+	req.Header.Set("User-Agent", "jkroepke/access-log-exporter")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		c.logger.Error("Failed to scrape NGINX metrics",
 			slog.String("url", c.scrapeURL),
