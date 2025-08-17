@@ -26,6 +26,7 @@ func TestCollector(t *testing.T) {
 		{
 			name: "valid URL",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Add("Server", "nginx")
 				w.WriteHeader(http.StatusOK)
 				_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
 				if err != nil {
@@ -52,7 +53,39 @@ nginx_connections_waiting 0
 nginx_connections_writing 1
 # HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
-nginx_up 1`,
+nginx_up{version="N/A"} 1`,
+		},
+		{
+			name: "valid URL with version",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Add("Server", "nginx/1.23.1")
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
+				if err != nil {
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				}
+			},
+			metrics: `# HELP nginx_connections_accepted_total Accepted client connections.
+# TYPE nginx_connections_accepted_total counter
+nginx_connections_accepted_total 10
+# HELP nginx_connections_active Active client connections.
+# TYPE nginx_connections_active gauge
+nginx_connections_active 1
+# HELP nginx_connections_handled_total Handled client connections.
+# TYPE nginx_connections_handled_total counter
+nginx_connections_handled_total 10
+# HELP nginx_connections_reading Connections where NGINX is reading the request header.
+# TYPE nginx_connections_reading gauge
+nginx_connections_reading 0
+# HELP nginx_connections_waiting Idle client connections.
+# TYPE nginx_connections_waiting gauge
+nginx_connections_waiting 0
+# HELP nginx_connections_writing Connections where NGINX is writing the response back to the client.
+# TYPE nginx_connections_writing gauge
+nginx_connections_writing 1
+# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
+# TYPE nginx_up gauge
+nginx_up{version="1.23.1"} 1`,
 		},
 		{
 			name: "invalid format",
@@ -65,7 +98,7 @@ nginx_up 1`,
 			},
 			metrics: `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
-nginx_up 0`,
+nginx_up{version="N/A"} 0`,
 		},
 		{
 			name: "empty response",
@@ -78,7 +111,7 @@ nginx_up 0`,
 			},
 			metrics: `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
-nginx_up 0`,
+nginx_up{version="N/A"} 0`,
 		},
 		{
 			name: "access denied",
@@ -87,7 +120,7 @@ nginx_up 0`,
 			},
 			metrics: `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
-nginx_up 0`,
+nginx_up{version="N/A"} 0`,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -115,7 +148,7 @@ func TestCollector_NoServer(t *testing.T) {
 
 	expected := `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
-nginx_up 0`
+nginx_up{version="N/A"} 0`
 
 	require.Equal(t, expected, metrics)
 }
