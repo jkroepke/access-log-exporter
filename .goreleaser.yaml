@@ -187,7 +187,7 @@ docker_manifests:
       - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-arm64v8{{end}}'
 
 docker_signs:
-  - artifacts: manifests
+  - artifacts: all
     output: true
     cmd: cosign
     env:
