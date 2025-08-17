@@ -1866,6 +1866,7 @@
           "expr": "sum(increase(http_request_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
           "format": "heatmap",
           "instant": false,
+          "interval": "5m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1966,6 +1967,7 @@
           "expr": "sum(increase(http_response_size_bytes_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval])) by(le)",
           "format": "heatmap",
           "instant": false,
+          "interval": "5m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2474,5 +2476,5 @@
   "timezone": "browser",
   "title": "access-log-exporter",
   "uid": "access-log-exporter",
-  "version": 1
+  "version": 4
 }
