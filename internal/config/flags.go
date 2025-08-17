@@ -43,7 +43,9 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 		&c.Preset,
 		"preset",
 		lookupEnvOrDefault("preset", c.Preset),
-		"Preset configuration to use. Available presets: simple, simple_upstream, all. Custom presets can be defined via config file. Default is simple.",
+		"Preset configuration to use. "+
+			"Available presets: simple, simple_upstream, simple_uri_upstream, all. "+
+			"Custom presets can be defined via config file.",
 	)
 
 	c.flagSetLog(flagSet)

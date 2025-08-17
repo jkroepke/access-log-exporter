@@ -31,7 +31,7 @@ Usage of access-log-exporter:
   --nginx.scrape-url value
     	A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status or `unix:///var/run/nginx-status.sock` (env: CONFIG_NGINX_SCRAPE__URL)
   --preset string
-    	Preset configuration to use. Available presets: simple, simple_upstream, all. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
+    	Preset configuration to use. Available presets: simple, simple_upstream, simple_uri_upstream, all. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
   --syslog.listen-address string
     	Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, tcp://0.0.0.0:8514, unix:///path/to/socket. (env: CONFIG_SYSLOG_LISTEN__ADDRESS) (default "udp://[::]:8514")
   --verify-config
@@ -92,11 +92,10 @@ The nginx.scrape-url supports these URL schemes:
 
 - **HTTP endpoints:** `http://127.0.0.1:8080/stub_status`
 - **HTTPS endpoints:** `https://nginx.example.com/stub_status`
-- **Unix domain sockets:** `unix:///var/run/nginx-status.sock`
 
 ### Nginx Configuration Requirements
 
-To use this feature, you must enable Nginx's `stub_status` module:
+To use this feature, you must enable nginx's `stub_status` module:
 
 ```nginx
 server {
@@ -108,6 +107,7 @@ server {
         access_log off;
         allow 127.0.0.1;
         deny all;
+        server_tokens on;  # expose nginx version
     }
 }
 ```
@@ -115,7 +115,6 @@ server {
 **Security considerations:**
 - Restrict access to localhost or trusted networks only
 - Use `allow`/`deny` directives to control access
-- Consider using Unix domain sockets for local-only access
 - Disable access logging for the status endpoint
 
 ### Metrics Exposed
@@ -137,7 +136,7 @@ When enabled, the following Nginx-specific metrics are collected and exposed:
 ```prometheus
 # HELP nginx_up Whether the NGINX server is up (1) or down (0)
 # TYPE nginx_up gauge
-nginx_up 1
+nginx_up{version="1.28.0"} 1
 
 # HELP nginx_connections_accepted_total Accepted client connections
 # TYPE nginx_connections_accepted_total counter
@@ -171,13 +170,14 @@ If the Nginx status endpoint is unreachable or returns invalid data:
 - Other Nginx metrics will not be updated
 - Error details are logged for troubleshooting
 - Access log processing continues normally
+- If the `version` label is set to `N/A`, check if `server_tokens on` is set within location block.
 
 This allows you to monitor both the availability of your Nginx server and the health of the metrics collection process.
 
 ## Presets
 
 Presets define how incoming log messages transform into Prometheus metrics.
-access-log-exporter includes three built-in presets and supports custom preset definitions.
+access-log-exporter includes four built-in presets and supports custom preset definitions.
 
 ### Built-in Presets
 
@@ -207,6 +207,22 @@ Only compatible with nginx, because apache2 does not support upstream metrics in
 - `http_upstream_connect_duration_seconds` - Histogram of upstream connection times
 - `http_upstream_header_duration_seconds` - Histogram of upstream header receive times
 - `http_upstream_request_duration_seconds` - Histogram of upstream response times
+
+#### `simple_uri_upstream` Preset
+
+The `simple_uri_upstream` preset extends the simple_upstream preset with request URI tracking.
+Only compatible with nginx, because apache2 does not support upstream metrics in the same way.
+
+**Log format requirements:**
+- **Nginx:** `'$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri'`
+
+**Additional features:**
+- All metrics from `simple_upstream` preset
+- Request URI tracking with automatic path normalization
+- URI paths are normalized to reduce cardinality (e.g., `/api/users/123/profile` becomes `/api/users/.+`)
+
+**Additional labels:**
+- `request_uri` - Added to all metrics with path normalization
 
 #### `all` Preset
 

@@ -37,7 +37,7 @@ services:
     ports:
       - "4040:4040/tcp"
     command:
-      - --preset=simple_upstream
+      - --preset=simple_uri_upstream
       - --nginx.scrape-url=http://nginx:8090/stub_status
   load-generator:
     image: golang:1.25
