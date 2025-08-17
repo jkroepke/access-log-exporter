@@ -11,7 +11,7 @@ This document provides a technical overview of the project and highlights the mo
 - **High-throughput processing**: Concurrent worker architecture for processing thousands of log lines per second
 - **Flexible configuration**: YAML-based configuration with support for multiple metric presets
 - **Multiple metric types**: Support for Prometheus counters, gauges, and histograms
-- **Label processing**: Advanced label extraction with regex replacements and user agent parsing
+- **Label processing**: Advanced label extraction with regular expression replacements and user agent parsing
 - **Upstream support**: Special handling for load balancer upstream servers
 - **Memory efficient**: Uses sync.Pool for object reuse to minimize garbage collection pressure
 - **Thread-safe**: Designed for concurrent access across multiple goroutines
@@ -85,7 +85,7 @@ func (m *Metric) Parse(line []string) error {
     // 1. Validate line format and extract value
     // 2. Get labels map from sync.Pool (thread-safe reuse)
     // 3. Process each configured label
-    // 4. Apply transformations (user agent parsing, regex replacements)
+    // 4. Apply transformations (user agent parsing, regular expression replacements)
     // 5. Set metric value (counter, gauge, or histogram)
     // 6. Return labels map to pool
 }
@@ -117,7 +117,7 @@ presets:
 
 #### Advanced Features
 - **Math transformations**: Apply multiplication/division to metric values
-- **Label replacements**: Use regex to transform label values
+- **Label replacements**: Use regular expression to transform label values
 - **User agent parsing**: Extract browser family from user agent strings
 - **Upstream handling**: Special support for load balancer upstream servers
 
@@ -136,7 +136,7 @@ presets:
 #### Parsing Optimizations
 - **Bounds check elimination**: Uses Go compiler hints to eliminate array bounds checks
 - **Efficient string operations**: Uses `strings.IndexByte` for fast comma parsing
-- **Regex optimization**: Only calls regex replacement when match is found
+- **Regular expression optimization**: Only calls regular expression replacement when match is found
 
 ### 5. Key Packages
 
@@ -144,7 +144,7 @@ presets:
 Core metric processing engine:
 - `Parse()`: Main entry point for processing log lines
 - `setMetric()`: Handles value parsing and Prometheus metric updates
-- `labelValueReplacements()`: Applies regex transformations to labels
+- `labelValueReplacements()`: Applies regular expression transformations to labels
 - Thread-safe design using sync.Pool for label map reuse
 
 #### `internal/collector`
