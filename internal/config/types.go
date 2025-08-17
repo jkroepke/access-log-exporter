@@ -83,11 +83,10 @@ type Label struct {
 }
 
 type Replacement struct {
-	String      *string        `json:"string,omitempty" yaml:"string,omitempty"`
-	Regexp      *regexp.Regexp `json:"regexp,omitempty" yaml:"regexp,omitempty"`
-	Replacement string         `json:"replacement"      yaml:"replacement"`
-
-	StringReplacer *strings.Replacer `json:"-" yaml:"-"`
+	String         *string           `json:"string,omitempty" yaml:"string,omitempty"`
+	Regexp         *regexp.Regexp    `json:"regexp,omitempty" yaml:"regexp,omitempty"`
+	StringReplacer *strings.Replacer `json:"-"                yaml:"-"`
+	Replacement    string            `json:"replacement"      yaml:"replacement"`
 }
 
 type Nginx struct {
@@ -106,6 +105,7 @@ func (c Config) String() string {
 
 func (r *Replacement) UnmarshalJSON(data []byte) error {
 	type Alias Replacement
+
 	aux := &struct {
 		*Alias
 	}{
@@ -113,7 +113,7 @@ func (r *Replacement) UnmarshalJSON(data []byte) error {
 	}
 
 	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 
 	if r.Regexp != nil && r.String != nil {
