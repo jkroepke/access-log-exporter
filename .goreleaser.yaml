@@ -157,12 +157,12 @@ docker_manifests:
     name_template: "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest{{end}}"
     image_templates:
       - "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-amd64{{end}}"
-      - "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-arm64{{end}}"
+      - "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-arm64v8{{end}}"
   - id: main
     name_template: '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main{{end}}'
     image_templates:
       - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-amd64{{end}}'
-      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-arm64{{end}}'
+      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-arm64v8{{end}}'
 
 docker_signs:
   - artifacts: manifests
