@@ -31,7 +31,7 @@ Usage of access-log-exporter:
   --nginx.scrape-url value
     	A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status or `unix:///var/run/nginx-status.sock` (env: CONFIG_NGINX_SCRAPE__URL)
   --preset string
-    	Preset configuration to use. Available presets: simple, simple_upstream, simple_uri_upstream, all. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
+    	Preset configuration to use. Available presets: simple, simple_upstream, simple_uri_upstream. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
   --syslog.listen-address string
     	Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, tcp://0.0.0.0:8514, unix:///path/to/socket. (env: CONFIG_SYSLOG_LISTEN__ADDRESS) (default "udp://[::]:8514")
   --verify-config
@@ -186,8 +186,8 @@ access-log-exporter includes four built-in presets and supports custom preset de
 The `simple` preset provides basic HTTP metrics without upstream server information. Compatible with both Nginx and Apache2.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent'`
-- **Apache2:** `"%v\t%m\t%>s\t%{ms}T\t%I\t%O"`
+- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent'`
+- **Apache2:** `"%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O"`
 
 **Metrics generated:**
 - `http_requests_total` - Counter of total HTTP requests
@@ -201,7 +201,7 @@ The `simple_upstream` preset extends the simple preset with upstream server metr
 Only compatible with nginx, because apache2 does not support upstream metrics in the same way.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time'`
+- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time'`
 
 **Additional metrics:**
 - `http_upstream_connect_duration_seconds` - Histogram of upstream connection times
@@ -214,7 +214,7 @@ The `simple_uri_upstream` preset extends the simple_upstream preset with request
 Only compatible with nginx, because apache2 does not support upstream metrics in the same way.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri'`
+- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri'`
 
 **Additional features:**
 - All metrics from `simple_upstream` preset
@@ -223,21 +223,6 @@ Only compatible with nginx, because apache2 does not support upstream metrics in
 
 **Additional labels:**
 - `request_uri` - Added to all metrics with path normalization
-
-#### `all` Preset
-
-The `all` preset provides comprehensive metrics including user agent parsing,
-SSL information, and upstream details with server labels.
-
-**Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$upstream_cache_status\t$remote_user\t$https\t$server_protocol\t$http_user_agent'`
-
-**Additional features:**
-- User agent parsing
-- SSL/TLS protocol information
-- Upstream server labeling
-- Cache status tracking
-- Remote user identification
 
 ### Custom Presets
 
@@ -337,14 +322,24 @@ This creates these indexed fields:
   - **`name`**: Label name
   - **`lineIndex`**: Index of the log field for this label
   - **`userAgent`**: Enable user agent parsing (boolean)
-  - **`replacements`**: Array of regular expressions replacements for label values. Only the first matching replacement applies.
+  - **`replacements`**: Array of string or regular expression replacements for label values. Only the first matching replacement applies.
+    - **`string`**: Exact string to match and replace
+    - **`regexp`**: Regular expression pattern to match
+    - **`replacement`**: Value to replace the matched string/pattern with. If `regexp` is set, capture groups can be used in the replacement string using `$1`, `$2`, etc.
 
 <details>
 <summary>Understanding `replacements`</summary>
 
 Replacements allow you to transform raw log field values into more meaningful or consistent label values
-using regular expressions.
+using either exact string matching or regular expressions.
 This helps reduce label cardinality and standardize values.
+
+**Replacement Types:**
+
+access-log-exporter supports two types of replacements:
+
+1. **String replacements**: Exact string matching for simple transformations
+2. **Regular expression replacements**: Pattern-based matching for complex transformations
 
 **Important behavior:**
 - Replacements process in the order defined in the array
@@ -352,6 +347,102 @@ This helps reduce label cardinality and standardize values.
 - If no replacements match, the original value remains unchanged
 - Empty matches can transform empty/null values into meaningful labels
 - **Uses RE2 regular expression engine**: Does not support negative lookahead/lookbehind assertions
+
+**String Replacement Examples:**
+
+String replacements are perfect for simple, exact value transformations:
+
+```yaml
+# Simple string-based replacements for request completion status
+- name: "completion_status"
+  lineIndex: 3  # $request_completion field
+  replacements:
+    - string: "OK"        # Exact match for "OK"
+      replacement: "1"
+    - string: ""          # Exact match for empty string
+      replacement: "0"
+
+# Transform specific method names
+- name: "method_normalized"
+  lineIndex: 1  # HTTP method field
+  replacements:
+    - string: "GET"
+      replacement: "read"
+    - string: "POST"
+      replacement: "write"
+    - string: "PUT"
+      replacement: "write"
+    - string: "DELETE"
+      replacement: "delete"
+```
+
+**Regular Expression Examples:**
+
+Regular expressions provide powerful pattern-based matching for complex transformations:
+
+```yaml
+# Group HTTP status codes into classes using regex
+- name: "status_class"
+  lineIndex: 2  # HTTP status field
+  replacements:
+    - regexp: "^2..$"
+      replacement: "2xx"
+    - regexp: "^3..$"
+      replacement: "3xx"
+    - regexp: "^4..$"
+      replacement: "4xx"
+    - regexp: "^5..$"
+      replacement: "5xx"
+    - regexp: ".*"  # Catch-all for any other values
+      replacement: "other"
+
+# Handle SSL/HTTPS values with regex patterns
+- name: "ssl"
+  lineIndex: 12  # HTTPS field ($https in Nginx)
+  replacements:
+    - regexp: "^$"        # Empty value means no SSL
+      replacement: "off"
+    - regexp: "^on$"      # Explicit "on" value
+      replacement: "on"
+    # Any other value (like SSL protocol names) becomes "on"
+```
+
+**When to use which type:**
+
+- **Use `string` replacements** for:
+  - Exact value matching (like "OK" → "1")
+  - Simple transformations
+  - Better performance with known fixed values
+  - Empty string handling
+
+- **Use `regexp` replacements** for:
+  - Pattern-based matching (like status code ranges)
+  - Complex string transformations
+  - Wildcard matching
+  - Path normalization
+
+**Mixed usage example:**
+
+You can mix both types in the same replacement array:
+
+```yaml
+- name: "normalized_value"
+  lineIndex: 5
+  replacements:
+    # Handle specific known values with string matching (faster)
+    - string: "OK"
+      replacement: "success"
+    - string: "FAILED"
+      replacement: "error"
+    # Handle patterns with regex (more flexible)
+    - regexp: "^ERROR_.*"
+      replacement: "error"
+    - regexp: "^WARN_.*"
+      replacement: "warning"
+    # Catch-all
+    - regexp: ".*"
+      replacement: "unknown"
+```
 
 **Regular expression engine limitations:**
 
@@ -369,97 +460,11 @@ which is fast and safe but has some limitations compared to PCRE or Perl regular
 
 For a complete list of supported syntax, see the [RE2 documentation](https://github.com/google/re2/wiki/Syntax).
 
-**Common use cases and examples:**
-
-```yaml
-# Group HTTP status codes into classes
-- name: "status_class"
-  lineIndex: 2  # HTTP status field
-  replacements:
-    - regexp: "^2..$"
-      replacement: "2xx"
-    - regexp: "^3..$"
-      replacement: "3xx"
-    - regexp: "^4..$"
-      replacement: "4xx"
-    - regexp: "^5..$"
-      replacement: "5xx"
-    - regexp: ".*"  # Catch-all for any other values
-      replacement: "other"
-
-# Handle SSL/HTTPS values (from the built-in 'all' preset)
-- name: "ssl"
-  lineIndex: 12  # HTTPS field ($https in Nginx)
-  replacements:
-    - regexp: "^$"        # Empty value means no SSL
-      replacement: "off"
-    - regexp: "^on$"      # Explicit "on" value
-      replacement: "on"
-    # Any other value (like SSL protocol names) becomes "on"
-
-# Simplify user agent strings to browser families
-# Note: Order matters since we can't use negative lookahead
-- name: "browser_family"
-  lineIndex: 14  # User agent field
-  replacements:
-    # Chrome must come before Safari since Chrome contains "Safari"
-    - regexp: ".*Chrome.*"
-      replacement: "chrome"
-    - regexp: ".*Firefox.*"
-      replacement: "firefox"
-    # This will match Safari that doesn't contain Chrome (due to ordering)
-    - regexp: ".*Safari.*"
-      replacement: "safari"
-    - regexp: ".*[Bb]ot.*"
-      replacement: "bot"
-    - regexp: ".*curl.*"
-      replacement: "curl"
-    - regexp: ".*"
-      replacement: "other"
-
-# Group request methods
-- name: "method_class"
-  lineIndex: 1  # HTTP method field
-  replacements:
-    - regexp: "^(GET|HEAD|OPTIONS)$"
-      replacement: "read"
-    - regexp: "^(POST|PUT|PATCH)$"
-      replacement: "write"
-    - regexp: "^DELETE$"
-      replacement: "delete"
-    - regexp: ".*"
-      replacement: "other"
-
-# Convert upstream cache status to simplified values
-- name: "cache_status"
-  lineIndex: 10  # $upstream_cache_status field
-  replacements:
-    - regexp: "^(HIT|STALE)$"
-      replacement: "hit"
-    - regexp: "^(MISS|BYPASS|EXPIRED)$"
-      replacement: "miss"
-    - regexp: "^-$"           # No upstream cache
-      replacement: "none"
-    - regexp: ".*"
-      replacement: "other"
-```
-
-**Example from the built-in `all` preset:**
-
-The `all` preset uses this replacement pattern:
-```yaml
-- name: "ssl"
-  lineIndex: 12
-  replacements:
-    - regexp: "^$"
-      replacement: "off"
-```
-
-This transforms empty SSL values (when HTTPS is not used) into the explicit label value "off", making it clear when connections use HTTP vs HTTPS.
-
 **Best practices:**
+- Use `string` replacements for exact matches when possible (better performance)
+- Use `regexp` replacements for pattern matching and complex transformations
 - Order replacements from most specific to most general
-- Always include a catch-all pattern (`.*`) as the last replacement
+- Always include a catch-all pattern (`.*`) as the last replacement when using regex
 - Use replacements to reduce label cardinality (group similar values)
 - Test regular expression patterns to ensure they match expected log values
 - Consider the performance impact of complex regular expression patterns on high-traffic logs

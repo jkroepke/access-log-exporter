@@ -173,6 +173,10 @@ func (m *Metric) validateAndExtractValue(line []string) (string, bool, error) {
 		return "", true, nil // Signal to skip processing
 	}
 
+	if m.cfg.Replacements != nil {
+		value = m.valueReplacements(m.cfg.Replacements, value)
+	}
+
 	return value, false, nil
 }
 
@@ -215,7 +219,7 @@ func (m *Metric) processLabels(line []string, labels prometheus.Labels) error {
 		}
 
 		// Apply regex replacements if configured
-		labelValue = m.labelValueReplacements(label.Replacements, labelValue)
+		labelValue = m.valueReplacements(label.Replacements, labelValue)
 
 		labels[label.Name] = labelValue
 	}
@@ -465,13 +469,17 @@ func (m *Metric) setMetricValue(value float64, labels prometheus.Labels) error {
 	return nil
 }
 
-func (m *Metric) labelValueReplacements(replacements []config.Replacement, labelValue string) string {
+func (m *Metric) valueReplacements(replacements []config.Replacement, labelValue string) string {
 	if len(replacements) == 0 {
 		return labelValue
 	}
 
 	for _, replacement := range replacements {
-		if replacement.Regexp.MatchString(labelValue) {
+		if replacement.StringReplacer != nil && strings.Contains(labelValue, *replacement.String) {
+			return replacement.StringReplacer.Replace(labelValue)
+		}
+
+		if replacement.Regexp != nil && replacement.Regexp.MatchString(labelValue) {
 			return replacement.Regexp.ReplaceAllString(labelValue, replacement.Replacement)
 		}
 	}

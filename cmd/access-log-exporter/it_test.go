@@ -30,7 +30,7 @@ events {
 }
 
 http {
-	log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+	log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 	access_log syslog:server=host.docker.internal:8514,nohostname accesslog_exporter;
 
 	server {
@@ -182,7 +182,7 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
 	require.Equal(t, 3, strings.Count(metrics, "access_log_exporter_build_info"), metrics)
-	require.Equal(t, 1140, strings.Count(metrics, "http_"), metrics)
+	require.Equal(t, 1174, strings.Count(metrics, "http_"), metrics)
 	require.Equal(t, 21, strings.Count(metrics, "nginx_"), metrics)
 
 	termCh <- syscall.SIGTERM

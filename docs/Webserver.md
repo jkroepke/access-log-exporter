@@ -24,11 +24,11 @@ To configure Nginx, add the following lines to the configuration file.
 ```nginx
 # Use only one of the presets below, depending on your needs.
 # simple preset
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
 
 # simple_upstream preset
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
 access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
 ```
 
@@ -50,11 +50,11 @@ map $request_uri $loggable {
 
 # Use only one of the presets below, depending on your needs.
 # simple preset with exclusion
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname if=$loggable;
 
 # simple_upstream preset with exclusion
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
 access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname if=$loggable;
 ```
 
@@ -68,7 +68,7 @@ Adjust the binary path for the logger command if your system uses a different lo
 
 ```apache
 # Configuration for the access-log-exporter
-LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" accesslog_exporter
+LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
 CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
 ```
 

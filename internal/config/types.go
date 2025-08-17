@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"regexp"
+	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 )
@@ -49,15 +50,16 @@ type Preset struct {
 }
 
 type Metric struct {
-	ConstLabels map[string]string  `json:"constLabels"          yaml:"constLabels"`
-	ValueIndex  *uint              `json:"valueIndex,omitempty" yaml:"valueIndex,omitempty"`
-	Name        string             `json:"name"                 yaml:"name"`
-	Type        string             `json:"type"                 yaml:"type"`
-	Help        string             `json:"help"                 yaml:"help"`
-	Buckets     types.Float64Slice `json:"buckets,omitempty"    yaml:"buckets,omitempty"`
-	Labels      []Label            `json:"labels"               yaml:"labels"`
-	Upstream    Upstream           `json:"upstream"             yaml:"upstream"`
-	Math        Math               `json:"math"                 yaml:"math"`
+	ConstLabels  map[string]string  `json:"constLabels"            yaml:"constLabels"`
+	ValueIndex   *uint              `json:"valueIndex,omitempty"   yaml:"valueIndex,omitempty"`
+	Name         string             `json:"name"                   yaml:"name"`
+	Type         string             `json:"type"                   yaml:"type"`
+	Help         string             `json:"help"                   yaml:"help"`
+	Buckets      types.Float64Slice `json:"buckets,omitempty"      yaml:"buckets,omitempty"`
+	Labels       []Label            `json:"labels"                 yaml:"labels"`
+	Replacements []Replacement      `json:"replacements,omitempty" yaml:"replacements,omitempty"`
+	Upstream     Upstream           `json:"upstream"               yaml:"upstream"`
+	Math         Math               `json:"math"                   yaml:"math"`
 }
 
 type Math struct {
@@ -81,8 +83,11 @@ type Label struct {
 }
 
 type Replacement struct {
-	Regexp      *regexp.Regexp `json:"regexp"      yaml:"regexp"`
-	Replacement string         `json:"replacement" yaml:"replacement"`
+	String      *string        `json:"string,omitempty" yaml:"string,omitempty"`
+	Regexp      *regexp.Regexp `json:"regexp,omitempty" yaml:"regexp,omitempty"`
+	Replacement string         `json:"replacement"      yaml:"replacement"`
+
+	StringReplacer *strings.Replacer `json:"-" yaml:"-"`
 }
 
 type Nginx struct {
@@ -97,4 +102,27 @@ func (c Config) String() string {
 	}
 
 	return string(jsonString)
+}
+
+func (r *Replacement) UnmarshalJSON(data []byte) error {
+	type Alias Replacement
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if r.Regexp != nil && r.String != nil {
+		return errors.New("replacement can not have both regexp and string")
+	}
+
+	if r.String != nil {
+		r.StringReplacer = strings.NewReplacer(*r.String, r.Replacement)
+	}
+
+	return nil
 }

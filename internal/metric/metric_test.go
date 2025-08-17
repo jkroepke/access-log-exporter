@@ -220,6 +220,34 @@ http_requests_total 200
 `,
 		},
 		{
+			name: "metric with replacements",
+			cfg: config.Metric{
+				Name:       "http_requests_completed_total",
+				Help:       "The total number of completed requests.",
+				Type:       "counter",
+				ValueIndex: ptr(uint(3)),
+				Replacements: []config.Replacement{
+					{
+						String:      ptr("OK"),
+						Replacement: "1",
+
+						StringReplacer: strings.NewReplacer("OK", "1"),
+					},
+				},
+			},
+			logLines: []string{
+				"example.com\tGET\t200\tOK",
+				"example.com\tGET\t200\tOK",
+				"example.com\tGET\t200\t",
+				"example.com\tGET\t200\tOK",
+			},
+			metrics: `
+# HELP http_requests_completed_total The total number of completed requests.
+# TYPE http_requests_completed_total counter
+http_requests_completed_total 3
+`,
+		},
+		{
 			name: "simple preset",
 			cfg: config.Metric{
 				Name:       "http_request_duration_seconds",

@@ -51,13 +51,13 @@ docker run -p 4040:4040 -p 8514:8514/udp ghcr.io/jkroepke/access-log-exporter:la
 
 For **Nginx**, add to your configuration:
 ```nginx
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_time\t$request_length\t$bytes_sent';
+log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
 ```
 
 For **Apache2**, add to your configuration:
 ```apache
-LogFormat "%v\t%m\t%>s\t%{ms}T\t%I\t%O" accesslog_exporter
+LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
 CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
 ```
 
@@ -76,7 +76,6 @@ curl http://localhost:4040/metrics
 - **`simple`**: Basic HTTP metrics (requests, response times, sizes) - compatible with both Nginx and Apache
 - **`simple_upstream`**: Includes upstream server metrics - Nginx only
 - **`simple_uri_upstream`**: Extends `simple_upstream` with request URI tracking and path normalization - Nginx only
-- **`all`**: Comprehensive metrics including user agent parsing, SSL info, and upstream details - Nginx only
 
 ## Configuration
 
@@ -116,6 +115,10 @@ With the `simple` preset, you get metrics like:
 # HELP http_requests_total The total number of client requests
 # TYPE http_requests_total counter
 http_requests_total{host="example.com",method="GET",status="200"} 1234
+
+# HELP http_requests_completed_total The total number of completed requests
+# TYPE http_requests_completed_total counter
+http_requests_completed_total{host="example.com",method="GET",status="200"} 1234
 
 # HELP http_request_duration_seconds The time spent on receiving and response the response to the client
 # TYPE http_request_duration_seconds histogram
