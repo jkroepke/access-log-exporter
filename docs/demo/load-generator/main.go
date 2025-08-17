@@ -13,6 +13,48 @@ import (
 	"time"
 )
 
+// ThrottledReader wraps an io.Reader to introduce artificial latency
+type ThrottledReader struct {
+	reader          io.Reader
+	maxBytesPerRead int
+	minDelay        time.Duration
+	maxDelay        time.Duration
+}
+
+// NewThrottledReader creates a reader that introduces random delays and limits bytes per read
+func NewThrottledReader(reader io.Reader, maxBytesPerRead int, minDelay, maxDelay time.Duration) *ThrottledReader {
+	return &ThrottledReader{
+		reader:          reader,
+		maxBytesPerRead: maxBytesPerRead,
+		minDelay:        minDelay,
+		maxDelay:        maxDelay,
+	}
+}
+
+func (t *ThrottledReader) Read(p []byte) (n int, err error) {
+	// Limit the number of bytes we read at once to simulate slow network
+	if len(p) > t.maxBytesPerRead {
+		p = p[:t.maxBytesPerRead]
+	}
+
+	// Add random delay before reading to simulate network latency
+	if t.maxDelay > 0 {
+		delayRange := t.maxDelay - t.minDelay
+		var randomDelay time.Duration
+
+		if delayRange > 0 {
+			randomDelay = t.minDelay + time.Duration(rand.Int63n(int64(delayRange)))
+		} else {
+			// If delayRange is 0 or negative, just use minDelay
+			randomDelay = t.minDelay
+		}
+
+		time.Sleep(randomDelay)
+	}
+
+	return t.reader.Read(p)
+}
+
 // StreamingRandomReader generates random content on-demand.
 type StreamingRandomReader struct {
 	charset   []byte
@@ -463,8 +505,12 @@ func makeRandomRequest(client *http.Client) {
 		}
 	}()
 
-	// Read response body with improved error handling
-	bytesRead, err := io.Copy(io.Discard, resp.Body)
+	// Read response body with improved error handling and throttling
+	// Generate different throttling parameters for response reading
+	respMaxBytes, respMinDelay, respMaxDelay := generateRandomThrottling()
+	throttledRespBody := NewThrottledReader(resp.Body, respMaxBytes, respMinDelay, respMaxDelay)
+
+	bytesRead, err := io.Copy(io.Discard, throttledRespBody)
 	if err != nil {
 		// Check if it's just an EOF which might be expected for some endpoints
 		if err == io.EOF {
@@ -477,7 +523,9 @@ func makeRandomRequest(client *http.Client) {
 		return
 	}
 
-	log.Printf("Request completed: %s %s - Status: %d, Read: %d bytes (took %v)", method, url, resp.StatusCode, bytesRead, duration)
+	// Update duration to include throttled response reading time
+	totalDuration := time.Since(start)
+	log.Printf("Request completed: %s %s - Status: %d, Read: %d bytes (took %v)", method, url, resp.StatusCode, bytesRead, totalDuration)
 }
 
 // SizedReader wraps streaming readers to provide Content-Length.
@@ -613,6 +661,18 @@ func (r *StreamingFormReader) ActualSize() int64 {
 	return int64(r.actualSize)
 }
 
+// Generate random throttling parameters for network simulation
+func generateRandomThrottling() (maxBytesPerRead int, minDelay, maxDelay time.Duration) {
+	// Random bandwidth simulation (100 bytes to 64KB per read)
+	maxBytesPerRead = 100 + rand.Intn(65436)
+
+	// Random network latency (0-50ms base delay, 0-200ms max delay)
+	minDelay = time.Duration(rand.Intn(50)) * time.Millisecond
+	maxDelay = minDelay + time.Duration(rand.Intn(200))*time.Millisecond
+
+	return maxBytesPerRead, minDelay, maxDelay
+}
+
 func generateRandomBody() io.Reader {
 	// Use dynamic size generation
 	size := generateDynamicSize(0) // Use current mean size
@@ -636,20 +696,24 @@ func generateRandomBody() io.Reader {
 	case "application/json":
 		jsonReader := NewStreamingJSONReader(size)
 		reader = jsonReader
-		actualSize = jsonReader.ActualSize() // Use actual calculated size, not requested size
+		actualSize = jsonReader.ActualSize()
 	case "text/plain":
 		reader = NewStreamingRandomReader(size)
-		actualSize = int64(size) // Random reader uses exact requested size
+		actualSize = int64(size)
 	case "application/x-www-form-urlencoded":
 		formReader := generateStreamingFormData(size).(*StreamingFormReader)
 		reader = formReader
-		actualSize = formReader.ActualSize() // Use actual calculated size
+		actualSize = formReader.ActualSize()
 	default:
-		reader = NewStreamingRandomReader(size) // For octet-stream
+		reader = NewStreamingRandomReader(size)
 		actualSize = int64(size)
 	}
 
-	return NewSizedReader(reader, actualSize)
+	// Add random throttling to simulate slow upload speeds
+	maxBytes, minDelay, maxDelay := generateRandomThrottling()
+	throttledReader := NewThrottledReader(reader, maxBytes, minDelay, maxDelay)
+
+	return NewSizedReader(throttledReader, actualSize)
 }
 
 func addRandomHeaders(req *http.Request) {
