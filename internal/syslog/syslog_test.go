@@ -92,39 +92,67 @@ func TestSyslogServerRawMessage(t *testing.T) {
 func TestSyslogServerWithInvalidMessages(t *testing.T) {
 	t.Parallel()
 
-	unixSocket, err := nettest.LocalPath()
-	require.NoError(t, err)
+	for _, tc := range []struct {
+		name    string
+		message string
+	}{
+		{
+			name:    "Empty message",
+			message: "",
+		},
+		{
+			name:    "without message",
+			message: "<34>Oct 11 22:14:15",
+		},
+		{
+			name:    "with partial time",
+			message: "<34>Oct 22:14",
+		},
+		{
+			name:    "without time",
+			message: "<34>Oct 11",
+		},
+		{
+			name:    "without priority",
+			message: "Oct 11 22:14:15",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	logBuffer := make(chan string, 1)
+			unixSocket, err := nettest.LocalPath()
+			require.NoError(t, err)
 
-	server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
-	require.NoError(t, err)
+			logBuffer := make(chan string, 1)
 
-	t.Cleanup(func() {
-		require.NoError(t, server.Close(t.Context()))
-	})
+			server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
+			require.NoError(t, err)
 
-	var serverErr error
+			t.Cleanup(func() {
+				require.NoError(t, server.Close(t.Context()))
+			})
 
-	go func() {
-		serverErr = server.Start()
-	}()
+			var serverErr error
 
-	t.Cleanup(func() {
-		require.NoError(t, serverErr)
-	})
+			go func() {
+				serverErr = server.Start()
+			}()
 
-	var dial net.Dialer
+			t.Cleanup(func() {
+				require.NoError(t, serverErr)
+			})
 
-	syslogClient, err := dial.DialContext(t.Context(), "unixgram", unixSocket)
-	require.NoError(t, err)
+			var dial net.Dialer
 
-	logMessage := "<34>Oct 11 22:14:15"
+			syslogClient, err := dial.DialContext(t.Context(), "unixgram", unixSocket)
+			require.NoError(t, err)
 
-	_, err = fmt.Fprint(syslogClient, logMessage)
-	require.NoError(t, err)
+			_, err = fmt.Fprint(syslogClient, tc.message)
+			require.NoError(t, err)
 
-	require.Empty(t, logBuffer)
+			require.Empty(t, logBuffer)
+		})
+	}
 }
 
 func TestSyslogInvalidListenAddr(t *testing.T) {

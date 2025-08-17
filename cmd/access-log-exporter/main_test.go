@@ -76,9 +76,33 @@ func TestInvalidPreset(t *testing.T) {
 	moduleRoot, err := findModuleRoot(wd)
 	require.NoError(t, err)
 
-	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--preset", "invalid"}, stdout, nil)
-	require.Equal(t, ReturnCodeError, rt, stdout)
+	returnCode := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+		"--preset", "invalid",
+	}, stdout, nil)
+	require.Equal(t, ReturnCodeError, returnCode, stdout)
 	require.Contains(t, stdout.String(), "preset 'invalid' not found in configuration")
+}
+
+func TestInvalidLogFormat(t *testing.T) {
+	t.Parallel()
+
+	stdout := &bytes.Buffer{}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	moduleRoot, err := findModuleRoot(wd)
+	require.NoError(t, err)
+
+	returnCode := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+		"--log.format", "invalid",
+	}, stdout, nil)
+	require.Equal(t, ReturnCodeError, returnCode, stdout)
+	require.Contains(t, stdout.String(), "unknown log format: invalid")
 }
 
 func TestVerifyConfig(t *testing.T) {
@@ -92,6 +116,11 @@ func TestVerifyConfig(t *testing.T) {
 	moduleRoot, err := findModuleRoot(wd)
 	require.NoError(t, err)
 
-	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--verify-config"}, stdout, nil)
-	require.Equal(t, ReturnCodeOK, rt, stdout)
+	returnCode := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+		"--log.format=json",
+		"--verify-config",
+	}, stdout, nil)
+	require.Equal(t, ReturnCodeOK, returnCode, stdout)
 }

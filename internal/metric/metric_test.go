@@ -329,6 +329,53 @@ http_request_duration_seconds_sum{host="app.example.net",method="PUT",status="50
 http_request_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
 		},
 		{
+			name: "simple preset with default buckets",
+			cfg: config.Metric{
+				Name:       "http_request_duration_seconds",
+				Type:       "histogram",
+				Help:       "The time spent on receiving the response from the upstream server",
+				ValueIndex: ptr(uint(3)),
+				Math: config.Math{
+					Enabled: true,
+					Div:     1000,
+				},
+				Labels: []config.Label{
+					{
+						Name:      "host",
+						LineIndex: 0,
+					},
+					{
+						Name:      "method",
+						LineIndex: 1,
+					},
+					{
+						Name:      "status",
+						LineIndex: 2,
+					},
+				},
+			},
+			logLines: []string{
+				"app.example.net\tPUT\t500\t1.234\t4096\t512",
+			},
+			metrics: `
+# HELP http_request_duration_seconds The time spent on receiving the response from the upstream server
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.005"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.01"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.025"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.05"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.25"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="0.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="1"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="2.5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="5"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="10"} 1
+http_request_duration_seconds_bucket{host="app.example.net",method="PUT",status="500",le="+Inf"} 1
+http_request_duration_seconds_sum{host="app.example.net",method="PUT",status="500"} 0.001234
+http_request_duration_seconds_count{host="app.example.net",method="PUT",status="500"} 1`,
+		},
+		{
 			name: "counter metric all preset",
 			cfg: config.Metric{
 				Name: "http_requests_total",
@@ -407,7 +454,6 @@ http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="of
 				Type:       "counter",
 				Help:       "The time spent on establishing a connection with the upstream server",
 				ValueIndex: ptr(uint(7)),
-				Buckets:    types.Float64Slice{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
 				Math: config.Math{
 					Enabled: true,
 					Div:     1000,
@@ -443,6 +489,51 @@ http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="of
 # TYPE http_upstream_connect_duration_seconds counter
 http_upstream_connect_duration_seconds{host="api.example.com",method="GET",status="200"} 3e-06
 http_upstream_connect_duration_seconds{host="web.example.org",method="POST",status="502"} 9e-06
+`,
+		},
+		{
+			name: "metric with upstream connect duration and label",
+			cfg: config.Metric{
+				Name:       "http_upstream_connect_duration_seconds",
+				Type:       "counter",
+				Help:       "The time spent on establishing a connection with the upstream server",
+				ValueIndex: ptr(uint(7)),
+				Math: config.Math{
+					Enabled: true,
+					Div:     1000,
+					Mul:     0, // default value
+				},
+				Upstream: config.Upstream{
+					Enabled:       true,
+					AddrLineIndex: 6,
+					Excludes:      make([]string, 0),
+					Label:         true,
+				},
+				Labels: []config.Label{
+					{
+						Name:      "host",
+						LineIndex: 0,
+					},
+					{
+						Name:      "method",
+						LineIndex: 1,
+					},
+					{
+						Name:      "status",
+						LineIndex: 2,
+					},
+				},
+			},
+			logLines: []string{
+				"api.example.com\tGET\t200\t0.125\t1536\t4096\t10.0.1.5:8080\t0.003\t0.045\t0.120",
+				"web.example.org\tPOST\t502\t2.150\t2048\t512\t10.0.1.10:8080, 10.0.1.11:8080, 10.0.1.12:8080\t0.005, 0.004, -\t0.120, 0.115, -\t0.800, 0.900, -",
+			},
+			metrics: `
+# HELP http_upstream_connect_duration_seconds The time spent on establishing a connection with the upstream server
+# TYPE http_upstream_connect_duration_seconds counter
+http_upstream_connect_duration_seconds{host="api.example.com",method="GET",status="200",upstream="10.0.1.5:8080"} 3e-06
+http_upstream_connect_duration_seconds{host="web.example.org",method="POST",status="502",upstream="10.0.1.10:8080"} 5e-06
+http_upstream_connect_duration_seconds{host="web.example.org",method="POST",status="502",upstream="10.0.1.11:8080"} 4e-06
 `,
 		},
 		{

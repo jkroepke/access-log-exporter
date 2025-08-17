@@ -34,7 +34,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	labelKeys := make([]string, labelCount)
 
 	var (
-		ua               *uaparser.Parser
+		uaParser         *uaparser.Parser
 		userAgentEnabled bool
 	)
 
@@ -52,7 +52,7 @@ func New(cfg config.Metric) (*Metric, error) {
 
 	// Initialize user agent parser if needed
 	if userAgentEnabled {
-		ua = useragent.New()
+		uaParser = useragent.New()
 	}
 
 	// Add upstream label if enabled
@@ -94,7 +94,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	return &Metric{
 		cfg:    cfg,
 		metric: metric,
-		ua:     ua,
+		ua:     uaParser,
 		labelsPool: &sync.Pool{
 			New: func() interface{} {
 				return make(prometheus.Labels, labelCount)

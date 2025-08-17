@@ -125,6 +125,7 @@ func TestIT(t *testing.T) {
 			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
 			"--nginx.scrape-url=" + endpoint + "/stub_status",
 			"--web.listen-address=127.0.0.1:54321",
+			"--debug.enable=true",
 		}, stdout, termCh)
 	}()
 
