@@ -113,6 +113,7 @@ dockers:
     build_flag_templates:
       - '--platform=linux/amd64'
       - '--sbom'
+      - '--provenance=false'
       - '--annotation=org.opencontainers.image.authors=Jan-Otto Kröpke https://github.com/jkroepke/'
       - '--annotation=org.opencontainers.image.created={{.Date}}'
       - '--annotation=org.opencontainers.image.description=A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
@@ -146,6 +147,7 @@ dockers:
     build_flag_templates:
       - '--platform=linux/arm64/v8'
       - '--sbom'
+      - '--provenance=false'
       - '--annotation=org.opencontainers.image.authors=Jan-Otto Kröpke https://github.com/jkroepke/'
       - '--annotation=org.opencontainers.image.created={{.Date}}'
       - '--annotation=org.opencontainers.image.description=A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
