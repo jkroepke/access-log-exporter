@@ -1,6 +1,7 @@
 package metric_test
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -71,6 +72,48 @@ func BenchmarkMetricParseUserAgent(b *testing.B) {
 	require.NoError(b, err)
 
 	logLine := strings.Split("example.com\tGET\t200\tMozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15", "\t")
+
+	for b.Loop() {
+		_ = met.Parse(logLine)
+	}
+
+	b.ReportAllocs()
+}
+
+func BenchmarkMetricParseReplacement(b *testing.B) {
+	met, err := metric.New(config.Metric{
+		Name: "http_requests_total",
+		Type: "counter",
+		Help: "The total number of client requests.",
+		Labels: []config.Label{
+			{
+				Name:      "host",
+				LineIndex: 0,
+			},
+			{
+				Name:      "method",
+				LineIndex: 1,
+			},
+			{
+				Name:      "status",
+				LineIndex: 2,
+			},
+			{
+				Name:      "path",
+				LineIndex: 3,
+				Replacements: []config.Replacement{
+					{
+						Regexp:      regexp.MustCompile(`/api/v1/resource\?id=\d+.+`),
+						Replacement: "/api/v1/resource?id=:id",
+					},
+				},
+			},
+		},
+	})
+
+	require.NoError(b, err)
+
+	logLine := strings.Split("example.com\tGET\t200\t/api/v1/resource?id=12345&name=test", "\t")
 
 	for b.Loop() {
 		_ = met.Parse(logLine)

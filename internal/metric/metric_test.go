@@ -446,6 +446,52 @@ http_upstream_connect_duration_seconds{host="web.example.org",method="POST",stat
 `,
 		},
 		{
+			name: "metric with uri and replacement",
+			cfg: config.Metric{
+				Name: "http_requests_total",
+				Type: "counter",
+				Help: "The total number of client requests.",
+				Labels: []config.Label{
+					{
+						Name:      "host",
+						LineIndex: 0,
+					},
+					{
+						Name:      "method",
+						LineIndex: 1,
+					},
+					{
+						Name:      "status",
+						LineIndex: 2,
+					},
+					{
+						Name:      "path",
+						LineIndex: 3,
+						Replacements: []config.Replacement{
+							{
+								Regexp:      regexp.MustCompile(`/api/v1/resource\?id=\d+.+`),
+								Replacement: "/api/v1/resource?id=:id",
+							},
+						},
+					},
+				},
+			},
+			logLines: []string{
+				"example.com\tGET\t200\t/api/v1/resource",
+				"example.com\tPOST\t201\t/api/v1/resource?id=123",
+				"example.com\tPUT\t500\t/api/v1/resource?id=456&name=test",
+				"example.com\tDELETE\t404\t/api/v1/resource?id=789&name=test&extra=param",
+			},
+			metrics: `
+# HELP http_requests_total The total number of client requests.
+# TYPE http_requests_total counter
+http_requests_total{host="example.com",method="DELETE",path="/api/v1/resource?id=:id",status="404"} 1
+http_requests_total{host="example.com",method="GET",path="/api/v1/resource",status="200"} 1
+http_requests_total{host="example.com",method="POST",path="/api/v1/resource?id=:id",status="201"} 1
+http_requests_total{host="example.com",method="PUT",path="/api/v1/resource?id=:id",status="500"} 1
+`,
+		},
+		{
 			name: "metric with excluded upstream connect duration",
 			cfg: config.Metric{
 				Name:       "http_upstream_connect_duration_seconds",

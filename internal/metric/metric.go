@@ -11,6 +11,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/useragent"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/ua-parser/uap-go/uaparser"
 )
 
 //nolint:cyclop
@@ -32,12 +33,26 @@ func New(cfg config.Metric) (*Metric, error) {
 	// Pre-allocate labelKeys with exact capacity
 	labelKeys := make([]string, labelCount)
 
+	var (
+		ua               *uaparser.Parser
+		userAgentEnabled bool
+	)
+
 	for i, label := range cfg.Labels {
 		if label.Name == "" {
 			return nil, errors.New("metric label name cannot be empty")
 		}
 
 		labelKeys[i] = label.Name
+
+		if label.UserAgent {
+			userAgentEnabled = true
+		}
+	}
+
+	// Initialize user agent parser if needed
+	if userAgentEnabled {
+		ua = useragent.New()
 	}
 
 	// Add upstream label if enabled
@@ -79,7 +94,7 @@ func New(cfg config.Metric) (*Metric, error) {
 	return &Metric{
 		cfg:    cfg,
 		metric: metric,
-		ua:     useragent.New(),
+		ua:     ua,
 		labelsPool: &sync.Pool{
 			New: func() interface{} {
 				return make(prometheus.Labels, labelCount)
