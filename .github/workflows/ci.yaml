@@ -204,8 +204,8 @@ jobs:
       # parse artifacts to the format required for image attestation
       # https://github.com/goreleaser/goreleaser/issues/4852#issuecomment-2122790132
       - run: |
-          echo "digest=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|.extra.Digest')" | tee /dev/stderr >> "$GITHUB_OUTPUT"
-          echo "name=$(echo "$ARTIFACTS" | jq -r '.[]|select(.type=="Docker Manifest")|.name|split("@")[0]')" | tee /dev/stderr >> "$GITHUB_OUTPUT"
+          echo "digest=$(echo "$ARTIFACTS" | jq -r '[.[]|select(.type=="Docker Manifest")][0]|.extra.Digest')" | tee /dev/stderr >> "$GITHUB_OUTPUT"
+          echo "name=$(echo "$ARTIFACTS" | jq -r '[.[]|select(.type=="Docker Manifest")][0]|.name|split(":")[0]')" | tee /dev/stderr >> "$GITHUB_OUTPUT"
         id: image_metadata
         env:
           ARTIFACTS: ${{steps.goreleaser.outputs.artifacts}}
