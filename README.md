@@ -75,6 +75,7 @@ curl http://localhost:4040/metrics
 
 - **`simple`**: Basic HTTP metrics (requests, response times, sizes) - compatible with both Nginx and Apache
 - **`simple_upstream`**: Includes upstream server metrics - Nginx only
+- **`simple_uri_upstream`**: Extends `simple_upstream` with request URI tracking and path normalization - Nginx only
 - **`all`**: Comprehensive metrics including user agent parsing, SSL info, and upstream details - Nginx only
 
 ## Configuration
