@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 16,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -799,7 +799,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Requests",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -860,7 +860,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
@@ -903,7 +903,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Requests",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -1060,9 +1060,9 @@
           "showLegend": true
         },
         "tooltip": {
-          "hideZeros": false,
+          "hideZeros": true,
           "mode": "multi",
-          "sort": "none"
+          "sort": "asc"
         }
       },
       "pluginVersion": "12.2.0-16979757807",
@@ -1100,7 +1100,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "requests",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -1144,7 +1144,7 @@
               }
             ]
           },
-          "unit": "requests"
+          "unit": "short"
         },
         "overrides": [
           {
@@ -1194,7 +1194,7 @@
           "format": "time_series",
           "interval": "5m",
           "intervalFactor": 1,
-          "legendFormat": "{{ingress}}",
+          "legendFormat": "requests",
           "range": true,
           "refId": "A"
         }
@@ -1586,9 +1586,9 @@
           "exponent": 0.5,
           "fill": "#C4162A",
           "mode": "scheme",
-          "reverse": false,
+          "reverse": true,
           "scale": "exponential",
-          "scheme": "Turbo",
+          "scheme": "YlOrRd",
           "steps": 128
         },
         "exemplars": {
@@ -1743,7 +1743,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum (irate (http_request_size_bytes_sum{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval]))",
+          "expr": "sum(rate(http_request_size_bytes_sum{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval]))",
           "format": "time_series",
           "instant": false,
           "interval": "10s",
@@ -1759,7 +1759,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "- sum (irate (http_response_size_bytes_sum{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval]))",
+          "expr": "- sum(rate(http_response_size_bytes_sum{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__rate_interval]))",
           "format": "time_series",
           "hide": false,
           "interval": "10s",
@@ -1825,10 +1825,10 @@
           "exponent": 0.5,
           "fill": "dark-orange",
           "mode": "scheme",
-          "reverse": false,
+          "reverse": true,
           "scale": "linear",
-          "scheme": "Turbo",
-          "steps": 64
+          "scheme": "YlOrRd",
+          "steps": 128
         },
         "exemplars": {
           "color": "rgba(255,0,255,0.7)"
@@ -1840,7 +1840,7 @@
           "show": true
         },
         "rowsFrame": {
-          "layout": "auto"
+          "layout": "le"
         },
         "tooltip": {
           "mode": "single",
@@ -1926,10 +1926,10 @@
           "exponent": 0.5,
           "fill": "dark-orange",
           "mode": "scheme",
-          "reverse": false,
+          "reverse": true,
           "scale": "linear",
-          "scheme": "Turbo",
-          "steps": 64
+          "scheme": "YlOrRd",
+          "steps": 128
         },
         "exemplars": {
           "color": "rgba(255,0,255,0.7)"
@@ -1941,7 +1941,7 @@
           "show": true
         },
         "rowsFrame": {
-          "layout": "auto"
+          "layout": "le"
         },
         "tooltip": {
           "mode": "single",
@@ -1991,9 +1991,127 @@
     },
     {
       "datasource": {
+        "name": "${datasource}",
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "This panel indicates the current status of the NGINX server for the selected instance, showing whether it's up or down.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "applyToRow": false,
+              "mode": "basic",
+              "type": "color-background",
+              "wrapText": false
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "DONW"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0-16979757807",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "nginx_up{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"} == 1",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{instance}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "NGINX Status",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "This panel tracks the number of processed connections for the selected instance, displaying both active and handled connections to monitor server activity.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2003,7 +2121,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Connections (rate)",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -2045,17 +2163,18 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
-        "y": 31
+        "y": 36
       },
-      "id": 28,
+      "id": 33,
       "options": {
         "legend": {
           "calcs": [],
@@ -2077,20 +2196,36 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(nginx_connections_accepted_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"}[$__interval]))",
-          "legendFormat": "Connections",
+          "expr": "sum(irate(nginx_connections_accepted_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"}[$__rate_interval]))",
+          "instant": false,
+          "legendFormat": "accepted",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(irate(nginx_connections_handled_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"}[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "handled",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "Connections accepted",
+      "title": "Processed connections",
       "type": "timeseries"
     },
     {
       "datasource": {
+        "name": "${datasource}",
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "This panel shows NGINX active connections for the selected instance, categorized as writing, waiting, reading, and total active.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2100,13 +2235,13 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Connections",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
+            "fillOpacity": 29,
+            "gradientMode": "hue",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -2114,6 +2249,9 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -2142,17 +2280,18 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 31
+        "w": 12,
+        "x": 12,
+        "y": 36
       },
-      "id": 29,
+      "id": 31,
       "options": {
         "legend": {
           "calcs": [],
@@ -2162,7 +2301,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -2175,9 +2314,23 @@
           },
           "editorMode": "code",
           "expr": "sum(nginx_connections_active{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"})",
+          "instant": false,
           "legendFormat": "active",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(nginx_connections_reading{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "reading",
+          "range": true,
+          "refId": "B"
         },
         {
           "datasource": {
@@ -2190,101 +2343,7 @@
           "instant": false,
           "legendFormat": "waiting",
           "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Connections active/idle",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 31
-      },
-      "id": 30,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.0-16979757807",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum(nginx_connections_reading{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\"})",
-          "legendFormat": "reading",
-          "range": true,
-          "refId": "A"
+          "refId": "C"
         },
         {
           "datasource": {
@@ -2297,10 +2356,10 @@
           "instant": false,
           "legendFormat": "writing",
           "range": true,
-          "refId": "B"
+          "refId": "D"
         }
       ],
-      "title": "Connections reading/writing",
+      "title": "Active Connections",
       "type": "timeseries"
     }
   ],
@@ -2314,7 +2373,7 @@
         "allowCustomValue": false,
         "current": {
           "text": "Prometheus",
-          "value": "PBFA97CFB590B2093"
+          "value": "mJF6HVvVk"
         },
         "label": "Datasource",
         "name": "datasource",
@@ -2439,9 +2498,7 @@
         "allValue": ".*",
         "allowCustomValue": false,
         "current": {
-          "text": [
-            "All"
-          ],
+          "text": "All",
           "value": [
             "$__all"
           ]
@@ -2469,12 +2526,12 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "access-log-exporter",
+  "title": "Access Log Metrics",
   "uid": "access-log-exporter",
-  "version": 4
+  "version": 12
 }

@@ -1,8 +1,19 @@
 services:
   nginx:
-    image: nginx
+    image: nginx:1-alpine-slim
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "http://127.0.0.1:8090/stub_status","-O","/dev/null" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     depends_on:
       - httpbin
+      - access-log-exporter
+    environment:
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
+    ports:
+      - "8090:8090/tcp"
     networks:
       access-log-exporter:
         aliases:
@@ -32,6 +43,8 @@ services:
     image: golang:1.25
     networks:
       access-log-exporter:
+    depends_on:
+      - nginx
     environment:
       BASE_URL: http://nginx:8090
     command:
@@ -42,6 +55,8 @@ services:
       - ./load-generator/main.go:/main.go
   prometheus:
     image: prom/prometheus
+    depends_on:
+      - access-log-exporter
     networks:
       access-log-exporter:
         aliases:

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,7 +18,7 @@ Reading: %d Writing: %d Waiting: %d
 `
 
 type Collector struct {
-	upMetric            prometheus.Gauge
+	upMetric            *prometheus.Desc
 	connectionsAccepted *prometheus.Desc
 	connectionsActive   *prometheus.Desc
 	connectionsHandled  *prometheus.Desc
@@ -49,10 +50,11 @@ func New(logger *slog.Logger, scrapeURL string) *Collector {
 	return &Collector{
 		scrapeURL: scrapeURL,
 		logger:    logger.With(slog.String("component", "nginx_collector")),
-		upMetric: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "nginx_up",
-			Help: "Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.",
-		}),
+		upMetric: prometheus.NewDesc(
+			"nginx_up",
+			"Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.",
+			[]string{"version"}, nil,
+		),
 		connectionsAccepted: prometheus.NewDesc(
 			"nginx_connections_accepted_total",
 			"Accepted client connections.",
@@ -87,7 +89,7 @@ func New(logger *slog.Logger, scrapeURL string) *Collector {
 }
 
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.upMetric.Desc()
+	ch <- c.upMetric
 
 	ch <- c.connectionsAccepted
 
@@ -108,16 +110,18 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	c.mu.Lock() // To protect metrics from concurrent collects
 	defer c.mu.Unlock()
 
+	serverVersion := "N/A"
+
 	//nolint:noctx
 	resp, err := http.Get(c.scrapeURL)
 	if err != nil {
-		c.upMetric.Set(0)
 		c.logger.Error("Failed to scrape NGINX metrics",
 			slog.String("url", c.scrapeURL),
 			slog.Any("error", err),
 		)
 
-		ch <- c.upMetric
+		ch <- prometheus.MustNewConstMetric(c.upMetric,
+			prometheus.GaugeValue, 0, serverVersion)
 
 		return
 	}
@@ -127,34 +131,37 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		c.upMetric.Set(0)
-
 		c.logger.Error("NGINX metrics endpoint returned non-200 status code",
 			slog.String("url", c.scrapeURL),
 			slog.Int("status_code", resp.StatusCode),
 		)
 
-		ch <- c.upMetric
+		ch <- prometheus.MustNewConstMetric(c.upMetric,
+			prometheus.GaugeValue, 0, serverVersion)
 
 		return
 	}
 
+	// Attempt to read the server version from the response header
+	if version := resp.Header.Get("Server"); strings.HasPrefix(version, "nginx/") {
+		serverVersion = strings.TrimPrefix(version, "nginx/")
+	}
+
 	stats, err := parseStubStats(resp.Body)
 	if err != nil {
-		c.upMetric.Set(0)
 		c.logger.Error("Failed to parse NGINX metrics",
 			slog.String("url", c.scrapeURL),
 			slog.Any("error", err),
 		)
 
-		ch <- c.upMetric
+		ch <- prometheus.MustNewConstMetric(c.upMetric,
+			prometheus.GaugeValue, 0, serverVersion)
 
 		return
 	}
 
-	c.upMetric.Set(1)
-
-	ch <- c.upMetric
+	ch <- prometheus.MustNewConstMetric(c.upMetric,
+		prometheus.GaugeValue, 1, serverVersion)
 
 	ch <- prometheus.MustNewConstMetric(c.connectionsActive,
 		prometheus.GaugeValue, float64(stats.Connections.Active))
