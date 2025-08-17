@@ -92,6 +92,11 @@ func TestVerifyConfig(t *testing.T) {
 	moduleRoot, err := findModuleRoot(wd)
 	require.NoError(t, err)
 
-	rt := run(t.Context(), []string{"access-log-exporter", "--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml", "--verify-config"}, stdout, nil)
+	rt := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+		"--log.format=json",
+		"--verify-config",
+	}, stdout, nil)
 	require.Equal(t, ReturnCodeOK, rt, stdout)
 }

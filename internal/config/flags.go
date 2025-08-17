@@ -46,10 +46,27 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 		"Preset configuration to use. Available presets: simple, simple_upstream, all. Custom presets can be defined via config file. Default is simple.",
 	)
 
+	c.flagSetLog(flagSet)
 	c.flagSetNginx(flagSet)
 	c.flagSetDebug(flagSet)
 	c.flagSetWeb(flagSet)
 	c.flagSetSyslog(flagSet)
+}
+
+//goland:noinspection GoMixedReceiverTypes
+func (c *Config) flagSetLog(flagSet *flag.FlagSet) {
+	flagSet.StringVar(
+		&c.Log.Format,
+		"log.format",
+		lookupEnvOrDefault("log.format", c.Log.Format),
+		"log format. json or console",
+	)
+	flagSet.TextVar(
+		&c.Log.Level,
+		"log.level",
+		lookupEnvOrDefault("log.level", c.Log.Level),
+		"log level. Can be one of: debug, info, warn, error",
+	)
 }
 
 //goland:noinspection GoMixedReceiverTypes
