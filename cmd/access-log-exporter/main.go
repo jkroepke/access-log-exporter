@@ -270,7 +270,7 @@ func initializeConfigAndLogger(args []string, stdout io.Writer) (config.Config, 
 
 	logger, err := setupLogger(conf, stdout)
 	if err != nil {
-		_, _ = fmt.Fprintln(stdout, fmt.Errorf("error setupConfiguration logging: %w", err).Error())
+		_, _ = fmt.Fprintln(stdout, fmt.Errorf("error setup logging: %w", err).Error())
 
 		return config.Config{}, nil, ReturnCodeError
 	}
