@@ -107,11 +107,11 @@ dockers:
     goarch: amd64
     dockerfile: Dockerfile
     image_templates:
-      - 'ghcr.io/jkroepke/access-log-exporter:{{ .Version }}-amd64'
-      - '{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-amd64{{end}}'
-      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-amd64{{end}}'
+      - 'ghcr.io/jkroepke/access-log-exporter:{{ .Version }}'
+      - '{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest{{end}}'
+      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main{{end}}'
     build_flag_templates:
-      - '--platform=linux/amd64'
+      - '--platform=linux/amd64,linux/arm64'
       - '--sbom'
       - '--provenance=false'
       - '--annotation=org.opencontainers.image.authors=Jan-Otto Kröpke https://github.com/jkroepke/'
@@ -136,57 +136,7 @@ dockers:
       - '--label=org.opencontainers.image.version={{.Version}}'
     extra_files:
       - packaging/etc/access-log-exporter/config.yaml
-  - goos: linux
-    use: buildx
-    goarch: arm64
-    dockerfile: Dockerfile
-    image_templates:
-      - 'ghcr.io/jkroepke/access-log-exporter:{{ .Version }}-arm64v8'
-      - '{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-arm64v8{{end}}'
-      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-arm64v8{{end}}'
-    build_flag_templates:
-      - '--platform=linux/arm64/v8'
-      - '--sbom'
-      - '--provenance=false'
-      - '--annotation=org.opencontainers.image.authors=Jan-Otto Kröpke https://github.com/jkroepke/'
-      - '--annotation=org.opencontainers.image.created={{.Date}}'
-      - '--annotation=org.opencontainers.image.description=A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
-      - '--annotation=org.opencontainers.image.documentation=https://github.com/jkroepke/access-log-exporter/wiki'
-      - '--annotation=org.opencontainers.image.licenses=Apache-2.0'
-      - '--annotation=org.opencontainers.image.revision={{.FullCommit}}'
-      - '--annotation=org.opencontainers.image.source=https://github.com/jkroepke/access-log-exporter'
-      - '--annotation=org.opencontainers.image.title={{.ProjectName}}'
-      - '--annotation=org.opencontainers.image.vendor=Jan-Otto Kröpke'
-      - '--annotation=org.opencontainers.image.version={{.Version}}'
-      - '--label=org.opencontainers.image.authors=Jan-Otto Kröpke https://github.com/jkroepke/'
-      - '--label=org.opencontainers.image.created={{.Date}}'
-      - '--label=org.opencontainers.image.description=A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
-      - '--label=org.opencontainers.image.documentation=https://github.com/jkroepke/access-log-exporter/wiki'
-      - '--label=org.opencontainers.image.licenses=Apache-2.0'
-      - '--label=org.opencontainers.image.revision={{.FullCommit}}'
-      - '--label=org.opencontainers.image.source=https://github.com/jkroepke/access-log-exporter'
-      - '--label=org.opencontainers.image.title={{.ProjectName}}'
-      - '--label=org.opencontainers.image.vendor=Jan-Otto Kröpke'
-      - '--label=org.opencontainers.image.version={{.Version}}'
-    extra_files:
-      - packaging/etc/access-log-exporter/config.yaml
-
-docker_manifests:
-  - id: version
-    name_template: "ghcr.io/jkroepke/access-log-exporter:{{ .Version }}"
-    image_templates:
-      - "ghcr.io/jkroepke/access-log-exporter:{{ .Version }}-amd64"
-      - "ghcr.io/jkroepke/access-log-exporter:{{ .Version }}-arm64v8"
-  - id: latest
-    name_template: "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest{{end}}"
-    image_templates:
-      - "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-amd64{{end}}"
-      - "{{ if and .Tag (not .Prerelease) }}ghcr.io/jkroepke/access-log-exporter:latest-arm64v8{{end}}"
-  - id: main
-    name_template: '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main{{end}}'
-    image_templates:
-      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-amd64{{end}}'
-      - '{{ if eq .Branch "main" }}ghcr.io/jkroepke/access-log-exporter:main-arm64v8{{end}}'
+      - dist/
 
 docker_signs:
   - artifacts: all
