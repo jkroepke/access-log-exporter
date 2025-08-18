@@ -104,7 +104,6 @@ nfpms:
 dockers:
   - goos: linux
     use: buildx
-    goarch: amd64
     dockerfile: Dockerfile
     image_templates:
       - 'ghcr.io/jkroepke/access-log-exporter:{{ .Version }}'
