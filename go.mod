@@ -38,7 +38,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20250317134145-8bc96cf8fc35 // indirect
+	github.com/lufia/plan9stats v0.0.0-20250821153705-5981dea3221d // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
