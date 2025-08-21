@@ -17,7 +17,7 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			config.Config{},
-			"",
+			"preset '' not found in configuration",
 		},
 	} {
 		t.Run(tc.err, func(t *testing.T) {
