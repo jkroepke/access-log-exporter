@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestURL(t *testing.T) {
