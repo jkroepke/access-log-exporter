@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/goccy/go-yaml v1.18.0
-	github.com/prometheus/client_golang v1.23.1
+	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.66.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.38.0
