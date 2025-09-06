@@ -181,8 +181,12 @@ func TestIT(t *testing.T) {
 
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
-	require.Equal(t, 3, strings.Count(metrics, "access_log_exporter_build_info"), metrics)
-	require.Equal(t, 1174, strings.Count(metrics, "http_"), metrics)
+	require.Equal(t, 1, strings.Count(metrics, "log_parse_errors_total 0"), metrics)
+	require.Equal(t, 448, strings.Count(metrics, "http_request_duration_seconds_"), metrics)
+	require.Equal(t, 322, strings.Count(metrics, "http_request_size_bytes"), metrics)
+	require.Equal(t, 34, strings.Count(metrics, "http_requests_completed_total"), metrics)
+	require.Equal(t, 34, strings.Count(metrics, "http_requests_total"), metrics)
+	require.Equal(t, 320, strings.Count(metrics, "http_response_size_bytes_"), metrics)
 	require.Equal(t, 21, strings.Count(metrics, "nginx_"), metrics)
 
 	termCh <- syscall.SIGTERM

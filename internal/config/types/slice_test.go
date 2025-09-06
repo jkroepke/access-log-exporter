@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 func TestSliceUnmarshalText(t *testing.T) {
@@ -46,7 +46,7 @@ func TestSliceUnmarshalYAML(t *testing.T) {
 
 	slice := types.StringSlice{}
 
-	require.NoError(t, yaml.NewDecoder(strings.NewReader("- a\n- b\n- c\n- d\n"), yaml.UseJSONUnmarshaler()).Decode(&slice))
+	require.NoError(t, yaml.NewDecoder(strings.NewReader("- a\n- b\n- c\n- d\n")).Decode(&slice))
 
 	assert.Equal(t, types.StringSlice{"a", "b", "c", "d"}, slice)
 }
@@ -74,7 +74,7 @@ func TestFloat64SliceMarshalText(t *testing.T) {
 func TestFloat64SliceUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 
-	slice := types.Float64Slice{}
+	var slice types.Float64Slice
 
 	require.NoError(t, json.NewDecoder(strings.NewReader(`[0.5,0.6,0.7,0.8]`)).Decode(&slice))
 
@@ -84,9 +84,9 @@ func TestFloat64SliceUnmarshalJSON(t *testing.T) {
 func TestFloat64SliceUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 
-	slice := types.Float64Slice{}
+	var slice types.Float64Slice
 
-	require.NoError(t, yaml.NewDecoder(strings.NewReader("- 0.5\n- 0.6\n- 0.7\n- 0.8\n"), yaml.UseJSONUnmarshaler()).Decode(&slice))
+	require.NoError(t, yaml.NewDecoder(strings.NewReader("- 0.5\n- 0.6\n- 0.7\n- 0.8\n")).Decode(&slice))
 
 	assert.Equal(t, types.Float64Slice{0.5, 0.6, 0.7, 0.8}, slice)
 }
