@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var ErrEmptyConfigFile = errors.New("configuration file is empty")
