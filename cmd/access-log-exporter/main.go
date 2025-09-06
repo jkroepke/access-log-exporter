@@ -32,6 +32,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/jkroepke/access-log-exporter/internal/collector"
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/nginx"
@@ -93,6 +94,13 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 	if conf.VerifyConfig {
 		return ReturnCodeOK
+	}
+
+	_, err := memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithLogger(logger),
+	)
+	if err != nil {
+		logger.LogAttrs(ctx, slog.LevelWarn, "error setting GOMEMLIMIT", slog.Any("error", err))
 	}
 
 	syslogMessageBuffer := make(chan string, conf.BufferSize)
