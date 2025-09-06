@@ -8,7 +8,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestSliceUnmarshalText(t *testing.T) {
@@ -74,7 +74,7 @@ func TestFloat64SliceMarshalText(t *testing.T) {
 func TestFloat64SliceUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 
-	slice := types.Float64Slice{}
+	var slice types.Float64Slice
 
 	require.NoError(t, json.NewDecoder(strings.NewReader(`[0.5,0.6,0.7,0.8]`)).Decode(&slice))
 
@@ -84,7 +84,7 @@ func TestFloat64SliceUnmarshalJSON(t *testing.T) {
 func TestFloat64SliceUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 
-	slice := types.Float64Slice{}
+	var slice types.Float64Slice
 
 	require.NoError(t, yaml.NewDecoder(strings.NewReader("- 0.5\n- 0.6\n- 0.7\n- 0.8\n")).Decode(&slice))
 

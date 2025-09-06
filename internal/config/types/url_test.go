@@ -8,7 +8,7 @@ import (
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestURL(t *testing.T) {

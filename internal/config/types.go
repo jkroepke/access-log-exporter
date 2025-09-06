@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 var ErrEmptyConfigFile = errors.New("configuration file is empty")
@@ -107,15 +107,13 @@ func (c Config) String() string {
 func (r *Replacement) UnmarshalYAML(data *yaml.Node) error {
 	type Alias Replacement
 
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(r),
-	}
+	aux := Alias(*r)
 
 	if err := data.Decode(&aux); err != nil {
 		return err //nolint:wrapcheck
 	}
+
+	*r = Replacement(aux)
 
 	if r.Regexp != nil && r.String != nil {
 		return errors.New("replacement can not have both regexp and string")

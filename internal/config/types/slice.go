@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 type StringSlice []string
@@ -55,7 +55,7 @@ func (s *StringSlice) UnmarshalJSON(jsonBytes []byte) error {
 func (s *StringSlice) UnmarshalYAML(data *yaml.Node) error {
 	var slice []string
 
-	err := json.NewDecoder(strings.NewReader(data.Value)).Decode(&slice)
+	err := data.Decode(&slice)
 
 	*s = slice
 
@@ -126,7 +126,7 @@ func (s *Float64Slice) UnmarshalJSON(jsonBytes []byte) error {
 func (s *Float64Slice) UnmarshalYAML(data *yaml.Node) error {
 	var slice []float64
 
-	err := json.NewDecoder(strings.NewReader(data.Value)).Decode(&slice)
+	err := data.Decode(&slice)
 
 	*s = slice
 
