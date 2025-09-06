@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"go.yaml.in/yaml/v4"
 )
 
 type StringSlice []string
@@ -40,6 +42,20 @@ func (s *StringSlice) UnmarshalJSON(jsonBytes []byte) error {
 	var slice []string
 
 	err := json.NewDecoder(bytes.NewReader(jsonBytes)).Decode(&slice)
+
+	*s = slice
+
+	//nolint:wrapcheck
+	return err
+}
+
+// UnmarshalYAML implements the [yaml.Unmarshaler] interface.
+//
+//goland:noinspection GoMixedReceiverTypes
+func (s *StringSlice) UnmarshalYAML(data *yaml.Node) error {
+	var slice []string
+
+	err := json.NewDecoder(strings.NewReader(data.Value)).Decode(&slice)
 
 	*s = slice
 
@@ -97,6 +113,20 @@ func (s *Float64Slice) UnmarshalJSON(jsonBytes []byte) error {
 	var slice []float64
 
 	err := json.NewDecoder(bytes.NewReader(jsonBytes)).Decode(&slice)
+
+	*s = slice
+
+	//nolint:wrapcheck
+	return err
+}
+
+// UnmarshalYAML implements the [yaml.Unmarshaler] interface.
+//
+//goland:noinspection GoMixedReceiverTypes
+func (s *Float64Slice) UnmarshalYAML(data *yaml.Node) error {
+	var slice []float64
+
+	err := json.NewDecoder(strings.NewReader(data.Value)).Decode(&slice)
 
 	*s = slice
 

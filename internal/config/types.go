@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
+	"go.yaml.in/yaml/v4"
 )
 
 var ErrEmptyConfigFile = errors.New("configuration file is empty")
@@ -103,7 +104,7 @@ func (c Config) String() string {
 	return string(jsonString)
 }
 
-func (r *Replacement) UnmarshalJSON(data []byte) error {
+func (r *Replacement) UnmarshalYAML(data *yaml.Node) error {
 	type Alias Replacement
 
 	aux := &struct {
@@ -112,7 +113,7 @@ func (r *Replacement) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(r),
 	}
 
-	if err := json.Unmarshal(data, &aux); err != nil {
+	if err := data.Decode(&aux); err != nil {
 		return err //nolint:wrapcheck
 	}
 
