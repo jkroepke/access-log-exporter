@@ -2,6 +2,8 @@
   <dictionary name="project">
     <words>
       <w>httpbin</w>
+      <w>opencontainers</w>
+      <w>rdpartylicenses</w>
     </words>
   </dictionary>
 </component>
