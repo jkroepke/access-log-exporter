@@ -4,7 +4,7 @@ version: 2
 before:
   hooks:
     - rm -rf 3rdpartylicenses
-    - go run github.com/google/go-licenses@latest save ./cmd/access-log-exporter --save_path=3rdpartylicenses
+    - make 3rdpartylicenses
 
 builds:
   - id: "access-log-exporter"
@@ -135,9 +135,9 @@ dockers_v2:
     platforms:
       - linux/amd64
       - linux/arm64
-    flags:
-      - '--sbom'
-      - '--provenance=false'
+    #flags:
+    #  - '--sbom'
+    #  - '--provenance=false'
 
 docker_signs:
   - artifacts: manifests
@@ -163,6 +163,8 @@ gomod:
   proxy: true
 
 release:
+  draft: true
+  replace_existing_draft: true
   prerelease: auto
 
 changelog:

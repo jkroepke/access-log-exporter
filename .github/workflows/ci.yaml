@@ -207,6 +207,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.NFPM_PASSPHRASE }}
 
+      - name: Publish Release
+        run: gh release edit "${GITHUB_REF_NAME}" --draft=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # parse artifacts to the format required for image attestation
       # https://github.com/goreleaser/goreleaser/issues/4852#issuecomment-2122790132
       - run: |
