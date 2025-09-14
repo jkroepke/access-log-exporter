@@ -136,7 +136,8 @@ dockers_v2:
       - linux/amd64
       - linux/arm64
     flags:
-      - '--provenance=false'
+      - '{{ if not .IsSnapshot }}--sbom=true{{end}}'
+      - '{{ if not .IsSnapshot }}--provenance=false{{end}}'
 
 docker_signs:
   - artifacts: manifests
