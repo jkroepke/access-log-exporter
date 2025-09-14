@@ -53,6 +53,9 @@ jobs:
           GPG_KEY_PATH: "${{ secrets.GPG_KEY_PATH }}"
           GPG_KEY: ${{ secrets.GPG_KEY }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: go build (with goreleaser)
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
@@ -172,6 +175,9 @@ jobs:
           GPG_KEY: ${{ secrets.GPG_KEY }}
           GPG_PASSPHRASE: ${{ secrets.NFPM_PASSPHRASE }}
           GPG_KEY_PATH: "${{ secrets.GPG_KEY_PATH }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Run GoReleaser
         id: goreleaser
