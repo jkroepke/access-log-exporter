@@ -140,7 +140,7 @@ dockers_v2:
     #   - '{{ if not .IsSnapshot }}--provenance=false{{end}}'
 
 docker_signs:
-  - artifacts: manifests
+  - artifacts: ''
     output: true
     cmd: cosign
     env:
