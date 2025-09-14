@@ -41,14 +41,14 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "This is the total number of requests made in this period (top-right period selected)",
+      "description": "The number of HTTP requests made in the last 1 minute window",
       "fieldConfig": {
         "defaults": {
           "color": {
             "fixedColor": "blue",
             "mode": "fixed"
           },
-          "decimals": 1,
+          "decimals": 0,
           "mappings": [
             {
               "options": {
@@ -79,7 +79,7 @@
         "x": 0,
         "y": 1
       },
-      "id": 7,
+      "id": 45,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "none",
@@ -106,15 +106,16 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[${__range_s}s]))",
+          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__interval]))",
           "format": "time_series",
+          "interval": "2m",
           "intervalFactor": 1,
           "legendFormat": "",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Requests (period)",
+      "title": "Requests ($__interval)",
       "transparent": true,
       "type": "stat"
     },
@@ -416,7 +417,7 @@
         "x": 12,
         "y": 1
       },
-      "id": 12,
+      "id": 39,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "value",
@@ -443,7 +444,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\",status=~\"[12]..\"}[${__range_s}s])) or vector(0)",
+          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\",status=~\"[12]..\"}[$__interval])) or vector(0)",
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 1,
@@ -452,7 +453,7 @@
           "refId": "A"
         }
       ],
-      "title": "HTTP 1/2xx (period)",
+      "title": "HTTP 1/2xx ($__interval)",
       "transparent": true,
       "type": "stat"
     },
@@ -710,14 +711,14 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "The number of HTTP requests made in the last 1 minute window",
+      "description": "This is the total number of requests made in this period (top-right period selected)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "fixedColor": "blue",
             "mode": "fixed"
           },
-          "decimals": 0,
+          "decimals": 1,
           "mappings": [
             {
               "options": {
@@ -748,7 +749,7 @@
         "x": 0,
         "y": 4
       },
-      "id": 10,
+      "id": 7,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "none",
@@ -775,16 +776,15 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__interval]))",
+          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[${__range_s}s]))",
           "format": "time_series",
-          "interval": "2m",
           "intervalFactor": 1,
           "legendFormat": "",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Requests ($__interval)",
+      "title": "Requests (period)",
       "transparent": true,
       "type": "stat"
     },
@@ -1086,7 +1086,7 @@
         "x": 12,
         "y": 4
       },
-      "id": 39,
+      "id": 12,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "value",
@@ -1113,7 +1113,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\",status=~\"[12]..\"}[$__interval])) or vector(0)",
+          "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\",status=~\"[12]..\"}[${__range_s}s])) or vector(0)",
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 1,
@@ -1122,7 +1122,7 @@
           "refId": "A"
         }
       ],
-      "title": "HTTP 1/2xx ($__interval)",
+      "title": "HTTP 1/2xx (period)",
       "transparent": true,
       "type": "stat"
     },
@@ -1487,153 +1487,19 @@
       "description": "The breakdown of the various HTTP status codes of the requests handled within' this period that matches the variables chosen above.\n\nThis chart helps notice and dive into which service is having failures and of what kind.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "Requests",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
           },
-          "decimals": 0,
-          "fieldMinMax": false,
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
+          "links": []
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "HTTP 101"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "/HTTP [1-2].*/i"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#37872D",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "/HTTP 4.*/i"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#C4162A",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "HTTP 404"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#FF9830",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "HTTP 499"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#FA6400",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "/HTTP 5.*/i"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#C4162A",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -1642,18 +1508,42 @@
         "y": 7
       },
       "id": 17,
+      "interval": "5m",
       "options": {
-        "alertThreshold": true,
+        "calculate": false,
+        "cellGap": 1,
+        "cellValues": {
+          "unit": "short"
+        },
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Warm",
+          "steps": 128
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "unknown"
         },
         "tooltip": {
-          "hideZeros": true,
           "mode": "multi",
-          "sort": "asc"
+          "showColorScale": false,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false
         }
       },
       "pluginVersion": "12.2.0-16979757807",
@@ -1668,13 +1558,13 @@
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 1,
-          "legendFormat": "HTTP {{status}}",
+          "legendFormat": "{{status}}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "HTTP Status Codes",
-      "type": "timeseries"
+      "type": "heatmap"
     },
     {
       "datasource": {
@@ -1821,7 +1711,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "response times",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -2172,14 +2062,16 @@
         "calculate": false,
         "calculation": {},
         "cellGap": 2,
-        "cellValues": {},
+        "cellValues": {
+          "decimals": 0
+        },
         "color": {
           "exponent": 0.5,
           "fill": "#C4162A",
           "mode": "scheme",
-          "reverse": true,
+          "reverse": false,
           "scale": "exponential",
-          "scheme": "YlOrRd",
+          "scheme": "Warm",
           "steps": 128
         },
         "exemplars": {
@@ -2192,7 +2084,7 @@
           "show": true
         },
         "rowsFrame": {
-          "layout": "auto"
+          "layout": "le"
         },
         "showValue": "never",
         "tooltip": {
@@ -2317,7 +2209,7 @@
           ],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false,
+          "showLegend": true,
           "width": 200
         },
         "tooltip": {
@@ -2416,9 +2308,9 @@
           "exponent": 0.5,
           "fill": "dark-orange",
           "mode": "scheme",
-          "reverse": true,
+          "reverse": false,
           "scale": "linear",
-          "scheme": "YlOrRd",
+          "scheme": "Warm",
           "steps": 128
         },
         "exemplars": {
@@ -2517,9 +2409,9 @@
           "exponent": 0.5,
           "fill": "dark-orange",
           "mode": "scheme",
-          "reverse": true,
+          "reverse": false,
           "scale": "linear",
-          "scheme": "YlOrRd",
+          "scheme": "Warm",
           "steps": 128
         },
         "exemplars": {
@@ -2952,6 +2844,130 @@
       ],
       "title": "Active Connections",
       "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 43,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "This is a total number of requests broken down by the host.  This can help get a sense of scale in relation to each other.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Requests",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 18,
+            "w": 24,
+            "x": 0,
+            "y": 48
+          },
+          "id": 46,
+          "options": {
+            "alertThreshold": true,
+            "legend": {
+              "calcs": [
+                "min",
+                "max",
+                "mean",
+                "last"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": true,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16979757807",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(http_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\",instance=~\"$instance\",host=~\"$host\"}[$__interval])) by (host, path)",
+              "format": "time_series",
+              "interval": "2m",
+              "intervalFactor": 1,
+              "legendFormat": "{{path}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP Requests / Host",
+          "type": "timeseries"
+        }
+      ],
+      "repeat": "host",
+      "title": "Host ($host)",
+      "type": "row"
     }
   ],
   "preload": false,
@@ -3124,5 +3140,5 @@
   "timezone": "browser",
   "title": "Access Log Metrics",
   "uid": "access-log-exporter",
-  "version": 20
+  "version": 28
 }

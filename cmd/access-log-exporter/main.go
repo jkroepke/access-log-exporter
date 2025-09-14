@@ -32,6 +32,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/jkroepke/access-log-exporter/internal/collector"
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/nginx"
@@ -91,18 +92,15 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 	logger.LogAttrs(ctx, slog.LevelDebug, "config", slog.String("config", conf.String()))
 
-	wg := &sync.WaitGroup{}
-	defer wg.Wait()
-
-	preset, ok := conf.Presets[conf.Preset]
-	if !ok {
-		logger.LogAttrs(ctx, slog.LevelError, fmt.Sprintf("preset '%s' not found in configuration", conf.Preset))
-
-		return ReturnCodeError
-	}
-
 	if conf.VerifyConfig {
 		return ReturnCodeOK
+	}
+
+	_, err := memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithLogger(logger),
+	)
+	if err != nil {
+		logger.LogAttrs(ctx, slog.LevelWarn, "error setting GOMEMLIMIT", slog.Any("error", err))
 	}
 
 	syslogMessageBuffer := make(chan string, conf.BufferSize)
@@ -115,77 +113,29 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	}
 
 	go func() {
+		logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
+
 		cancel(syslogServer.Start())
 	}()
 
-	logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
-
-	prometheusCollector, err := collector.New(ctx, logger, preset, conf.WorkerCount, syslogMessageBuffer)
+	prometheusCollector, err := collector.New(ctx, logger, conf.Presets[conf.Preset], conf.WorkerCount, syslogMessageBuffer)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
 
 		return ReturnCodeError
 	}
 
-	prometheus.DefaultGatherer = nil   // Disable default gatherer to avoid conflicts with custom registry
-	prometheus.DefaultRegisterer = nil // Disable default registerer to avoid conflicts with custom registry
+	reg := setupPrometheusRegistry(conf, logger, prometheusCollector)
+	server := setupServer(conf, logger, reg)
 
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewBuildInfoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versioncollector.NewCollector("access_log_exporter"),
-		prometheusCollector,
-	)
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	if !conf.Nginx.ScrapeURL.IsEmpty() {
-		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String()))
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.Handle("GET /metrics", promhttp.InstrumentMetricHandler(reg, promhttp.HandlerFor(
-		prometheus.Gatherers{reg},
-		promhttp.HandlerOpts{
-			ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
-			ErrorHandling:     promhttp.ContinueOnError,
-			Registry:          reg,
-			EnableOpenMetrics: true,
-		},
-	)))
-
-	// Start debug listener if enabled
-	if conf.Debug.Enable {
-		mux.Handle("GET /", http.RedirectHandler("/debug/pprof/", http.StatusTemporaryRedirect))
-		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
-		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
-		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
-		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
-		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
-	}
-
-	server := &http.Server{
-		Addr:              conf.Web.ListenAddress,
-		ReadHeaderTimeout: 3 * time.Second,
-		ReadTimeout:       3 * time.Second,
-		WriteTimeout:      10 * time.Second,
-		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
-		Handler:           mux,
-	}
-
-	go func() {
-		defer wg.Done()
-
-		wg.Add(1)
-
+	wg.Go(func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			cancel(err)
 		}
-	}()
+	})
 
 	for {
 		select {
@@ -247,6 +197,65 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 			}
 		}
 	}
+}
+
+func setupPrometheusRegistry(conf config.Config, logger *slog.Logger, prometheusCollector *collector.Collector) *prometheus.Registry {
+	prometheus.DefaultGatherer = nil   // Disable default gatherer to avoid conflicts with custom registry
+	prometheus.DefaultRegisterer = nil // Disable default registerer to avoid conflicts with custom registry
+
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewBuildInfoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		versioncollector.NewCollector("access_log_exporter"),
+		prometheusCollector,
+	)
+
+	if !conf.Nginx.ScrapeURL.IsEmpty() {
+		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String()))
+	}
+
+	return reg
+}
+
+// setupServer initializes the HTTP server with the given configuration and logger.
+func setupServer(conf config.Config, logger *slog.Logger, reg *prometheus.Registry) *http.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.Handle("GET /metrics", promhttp.InstrumentMetricHandler(reg, promhttp.HandlerFor(
+		prometheus.Gatherers{reg},
+		promhttp.HandlerOpts{
+			ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
+			ErrorHandling:     promhttp.ContinueOnError,
+			Registry:          reg,
+			EnableOpenMetrics: true,
+		},
+	)))
+
+	// Start debug listener if enabled
+	if conf.Debug.Enable {
+		mux.Handle("GET /", http.RedirectHandler("/debug/pprof/", http.StatusTemporaryRedirect))
+		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+	}
+
+	server := &http.Server{
+		Addr:              conf.Web.ListenAddress,
+		ReadHeaderTimeout: 3 * time.Second,
+		ReadTimeout:       3 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		Handler:           mux,
+	}
+
+	return server
 }
 
 // initializeConfigAndLogger handles configuration parsing and logger setup.
