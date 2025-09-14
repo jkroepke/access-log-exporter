@@ -106,7 +106,7 @@ dockers_v2:
       - ghcr.io/jkroepke/access-log-exporter
     tags:
       - '{{ .Version }}'
-      - '{{ if and .Tag (not .Prerelease) }}latest{{end}}'
+      - '{{ if and .Tag (not .Prerelease) (ne .Branch "main") }}latest{{end}}'
       - '{{ if eq .Branch "main" }}main{{end}}'
     extra_files:
       - packaging/etc/access-log-exporter/config.yaml
