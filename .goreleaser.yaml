@@ -122,16 +122,16 @@ dockers_v2:
       "org.opencontainers.image.vendor": 'Jan-Otto Kröpke'
       "org.opencontainers.image.version": '{{.Version}}'
     annotations:
-      "org.opencontainers.image.authors": 'Jan-Otto Kröpke https://github.com/jkroepke/'
-      "org.opencontainers.image.created": '{{.Date}}'
-      "org.opencontainers.image.description": 'A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
-      "org.opencontainers.image.documentation": 'https://github.com/jkroepke/access-log-exporter/wiki'
-      "org.opencontainers.image.licenses": 'Apache-2.0'
-      "org.opencontainers.image.revision": '{{.FullCommit}}'
-      "org.opencontainers.image.source": 'https://github.com/jkroepke/access-log-exporter'
-      "org.opencontainers.image.title": '{{.ProjectName}}'
-      "org.opencontainers.image.vendor": 'Jan-Otto Kröpke'
-      "org.opencontainers.image.version": '{{.Version}}'
+      "index,manifest:org.opencontainers.image.authors": 'Jan-Otto Kröpke https://github.com/jkroepke/'
+      "index,manifest:org.opencontainers.image.created": '{{.Date}}'
+      "index,manifest:org.opencontainers.image.description": 'A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.'
+      "index,manifest:org.opencontainers.image.documentation": 'https://github.com/jkroepke/access-log-exporter/wiki'
+      "index,manifest:org.opencontainers.image.licenses": 'Apache-2.0'
+      "index,manifest:org.opencontainers.image.revision": '{{.FullCommit}}'
+      "index,manifest:org.opencontainers.image.source": 'https://github.com/jkroepke/access-log-exporter'
+      "index,manifest:org.opencontainers.image.title": '{{.ProjectName}}'
+      "index,manifest:org.opencontainers.image.vendor": 'Jan-Otto Kröpke'
+      "index,manifest:org.opencontainers.image.version": '{{.Version}}'
     platforms:
       - linux/amd64
       - linux/arm64
