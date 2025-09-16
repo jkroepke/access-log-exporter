@@ -44,7 +44,7 @@ jobs:
           cache: 'true'
           cache-dependency-path: 'go.sum'
 
-      - uses: anchore/sbom-action/download-syft@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
+      - uses: anchore/sbom-action/download-syft@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
 
       - name: Write gpg sign key
         if: env.GPG_KEY != null
@@ -54,13 +54,13 @@ jobs:
           GPG_KEY: ${{ secrets.GPG_KEY }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: go build (with goreleaser)
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           # renovate: github=goreleaser/goreleaser
-          version: v2.12.0
+          version: v2.12.1
           args: release --snapshot
         env:
           GITHUB_TOKEN: ""
@@ -145,9 +145,9 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - uses: anchore/sbom-action/download-syft@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
+      - uses: anchore/sbom-action/download-syft@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
 
-      - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
@@ -177,14 +177,14 @@ jobs:
           GPG_KEY_PATH: "${{ secrets.GPG_KEY_PATH }}"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Run GoReleaser
         id: goreleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           # renovate: github=goreleaser/goreleaser
-          version: v2.12.0
+          version: v2.12.1
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
