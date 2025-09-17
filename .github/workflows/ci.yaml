@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: 'go.mod'
-          cache: github.actor != 'renovate[bot]' && github.actor == 'mend[bot]'
+          cache: "${{ github.actor != 'renovate[bot]' && github.actor != 'mend[bot]' }}"
 
       - run: go build ./cmd/access-log-exporter
       - run: go test ./... -timeout 20s -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./...
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: 'go.mod'
-          cache: github.actor != 'renovate[bot]' && github.actor == 'mend[bot]'
+          cache: "${{ github.actor != 'renovate[bot]' && github.actor != 'mend[bot]' }}"
 
       - uses: anchore/sbom-action/download-syft@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
 
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: 'go.mod'
-          cache: github.actor != 'renovate[bot]' && github.actor == 'mend[bot]'
+          cache: "${{ github.actor != 'renovate[bot]' && github.actor != 'mend[bot]' }}"
 
       - run: go mod tidy -diff
 
