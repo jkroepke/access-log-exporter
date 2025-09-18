@@ -129,8 +129,8 @@ github.com/tklauser/go-sysconf v0.3.15 h1:VE89k0criAymJ/Os65CSn1IXaol+1wrsFHEB8O
 github.com/tklauser/go-sysconf v0.3.15/go.mod h1:Dmjwr6tYFIseJw7a3dRLJfsHAMXZ3nEnL/aZY+0IuI4=
 github.com/tklauser/numcpus v0.10.0 h1:18njr6LDBk1zuna922MgdjQuJFjrdppsZG60sHGfjso=
 github.com/tklauser/numcpus v0.10.0/go.mod h1:BiTKazU708GQTYF4mB+cmlpT2Is1gLk7XVuEeem8LsQ=
-github.com/ua-parser/uap-go v0.0.0-20250326155420-f7f5a2f9f5bc h1:reH9QQKGFOq39MYOvU9+SYrB8uzXtWNo51fWK3g0gGc=
-github.com/ua-parser/uap-go v0.0.0-20250326155420-f7f5a2f9f5bc/go.mod h1:gwANdYmo9R8LLwGnyDFWK2PMsaXXX2HhAvCnb/UhZsM=
+github.com/ua-parser/uap-go v0.0.0-20250917011043-9c86a9b0f8f0 h1:DHueI9yFvHWHJDas1bZKOILjS+COtvFyYShEd77ak+U=
+github.com/ua-parser/uap-go v0.0.0-20250917011043-9c86a9b0f8f0/go.mod h1:gwANdYmo9R8LLwGnyDFWK2PMsaXXX2HhAvCnb/UhZsM=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
