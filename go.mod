@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.4
-	github.com/docker/docker v28.5.0+incompatible
+	github.com/docker/docker v28.5.1+incompatible
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.66.1
 	github.com/stretchr/testify v1.11.1
