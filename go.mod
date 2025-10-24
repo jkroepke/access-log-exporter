@@ -3,7 +3,7 @@ module github.com/jkroepke/access-log-exporter
 go 1.25
 
 require (
-	github.com/KimMachineGun/automemlimit v0.7.4
+	github.com/KimMachineGun/automemlimit v0.7.5
 	github.com/docker/docker v28.5.1+incompatible
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.1
