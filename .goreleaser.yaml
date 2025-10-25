@@ -149,6 +149,7 @@ docker_signs:
       - sign
       - '--oidc-issuer={{if index .Env "CI"}}https://token.actions.githubusercontent.com{{else}}https://oauth2.sigstore.dev/auth{{end}}'
       - '--yes'
+      - '--use-signing-config=false'
       - '${artifact}@${digest}'
 
 checksum:
