@@ -147,8 +147,8 @@ func (s *Syslog) Close(ctx context.Context) error {
 		return fmt.Errorf("could not stop syslog server: %w", err)
 	}
 
-	if strings.HasPrefix(s.listenAddr, "unix://") {
-		_ = os.Remove(strings.TrimPrefix(s.listenAddr, "unix://"))
+	if unixSocketPath, ok := strings.CutPrefix(s.listenAddr, "unix://"); ok {
+		_ = os.Remove(unixSocketPath)
 	}
 
 	s.logger.InfoContext(ctx, "syslog server shutdown complete")
