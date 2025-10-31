@@ -96,7 +96,7 @@ func New(cfg config.Metric) (*Metric, error) {
 		metric: metric,
 		ua:     uaParser,
 		labelsPool: &sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return make(prometheus.Labels, labelCount)
 			},
 		},

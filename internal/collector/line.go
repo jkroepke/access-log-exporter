@@ -19,13 +19,9 @@ func (c *Collector) lineHandlerWorkers(ctx context.Context, logger *slog.Logger,
 	}
 
 	for range workerCount {
-		c.wg.Add(1)
-
-		go func() {
-			defer c.wg.Done()
-
+		c.wg.Go(func() {
 			c.lineHandlerWorker(ctx, logger, messageCh)
-		}()
+		})
 	}
 
 	logger.InfoContext(ctx, "line handler started", slog.Int("workers", runtime.NumCPU()))

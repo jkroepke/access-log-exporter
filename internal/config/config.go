@@ -109,8 +109,8 @@ func lookupConfigArgument(args []string) string {
 			continue
 		}
 
-		if strings.HasPrefix(arg, "--config=") {
-			return strings.TrimPrefix(arg, "--config=")
+		if configPath, ok := strings.CutPrefix(arg, "--config="); ok {
+			return configPath
 		}
 
 		// check if the argument is --config without value and look for the next argument
