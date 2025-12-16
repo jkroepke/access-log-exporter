@@ -47,15 +47,13 @@ nfpms:
     maintainer: Jan-Otto Kröpke <github@jkroepke.de>
     section: net
     description: |
-      access-log-exporter is a management client for OpenVPN that handles the authentication of connecting users against OIDC providers like Azure AD or Keycloak.
+      A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.
     license: MIT License
     formats:
       - deb
       - rpm
     provides:
       - access-log-exporter
-    recommends:
-      - openvpn
     contents:
       - src: packaging/usr/lib/sysusers.d/
         dst: /usr/lib/sysusers.d/
