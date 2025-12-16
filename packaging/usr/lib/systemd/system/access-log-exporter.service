@@ -11,7 +11,7 @@ User=access-log-exporter-dynamic
 Group=access-log-exporter-dynamic
 SupplementaryGroups=access-log-exporter
 
-ExecStart=/usr/bin/access-log-exporter -config-file ${CONFIG_FILE}
+ExecStart=/usr/bin/access-log-exporter -config ${CONFIG_FILE}
 NoExecPaths=/
 ExecPaths=/usr/bin/access-log-exporter /usr/bin/env /usr/bin/kill
 ExecReload=/usr/bin/env kill -USR1 $MAINPID
