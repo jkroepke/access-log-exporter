@@ -345,8 +345,9 @@ func (m *Metric) processCommaDelimitedValues(value string, upstreams []string, l
 
 // extractNextValue extracts the next comma-separated value from the input string.
 func (m *Metric) extractNextValue(value string) (string, string) {
-	if comma := strings.IndexByte(value, ','); comma >= 0 {
-		return strings.TrimSpace(value[:comma]), value[comma+1:]
+	before, after, found := strings.Cut(value, ",")
+	if found {
+		return strings.TrimSpace(before), after
 	}
 
 	return strings.TrimSpace(value), ""
