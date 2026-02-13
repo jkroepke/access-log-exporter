@@ -40,7 +40,7 @@ services:
       - --preset=simple_uri_upstream
       - --nginx.scrape-url=http://nginx:8090/stub_status
   load-generator:
-    image: golang:1.25
+    image: golang:1.26
     networks:
       access-log-exporter:
     depends_on:
