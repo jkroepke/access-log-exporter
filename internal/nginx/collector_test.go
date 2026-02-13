@@ -28,6 +28,7 @@ func TestCollector(t *testing.T) {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Add("Server", "nginx")
 				w.WriteHeader(http.StatusOK)
+
 				_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -60,6 +61,7 @@ nginx_up{version="N/A"} 1`,
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Add("Server", "nginx/1.23.1")
 				w.WriteHeader(http.StatusOK)
+
 				_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -91,6 +93,7 @@ nginx_up{version="1.23.1"} 1`,
 			name: "invalid format",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
+
 				_, err := w.Write([]byte("Invalid format"))
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -104,6 +107,7 @@ nginx_up{version="N/A"} 0`,
 			name: "empty response",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
+
 				_, err := w.Write([]byte(""))
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
