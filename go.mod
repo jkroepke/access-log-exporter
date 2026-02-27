@@ -11,7 +11,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/ua-parser/uap-go v0.0.0-20251207011819-db9adb27a0b8
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
-	golang.org/x/net v0.50.0
+	golang.org/x/net v0.51.0
 )
 
 require (
