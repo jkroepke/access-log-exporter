@@ -42,7 +42,7 @@ jobs:
           go-version-file: 'go.mod'
           cache: "${{ github.actor != 'renovate[bot]' && github.actor != 'mend[bot]' }}"
 
-      - uses: anchore/sbom-action/download-syft@17ae1740179002c89186b61233e0f892c3118b11 # v0.23.0
+      - uses: anchore/sbom-action/download-syft@57aae528053a48a3f6235f2d9461b05fbcb7366d # v0.23.1
 
       - name: Write gpg sign key
         if: env.GPG_KEY != null
@@ -58,7 +58,7 @@ jobs:
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:
           # renovate: github=goreleaser/goreleaser
-          version: v2.14.1
+          version: v2.14.3
           args: release --snapshot
         env:
           GITHUB_TOKEN: ""
@@ -84,7 +84,7 @@ jobs:
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           # renovate: github=golangci/golangci-lint
-          version: v2.11.1
+          version: v2.11.3
           args: "--max-same-issues=0"
 
   super-lint:
@@ -145,9 +145,9 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      - uses: anchore/sbom-action/download-syft@17ae1740179002c89186b61233e0f892c3118b11 # v0.23.0
+      - uses: anchore/sbom-action/download-syft@57aae528053a48a3f6235f2d9461b05fbcb7366d # v0.23.1
 
-      - uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+      - uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
@@ -184,7 +184,7 @@ jobs:
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:
           # renovate: github=goreleaser/goreleaser
-          version: v2.14.1
+          version: v2.14.3
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
