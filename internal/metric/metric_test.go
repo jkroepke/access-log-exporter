@@ -123,7 +123,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 				Name:       "http_requests_total",
 				Type:       "counter",
 				Help:       "The total number of client requests.",
-				ValueIndex: ptr(uint(4)),
+				ValueIndex: new(uint(4)),
 			},
 			logLines: []string{
 				"example.com\tGET",
@@ -166,7 +166,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			name: "metric without type",
 			cfg: config.Metric{
 				Name:       "http_requests_total",
-				ValueIndex: ptr(uint(0)),
+				ValueIndex: new(uint(0)),
 			},
 			logLines:  make([]string, 0),
 			metricErr: `unsupported metric type: "". Must be one of counter, gauge, or histogram`,
@@ -175,7 +175,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			name: "metric with empty label name",
 			cfg: config.Metric{
 				Name:       "http_requests_total",
-				ValueIndex: ptr(uint(0)),
+				ValueIndex: new(uint(0)),
 				Labels: []config.Label{
 					{},
 				},
@@ -188,7 +188,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 			cfg: config.Metric{
 				Name:       "http_requests_total",
 				Type:       "info",
-				ValueIndex: ptr(uint(0)),
+				ValueIndex: new(uint(0)),
 			},
 			logLines:  make([]string, 0),
 			metricErr: `unsupported metric type: "info". Must be one of counter, gauge, or histogram`,
@@ -208,7 +208,7 @@ http_requests_total{host="example.com",method="GET",status="200"} 1`,
 				Name:       "http_requests_total",
 				Help:       "The total number of client requests.",
 				Type:       "gauge",
-				ValueIndex: ptr(uint(2)),
+				ValueIndex: new(uint(2)),
 			},
 			logLines: []string{
 				"example.com\tGET\t200",
@@ -225,10 +225,10 @@ http_requests_total 200
 				Name:       "http_requests_completed_total",
 				Help:       "The total number of completed requests.",
 				Type:       "counter",
-				ValueIndex: ptr(uint(3)),
+				ValueIndex: new(uint(3)),
 				Replacements: []config.Replacement{
 					{
-						String:      ptr("OK"),
+						String:      new("OK"),
 						Replacement: "1",
 
 						StringReplacer: strings.NewReplacer("OK", "1"),
@@ -253,7 +253,7 @@ http_requests_completed_total 3
 				Name:       "http_request_duration_seconds",
 				Type:       "histogram",
 				Help:       "The time spent on receiving the response from the upstream server",
-				ValueIndex: ptr(uint(3)),
+				ValueIndex: new(uint(3)),
 				Buckets:    []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
 				Math: config.Math{
 					Enabled: true,
@@ -301,7 +301,7 @@ http_request_duration_seconds_count{host="app.example.net",method="PUT",status="
 				Name:       "http_request_duration_seconds",
 				Type:       "counter",
 				Help:       "The time spent on receiving the response from the upstream server",
-				ValueIndex: ptr(uint(3)),
+				ValueIndex: new(uint(3)),
 			},
 			logLines: []string{
 				"app.example.net\tPUT\t500\t-\t4096\t512",
@@ -314,7 +314,7 @@ http_request_duration_seconds_count{host="app.example.net",method="PUT",status="
 				Name:       "http_request_duration_seconds",
 				Type:       "histogram",
 				Help:       "The time spent on receiving the response from the upstream server",
-				ValueIndex: ptr(uint(3)),
+				ValueIndex: new(uint(3)),
 				Buckets:    []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
 				Math: config.Math{
 					Enabled: true,
@@ -362,7 +362,7 @@ http_request_duration_seconds_count{host="app.example.net",method="PUT",status="
 				Name:       "http_request_duration_seconds",
 				Type:       "histogram",
 				Help:       "The time spent on receiving the response from the upstream server",
-				ValueIndex: ptr(uint(3)),
+				ValueIndex: new(uint(3)),
 				Math: config.Math{
 					Enabled: true,
 					Div:     1000,
@@ -481,7 +481,7 @@ http_requests_total{host="www.example.com",method="HEAD",remote_user="-",ssl="of
 				Name:       "http_upstream_connect_duration_seconds",
 				Type:       "counter",
 				Help:       "The time spent on establishing a connection with the upstream server",
-				ValueIndex: ptr(uint(7)),
+				ValueIndex: new(uint(7)),
 				Math: config.Math{
 					Enabled: true,
 					Div:     1000,
@@ -525,7 +525,7 @@ http_upstream_connect_duration_seconds{host="web.example.org",method="POST",stat
 				Name:       "http_upstream_connect_duration_seconds",
 				Type:       "counter",
 				Help:       "The time spent on establishing a connection with the upstream server",
-				ValueIndex: ptr(uint(7)),
+				ValueIndex: new(uint(7)),
 				Math: config.Math{
 					Enabled: true,
 					Div:     1000,
@@ -616,7 +616,7 @@ http_requests_total{host="example.com",method="PUT",path="/api/v1/resource?id=:i
 				Name:       "http_upstream_connect_duration_seconds",
 				Type:       "counter",
 				Help:       "The time spent on establishing a connection with the upstream server",
-				ValueIndex: ptr(uint(7)),
+				ValueIndex: new(uint(7)),
 				Buckets:    types.Float64Slice{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
 				Math: config.Math{
 					Enabled: true,
@@ -716,8 +716,4 @@ func MetricsToText(tb testing.TB, met prometheus.Collector) (string, error) {
 	}
 
 	return strings.TrimSpace(string(allMetrics)), nil
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }
