@@ -51,8 +51,8 @@ docker run -p 4040:4040 -p 8514:8514/udp ghcr.io/jkroepke/access-log-exporter:la
 
 For **Nginx**, add to your configuration:
 ```nginx
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
-access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 ```
 
 For **Apache2**, add to your configuration:

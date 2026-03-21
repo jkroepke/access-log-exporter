@@ -24,12 +24,12 @@ To configure Nginx, add the following lines to the configuration file.
 ```nginx
 # Use only one of the presets below, depending on your needs.
 # simple preset
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
-access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 
 # simple_upstream preset
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
-access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 ```
 
 References:
@@ -50,12 +50,12 @@ map $request_uri $loggable {
 
 # Use only one of the presets below, depending on your needs.
 # simple preset with exclusion
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
-access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname if=$loggable;
+log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter if=$loggable;
 
 # simple_upstream preset with exclusion
-log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
-access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname if=$loggable;
+log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter if=$loggable;
 ```
 
 ## Apache2

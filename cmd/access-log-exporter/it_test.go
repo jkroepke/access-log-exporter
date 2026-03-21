@@ -30,8 +30,8 @@ events {
 }
 
 http {
-	log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
-	access_log syslog:server=host.docker.internal:8514,nohostname accesslog_exporter;
+	log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+	access_log syslog:server=host.docker.internal:8514,nohostname access_log_exporter;
 
 	server {
 		listen       8080;

@@ -16,8 +16,8 @@ presets:
   # LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
   # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
   # nginx
-  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
-  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+  # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple:
     metrics:
       - name: "http_requests_total"
@@ -91,8 +91,8 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
-  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+  # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple_upstream:
     metrics:
       - name: "http_requests_total"
@@ -226,8 +226,8 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format accesslog_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri';
-  # access_log syslog:server=127.0.0.1:8514 accesslog_exporter,nohostname;
+  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri';
+  # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple_uri_upstream:
     metrics:
       - name: "http_requests_total"
