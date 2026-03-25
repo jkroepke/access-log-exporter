@@ -100,6 +100,18 @@ func (c *Config) flagSetWeb(flagSet *flag.FlagSet) {
 		lookupEnvOrDefault("web.listen-address", c.Web.ListenAddress),
 		"Addresses on which to expose metrics. Examples: `:4041` or `[::1]:4041` for http",
 	)
+	flagSet.StringVar(
+		&c.Web.TLSCertFile,
+		"web.tls-cert-file",
+		lookupEnvOrDefault("web.tls-cert-file", c.Web.TLSCertFile),
+		"Path to the TLS certificate file. When set along with --web.tls-key-file, enables HTTPS.",
+	)
+	flagSet.StringVar(
+		&c.Web.TLSKeyFile,
+		"web.tls-key-file",
+		lookupEnvOrDefault("web.tls-key-file", c.Web.TLSKeyFile),
+		"Path to the TLS private key file. When set along with --web.tls-cert-file, enables HTTPS.",
+	)
 }
 
 //goland:noinspection GoMixedReceiverTypes
