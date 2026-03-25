@@ -2,9 +2,16 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -190,6 +197,124 @@ func TestIT(t *testing.T) {
 	require.Equal(t, 21, strings.Count(metrics, "nginx_"), metrics)
 
 	termCh <- syscall.SIGTERM
+}
+
+func TestIT_HTTPS(t *testing.T) {
+	t.Parallel()
+
+	termCh := make(chan os.Signal)
+	returnCodeCh := make(chan ReturnCode, 1)
+
+	// Generate self-signed TLS certs
+	certFile, keyFile := generateTestCerts(t)
+
+	stdout := &bytes.Buffer{}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	moduleRoot, err := findModuleRoot(wd)
+	require.NoError(t, err)
+
+	go func() {
+		returnCodeCh <- run(t.Context(), []string{
+			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+			"--web.listen-address=127.0.0.1:54322",
+			"--web.tls-cert-file=" + certFile,
+			"--web.tls-key-file=" + keyFile,
+		}, stdout, termCh)
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	t.Cleanup(func() {
+		require.Equal(t, ReturnCodeOK, <-returnCodeCh, stdout.String())
+	})
+
+	// Create HTTPS client that skips cert verification (self-signed)
+	tlsClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	// Test /health endpoint over HTTPS
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://127.0.0.1:54322/health", nil)
+	require.NoError(t, err)
+
+	resp, err := tlsClient.Do(req)
+	require.NoError(t, err, "HTTPS request to /health failed")
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+
+	// Test /metrics endpoint over HTTPS
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, "https://127.0.0.1:54322/metrics", nil)
+	require.NoError(t, err)
+
+	resp, err = tlsClient.Do(req)
+	require.NoError(t, err, "HTTPS request to /metrics failed")
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	err = resp.Body.Close()
+	require.NoError(t, err)
+
+	// Verify we got some metrics
+	metrics := string(body)
+	require.Contains(t, metrics, "go_info", "expected Go metrics in response")
+
+	termCh <- syscall.SIGTERM
+}
+
+func generateTestCerts(t *testing.T) (certFile, keyFile string) {
+	t.Helper()
+
+	tmpDir := t.TempDir()
+	certFile = filepath.Join(tmpDir, "cert.pem")
+	keyFile = filepath.Join(tmpDir, "key.pem")
+
+	// Generate private key
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	// Create certificate template
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames:     []string{"localhost"},
+	}
+
+	// Create certificate
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	require.NoError(t, err)
+
+	// Write cert file
+	certOut, err := os.Create(certFile)
+	require.NoError(t, err)
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	require.NoError(t, err)
+	err = certOut.Close()
+	require.NoError(t, err)
+
+	// Write key file
+	keyOut, err := os.Create(keyFile)
+	require.NoError(t, err)
+	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
+	require.NoError(t, err)
+	err = keyOut.Close()
+	require.NoError(t, err)
+
+	return certFile, keyFile
 }
 
 func findModuleRoot(start string) (string, error) {

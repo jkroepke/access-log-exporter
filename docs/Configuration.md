@@ -40,6 +40,10 @@ Usage of access-log-exporter:
     	show version
   --web.listen-address :4041
     	Addresses on which to expose metrics. Examples: :4041 or `[::1]:4041` for http (env: CONFIG_WEB_LISTEN__ADDRESS) (default ":4040")
+  --web.tls-cert-file string
+    	Path to the TLS certificate file. When set along with --web.tls-key-file, enables HTTPS. (env: CONFIG_WEB_TLS__CERT__FILE)
+  --web.tls-key-file string
+    	Path to the TLS private key file. When set along with --web.tls-cert-file, enables HTTPS. (env: CONFIG_WEB_TLS__KEY__FILE)
   --worker int
     	Number of workers to process syslog messages. 0 or below means number of available CPU cores. (env: CONFIG_WORKER)
 ```
@@ -60,6 +64,16 @@ The default configuration file location depends on your installation method:
 ### Configuration File
 
 A example configuration can be found [here](https://github.com/jkroepke/access-log-exporter/blob/main/packaging/etc/access-log-exporter/config.yaml).
+
+## TLS/HTTPS
+
+To enable HTTPS, set both `--web.tls-cert-file` and `--web.tls-key-file`. Both files must be PEM-encoded.
+
+```yaml
+web:
+  tlsCertFile: "/path/to/cert.pem"
+  tlsKeyFile: "/path/to/key.pem"
+```
 
 ## Nginx Status Metrics
 
