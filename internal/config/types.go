@@ -42,6 +42,8 @@ type Debug struct {
 
 type Web struct {
 	ListenAddress string `json:"listenAddress" yaml:"listenAddress"`
+	TLSCertFile   string `json:"tlsCertFile"   yaml:"tlsCertFile"`
+	TLSKeyFile    string `json:"tlsKeyFile"    yaml:"tlsKeyFile"`
 }
 
 type Presets map[string]Preset

@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>jkroepke/renovate-config"]
+  "extends": ["github>jkroepke/renovate-config"],
+  "packageRules": [
+    {
+      "groupName": "All go dependencies",
+      "matchCategories": ["go"],
+      "matchPackageNames": [
+        "*"
+      ]
+    }
+  ]
 }

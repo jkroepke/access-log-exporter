@@ -132,7 +132,18 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	defer wg.Wait()
 
 	wg.Go(func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		var err error
+
+		if conf.Web.TLSCertFile != "" && conf.Web.TLSKeyFile != "" {
+			logger.InfoContext(ctx, "starting HTTPS server", slog.String("address", conf.Web.ListenAddress))
+			err = server.ListenAndServeTLS(conf.Web.TLSCertFile, conf.Web.TLSKeyFile)
+		} else {
+			logger.InfoContext(ctx, "starting HTTP server", slog.String("address", conf.Web.ListenAddress))
+
+			err = server.ListenAndServe()
+		}
+
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			cancel(err)
 		}
 	})
