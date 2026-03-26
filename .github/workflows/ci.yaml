@@ -9,9 +9,13 @@ on:
     branches:
       - main
 
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     name: Build & Test
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -34,6 +38,8 @@ jobs:
   goreleaser:
     runs-on: ubuntu-24.04
     name: Test goreleaser
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -74,6 +80,8 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -144,7 +152,7 @@ jobs:
       - goreleaser
       - super-lint
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: app-token
