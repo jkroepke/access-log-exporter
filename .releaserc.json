@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json.schemastore.org/semantic-release",
+  "plugins": [
+    "@semantic-release/commit-analyzer"
+  ]
+}
