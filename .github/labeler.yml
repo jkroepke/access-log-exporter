@@ -1,0 +1,16 @@
+---
+version: '1'
+appendOnly: 'true'
+labels:
+  - label: 'chore'
+    type: 'pull_request'
+    title: '^chore:.*'
+  - label: '🐞 bug'
+    type: 'pull_request'
+    title: '^fix:.*'
+  - label: '✨ enhancement'
+    type: 'pull_request'
+    title: '^feat:.*'
+  - label: '📖 docs'
+    type: 'pull_request'
+    title: '^docs:.*'

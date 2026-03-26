@@ -9,12 +9,18 @@ on:
     branches:
       - main
 
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     name: Build & Test
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: 'false'
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
@@ -32,9 +38,12 @@ jobs:
   goreleaser:
     runs-on: ubuntu-24.04
     name: Test goreleaser
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: 'false'
           fetch-depth: 0
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
@@ -71,8 +80,13 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: 'false'
+
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version-file: 'go.mod'
@@ -96,6 +110,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: 'false'
           fetch-depth: 0
 
       - name: Lint Code Base
@@ -104,13 +119,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: false
           LINTER_RULES_PATH: .
+          GITHUB_ACTIONS_ZIZMOR_CONFIG_FILE: ./.github/zizmor.yml
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          SAVE_SUPER_LINTER_SUMMARY: true
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_BASH: true
           VALIDATE_BASH_EXEC: true
           VALIDATE_EDITORCONFIG: true
           VALIDATE_ENV: true
-          # VALIDATE_GO_RELEASER: true
+          VALIDATE_GO_RELEASER: true
           VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
           VALIDATE_HTML: true
           VALIDATE_JSON: true
           VALIDATE_NATURAL_LANGUAGE: true
@@ -119,6 +139,40 @@ jobs:
           VALIDATE_SHELL_SHFMT: true
           VALIDATE_XML: true
           VALIDATE_YAML: true
+
+  release:
+    if: github.repository_owner == 'jkroepke' && github.ref_name == 'main'
+    name: Release
+    runs-on: ubuntu-latest
+    environment: "Create Release Tag"
+    concurrency: create-tag
+    needs:
+      - build
+      - lint
+      - goreleaser
+      - super-lint
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        id: app-token
+        with:
+          app-id: 1248576
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: 'false'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: npx -y semantic-release
   publish:
     name: Publish package
     if: >-
@@ -138,6 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: 'false'
           fetch-depth: 0
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0

@@ -1,4 +1,4 @@
-name: Validate Pull Request
+name: Pull Request
 on:
   pull_request:
     types:
@@ -8,24 +8,51 @@ on:
       - labeled
       - unlabeled
 
+permissions: {}
+
 jobs:
-  required-labels-missing:
-    name: required labels missing
+  add-labels:
+    runs-on: ubuntu-latest
+    if: >-
+      !contains(github.event.pull_request.labels.*.name, '💥 breaking-change') &&
+      !contains(github.event.pull_request.labels.*.name, '✨ enhancement') &&
+      !contains(github.event.pull_request.labels.*.name, '🐞 bug') &&
+      !contains(github.event.pull_request.labels.*.name, '📖 docs') &&
+      !contains(github.event.pull_request.labels.*.name, 'chore') &&
+      !contains(github.event.pull_request.labels.*.name, '🛠️ dependencies')
+    steps:
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        id: app-token
+        with:
+          app-id: 1248576
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+      - uses: srvaroa/labeler@bf262763a8a8e191f5847873aecc0f29df84f957 # v1.14.0
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+  validate-labels:
+    name: check labels missing
     runs-on: ubuntu-latest
     steps:
       - name: check
         if: >-
-          !contains(github.event.pull_request.labels.*.name, '💥 breaking-change')
-          && !contains(github.event.pull_request.labels.*.name, '✨ enhancement')
-          && !contains(github.event.pull_request.labels.*.name, '🐞 bug')
-          && !contains(github.event.pull_request.labels.*.name, '📖 docs')
-          && !contains(github.event.pull_request.labels.*.name, 'chore')
-          && !contains(github.event.pull_request.labels.*.name, '🛠️ dependencies')
+          !contains(github.event.pull_request.labels.*.name, '💥 breaking-change') &&
+          !contains(github.event.pull_request.labels.*.name, '✨ enhancement') &&
+          !contains(github.event.pull_request.labels.*.name, '🐞 bug') &&
+          !contains(github.event.pull_request.labels.*.name, '📖 docs') &&
+          !contains(github.event.pull_request.labels.*.name, 'chore') &&
+          !contains(github.event.pull_request.labels.*.name, '🛠️ dependencies')
         run: >-
           echo One of the following labels is missing on this PR:
-          breaking-change
-          enhancement
-          bug
-          docs
-          chore
-          && exit 1
+          breaking-change enhancement bug docs chore && exit 1
+  validate-title:
+    name: check title prefix
+    runs-on: ubuntu-latest
+    steps:
+      - name: check
+        if: >-
+          !startsWith(github.event.pull_request.title, 'fix') &&
+          !startsWith(github.event.pull_request.title, 'feat') &&
+          !startsWith(github.event.pull_request.title, 'chore') &&
+          !startsWith(github.event.pull_request.title, 'docs')
+        run: >-
+          echo "PR title must start with feat, fix or chore" && exit 1
