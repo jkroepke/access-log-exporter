@@ -119,6 +119,40 @@ jobs:
           VALIDATE_SHELL_SHFMT: true
           VALIDATE_XML: true
           VALIDATE_YAML: true
+
+  release:
+    if: github.repository_owner == 'jkroepke' && github.ref_name == 'main'
+    name: Release
+    runs-on: ubuntu-latest
+    environment: "Create Release Tag"
+    concurrency: create-tag
+    needs:
+      - build
+      - lint
+      - goreleaser
+      - super-lint
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        id: app-token
+        with:
+          app-id: 1248576
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: 'false'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: npx -y semantic-release
   publish:
     name: Publish package
     if: >-
