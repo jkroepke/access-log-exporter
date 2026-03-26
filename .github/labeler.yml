@@ -1,5 +1,6 @@
-version: 1
-appendOnly: true
+---
+version: '1'
+appendOnly: 'true'
 labels:
   - label: 'chore'
     type: 'pull_request'

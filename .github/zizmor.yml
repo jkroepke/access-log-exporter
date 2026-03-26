@@ -1,3 +1,4 @@
+---
 rules:
   cache-poisoning:
     disable: true
