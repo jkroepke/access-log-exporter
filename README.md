@@ -6,6 +6,7 @@
 [![ghcr.io Pulls](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fjkroepke%2Faccess-log-exporter%2Faccess-log-exporter.json&query=%24.downloads&logo=github&label=ghcr.io%20pulls)](https://github.com/jkroepke/access-log-exporter/pkgs/container/access-log-exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jkroepke/access-log-exporter)](https://goreportcard.com/report/github.com/jkroepke/access-log-exporter)
 [![codecov](https://codecov.io/gh/jkroepke/access-log-exporter/graph/badge.svg?token=TJRPHF5BVX)](https://codecov.io/gh/jkroepke/access-log-exporter)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjkroepke%2Faccess-log-exporter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjkroepke%2Faccess-log-exporter?ref=badge_shield)
 
 # access-log-exporter
 
@@ -209,6 +210,9 @@ Contributions welcome! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and
 © 2025 Jan-Otto Kröpke (jkroepke)
 
 Licensed under the [Apache License, Version 2.0](LICENSE.txt).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjkroepke%2Faccess-log-exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjkroepke%2Faccess-log-exporter?ref=badge_large)
 
 ## Open Source Sponsors
 
