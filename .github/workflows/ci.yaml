@@ -136,6 +136,7 @@ jobs:
           VALIDATE_NATURAL_LANGUAGE: true
           # VALIDATE_MARKDOWN: false
           VALIDATE_RENOVATE: true
+          VALIDATE_SPELL_CODESPELL: true
           VALIDATE_SHELL_SHFMT: true
           VALIDATE_XML: true
           VALIDATE_YAML: true
