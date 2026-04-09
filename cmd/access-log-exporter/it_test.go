@@ -20,7 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -341,7 +342,7 @@ func getContainerLogs(t *testing.T, ctr testcontainers.Container) (string, error
 		return "", fmt.Errorf("failed to create Docker client: %w", err)
 	}
 
-	logReader, err := cli.ContainerLogs(t.Context(), ctr.GetContainerID(), container.LogsOptions{
+	logReader, err := cli.ContainerLogs(t.Context(), ctr.GetContainerID(), client.ContainerLogsOptions{
 		ShowStderr: true,
 		ShowStdout: true,
 	})
