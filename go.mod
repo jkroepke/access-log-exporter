@@ -1,6 +1,6 @@
 module github.com/jkroepke/access-log-exporter
 
-go 1.26.1
+go 1.26.2
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.5
