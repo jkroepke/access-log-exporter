@@ -9,7 +9,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
 	github.com/stretchr/testify v1.11.1
-	github.com/testcontainers/testcontainers-go v0.42.1-0.20260417052433-3caae2e8abbf
+	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/ua-parser/uap-go v0.0.0-20251207011819-db9adb27a0b8
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/net v0.53.0
