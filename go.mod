@@ -12,7 +12,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/ua-parser/uap-go v0.0.0-20251207011819-db9adb27a0b8
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
-	golang.org/x/net v0.53.0
+	golang.org/x/net v0.54.0
 )
 
 require (
@@ -67,7 +67,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
