@@ -1,10 +1,6 @@
 package metric_test
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
@@ -12,8 +8,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"github.com/jkroepke/access-log-exporter/internal/metric"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -683,37 +678,7 @@ http_upstream_connect_duration_seconds{host="web.example.org",method="POST",stat
 				}
 			}
 
-			allMetrics, err := MetricsToText(t, met)
-			require.NoError(t, err)
-
-			require.Equal(t, strings.TrimSpace(tc.metrics), allMetrics)
+			require.NoError(t, testutil.CollectAndCompare(met, strings.NewReader(strings.TrimSpace(tc.metrics)+"\n")))
 		})
 	}
-}
-
-func MetricsToText(tb testing.TB, met prometheus.Collector) (string, error) {
-	tb.Helper()
-
-	reg := prometheus.NewRegistry()
-	err := reg.Register(met)
-	require.NoError(tb, err)
-
-	request, err := http.NewRequestWithContext(tb.Context(), http.MethodGet, "/", nil)
-	require.NoError(tb, err)
-
-	request.Header.Add("Accept", "text/plain")
-
-	writer := httptest.NewRecorder()
-
-	regHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
-	regHandler.ServeHTTP(writer, request)
-
-	require.Equal(tb, http.StatusOK, writer.Code)
-
-	allMetrics, err := io.ReadAll(writer.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading writer body: %w", err)
-	}
-
-	return strings.TrimSpace(string(allMetrics)), nil
 }

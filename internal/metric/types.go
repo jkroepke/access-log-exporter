@@ -11,7 +11,7 @@ import (
 type Metric struct {
 	metric     prometheus.Collector
 	ua         *uaparser.Parser
-	labelsPool *sync.Pool // Pool for reusing label maps in a thread-safe way
+	labelsPool *sync.Pool // Pool for reusing label value slices in a thread-safe way
 
 	cfg config.Metric
 }

@@ -1,8 +1,6 @@
 package nginx_test
 
 import (
-	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -10,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/jkroepke/access-log-exporter/internal/nginx"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/nettest"
 )
 
 func TestCollector(t *testing.T) {
@@ -135,9 +133,7 @@ nginx_up{version="N/A"} 0`,
 
 			col := nginx.New(slog.New(slog.DiscardHandler), stubServer.URL)
 
-			metrics, err := MetricsToText(t, col)
-			require.NoError(t, err)
-			require.Equal(t, tc.metrics, metrics)
+			require.NoError(t, testutil.CollectAndCompare(col, strings.NewReader(strings.TrimSpace(tc.metrics)+"\n")))
 		})
 	}
 }
@@ -147,39 +143,55 @@ func TestCollector_NoServer(t *testing.T) {
 
 	col := nginx.New(slog.New(slog.DiscardHandler), "http://nonexistent-server")
 
-	metrics, err := MetricsToText(t, col)
-	require.NoError(t, err)
-
 	expected := `# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
 # TYPE nginx_up gauge
 nginx_up{version="N/A"} 0`
 
-	require.Equal(t, expected, metrics)
+	require.NoError(t, testutil.CollectAndCompare(col, strings.NewReader(strings.TrimSpace(expected)+"\n")))
 }
 
-func MetricsToText(tb testing.TB, met prometheus.Collector) (string, error) {
-	tb.Helper()
+func TestCollector_UnixSocket(t *testing.T) {
+	t.Parallel()
 
-	reg := prometheus.NewRegistry()
-	err := reg.Register(met)
-	require.NoError(tb, err)
+	listener, err := nettest.NewLocalListener("unix")
+	require.NoError(t, err)
 
-	request, err := http.NewRequestWithContext(tb.Context(), http.MethodGet, "/", nil)
-	require.NoError(tb, err)
+	stubServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Add("Server", "nginx/1.29.0")
+		w.WriteHeader(http.StatusOK)
 
-	request.Header.Add("Accept", "text/plain")
+		_, err := w.Write([]byte("Active connections: 2\nserver accepts handled requests\n11 11 12\nReading: 0 Writing: 1 Waiting: 1\n"))
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}))
+	stubServer.Listener = listener
+	stubServer.Start()
+	t.Cleanup(stubServer.Close)
 
-	writer := httptest.NewRecorder()
+	col := nginx.New(slog.New(slog.DiscardHandler), "unix://"+listener.Addr().String())
 
-	regHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
-	regHandler.ServeHTTP(writer, request)
+	expected := `# HELP nginx_connections_accepted_total Accepted client connections.
+# TYPE nginx_connections_accepted_total counter
+nginx_connections_accepted_total 11
+# HELP nginx_connections_active Active client connections.
+# TYPE nginx_connections_active gauge
+nginx_connections_active 2
+# HELP nginx_connections_handled_total Handled client connections.
+# TYPE nginx_connections_handled_total counter
+nginx_connections_handled_total 11
+# HELP nginx_connections_reading Connections where NGINX is reading the request header.
+# TYPE nginx_connections_reading gauge
+nginx_connections_reading 0
+# HELP nginx_connections_waiting Idle client connections.
+# TYPE nginx_connections_waiting gauge
+nginx_connections_waiting 1
+# HELP nginx_connections_writing Connections where NGINX is writing the response back to the client.
+# TYPE nginx_connections_writing gauge
+nginx_connections_writing 1
+# HELP nginx_up Whether the NGINX server is up (1) or down (0). 1 means the server is up and metrics are being collected, 0 means the server is down or unreachable.
+# TYPE nginx_up gauge
+nginx_up{version="1.29.0"} 1`
 
-	require.Equal(tb, http.StatusOK, writer.Code)
-
-	allMetrics, err := io.ReadAll(writer.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading writer body: %w", err)
-	}
-
-	return strings.TrimSpace(string(allMetrics)), nil
+	require.NoError(t, testutil.CollectAndCompare(col, strings.NewReader(strings.TrimSpace(expected)+"\n")))
 }

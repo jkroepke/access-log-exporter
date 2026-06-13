@@ -78,7 +78,14 @@ func (c *Config) flagSetNginx(flagSet *flag.FlagSet) {
 		"nginx.scrape-url",
 		lookupEnvOrDefault("nginx.scrape-url", c.Nginx.ScrapeURL),
 		"A URI or unix domain socket path for scraping NGINX metrics. "+
-			"For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status",
+			"For NGINX, the stub_status page must be available through the URI. "+
+			"Examples: http://127.0.0.1/stub_status or unix:///var/run/nginx-status.sock",
+	)
+	flagSet.DurationVar(
+		&c.Nginx.ScrapeTimeout,
+		"nginx.scrape-timeout",
+		lookupEnvOrDefault("nginx.scrape-timeout", c.Nginx.ScrapeTimeout),
+		"Timeout for scraping NGINX metrics.",
 	)
 }
 
@@ -120,6 +127,6 @@ func (c *Config) flagSetSyslog(flagSet *flag.FlagSet) {
 		&c.Syslog.ListenAddress,
 		"syslog.listen-address",
 		lookupEnvOrDefault("syslog.listen-address", c.Syslog.ListenAddress),
-		"Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, tcp://0.0.0.0:8514, unix:///path/to/socket.",
+		"Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, unix:///path/to/socket.",
 	)
 }

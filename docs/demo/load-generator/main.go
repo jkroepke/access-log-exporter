@@ -275,7 +275,8 @@ func updateLoadParameters() {
 
 			loadParams.lastUpdate = time.Now()
 
-			log.Printf("Load parameters updated: ErrorRate=%.1f%%, MeanDelay=%dms (spread=%.1fx), MeanSize=%d bytes (spread=%.1fx), RequestRate=%.1f req/s",
+			log.Printf(
+				"Load parameters updated: ErrorRate=%.1f%%, MeanDelay=%dms (spread=%.1fx), MeanSize=%d bytes (spread=%.1fx), RequestRate=%.1f req/s",
 				loadParams.errorRate*100,
 				loadParams.meanDelayMs,
 				loadParams.delaySpreadFactor,
@@ -397,7 +398,8 @@ func main() {
 	go updateLoadParameters()
 
 	// Log initial parameters
-	log.Printf("Initial parameters: ErrorRate=%.1f%%, MeanDelay=%dms, MeanSize=%d bytes, RequestRate=%.1f req/s",
+	log.Printf(
+		"Initial parameters: ErrorRate=%.1f%%, MeanDelay=%dms, MeanSize=%d bytes, RequestRate=%.1f req/s",
 		loadParams.errorRate*100,
 		loadParams.meanDelayMs,
 		loadParams.meanSizeBytes,

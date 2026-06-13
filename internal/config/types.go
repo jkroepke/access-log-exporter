@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
 	"go.yaml.in/yaml/v4"
@@ -93,7 +94,8 @@ type Replacement struct {
 }
 
 type Nginx struct {
-	ScrapeURL types.URL `json:"scrapeUri" yaml:"scrapeUri"`
+	ScrapeURL     types.URL     `json:"scrapeUri"     yaml:"scrapeUri"`
+	ScrapeTimeout time.Duration `json:"scrapeTimeout" yaml:"scrapeTimeout"`
 }
 
 //goland:noinspection GoMixedReceiverTypes

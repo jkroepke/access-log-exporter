@@ -130,6 +130,7 @@ func TestIT(t *testing.T) {
 
 	go func() {
 		returnCodeCh <- run(t.Context(), []string{
+			"access-log-exporter",
 			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
 			"--nginx.scrape-url=" + endpoint + "/stub_status",
 			"--web.listen-address=127.0.0.1:54321",
@@ -219,7 +220,9 @@ func TestIT_HTTPS(t *testing.T) {
 
 	go func() {
 		returnCodeCh <- run(t.Context(), []string{
+			"access-log-exporter",
 			"--config=" + moduleRoot + "/packaging/etc/access-log-exporter/config.yaml",
+			"--syslog.listen-address=udp://[::]:18514",
 			"--web.listen-address=127.0.0.1:54322",
 			"--web.tls-cert-file=" + certFile,
 			"--web.tls-key-file=" + keyFile,
