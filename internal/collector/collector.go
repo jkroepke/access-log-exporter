@@ -8,10 +8,11 @@ import (
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/metric"
+	"github.com/jkroepke/access-log-exporter/internal/syslog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerCount int, messageCh <-chan string) (*Collector, error) {
+func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerCount int, messageCh <-chan syslog.Message) (*Collector, error) {
 	var (
 		err       error
 		userAgent bool
@@ -57,6 +58,7 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 // Describe implements the prometheus.Collector interface.
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	c.metricLogParseError.Describe(ch)
+	c.metricLogLastReceived.Describe(ch)
 
 	for _, met := range c.metrics {
 		met.Describe(ch)
@@ -66,6 +68,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements the prometheus.Collector interface.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	c.metricLogParseError.Collect(ch)
+	c.metricLogLastReceived.Collect(ch)
 
 	for _, met := range c.metrics {
 		met.Collect(ch)

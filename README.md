@@ -139,9 +139,14 @@ To enable Nginx status metrics collection, use the `--nginx.scrape-url` flag:
 # HTTP endpoint
 access-log-exporter --nginx.scrape-url http://127.0.0.1/stub_status
 
+# HTTP endpoint with a custom timeout
+access-log-exporter --nginx.scrape-url http://127.0.0.1/stub_status --nginx.scrape-timeout 2s
+
 # Unix domain socket
 access-log-exporter --nginx.scrape-url unix:///var/run/nginx-status.sock
 ```
+
+For Unix domain sockets, access-log-exporter connects to the socket path and requests `/`. Configure the socket listener to serve `stub_status` at `/`.
 
 ### Nginx Configuration
 
@@ -172,6 +177,7 @@ You can also configure the Nginx scrape URL in your YAML configuration file:
 ```yaml
 nginx:
   scrapeUri: "http://127.0.0.1:8080/stub_status"
+  scrapeTimeout: 1s
 
 preset: "simple"
 syslog:

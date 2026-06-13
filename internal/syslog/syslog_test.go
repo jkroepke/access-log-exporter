@@ -18,7 +18,7 @@ func TestSyslogServer(t *testing.T) {
 	unixSocket, err := nettest.LocalPath()
 	require.NoError(t, err)
 
-	logBuffer := make(chan string, 1)
+	logBuffer := make(chan syslog.Message, 1)
 
 	server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
 	require.NoError(t, err)
@@ -45,7 +45,7 @@ func TestSyslogServer(t *testing.T) {
 	_, err = fmt.Fprint(syslogClient, logMessage)
 	require.NoError(t, err)
 
-	require.Equal(t, logMessage, <-logBuffer)
+	require.Equal(t, logMessage, readMessage(t, logBuffer))
 }
 
 func TestSyslogServerRawMessage(t *testing.T) {
@@ -54,7 +54,7 @@ func TestSyslogServerRawMessage(t *testing.T) {
 	unixSocket, err := nettest.LocalPath()
 	require.NoError(t, err)
 
-	logBuffer := make(chan string, 1)
+	logBuffer := make(chan syslog.Message, 1)
 
 	server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
 	require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestSyslogServerRawMessage(t *testing.T) {
 	_, err = fmt.Fprint(syslogClient, logMessage)
 	require.NoError(t, err)
 
-	require.Equal(t, logMessage, <-logBuffer)
+	require.Equal(t, logMessage, readMessage(t, logBuffer))
 }
 
 func TestSyslogServerWithInvalidMessages(t *testing.T) {
@@ -123,7 +123,7 @@ func TestSyslogServerWithInvalidMessages(t *testing.T) {
 			unixSocket, err := nettest.LocalPath()
 			require.NoError(t, err)
 
-			logBuffer := make(chan string, 1)
+			logBuffer := make(chan syslog.Message, 1)
 
 			server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
 			require.NoError(t, err)
@@ -153,6 +153,15 @@ func TestSyslogServerWithInvalidMessages(t *testing.T) {
 			require.Empty(t, logBuffer)
 		})
 	}
+}
+
+func readMessage(t *testing.T, logBuffer <-chan syslog.Message) string {
+	t.Helper()
+
+	msg := <-logBuffer
+	defer msg.Release()
+
+	return msg.Line
 }
 
 func TestSyslogInvalidListenAddr(t *testing.T) {

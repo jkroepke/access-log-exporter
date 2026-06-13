@@ -11,6 +11,9 @@
 #   format: "console"
 # debug:
 #   enabled: false
+# nginx:
+#   scrapeUri: "http://127.0.0.1:8080/stub_status"
+#   scrapeTimeout: 1s
 presets:
   # apache
   # LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter

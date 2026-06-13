@@ -97,7 +97,9 @@ func New(cfg config.Metric) (*Metric, error) {
 		ua:     uaParser,
 		labelsPool: &sync.Pool{
 			New: func() any {
-				return make(prometheus.Labels, labelCount)
+				labels := make([]string, labelCount)
+
+				return &labels
 			},
 		},
 	}, nil
@@ -132,9 +134,11 @@ func (m *Metric) Parse(line []string) error {
 		return nil // Skip processing for empty/invalid lines
 	}
 
-	// Get labels map from pool and ensure cleanup
-	labels := m.getLabelsFromPool()
-	defer m.returnLabelsToPool(labels)
+	// Get label values from pool and ensure cleanup
+	labelsPtr := m.getLabelsFromPool()
+
+	labels := *labelsPtr
+	defer m.returnLabelsToPool(labelsPtr)
 
 	// Process all labels from the line
 	if err := m.processLabels(line, labels); err != nil {
@@ -180,32 +184,37 @@ func (m *Metric) validateAndExtractValue(line []string) (string, bool, error) {
 	return value, false, nil
 }
 
-// getLabelsFromPool retrieves a labels map from the sync.Pool for thread-safe reuse.
-func (m *Metric) getLabelsFromPool() prometheus.Labels {
-	labels, ok := m.labelsPool.Get().(prometheus.Labels)
+// getLabelsFromPool retrieves label values from the sync.Pool for thread-safe reuse.
+func (m *Metric) getLabelsFromPool() *[]string {
+	labels, ok := m.labelsPool.Get().(*[]string)
 	if !ok {
-		// If the type assertion fails, create a new map
-		labels = make(prometheus.Labels, len(m.cfg.Labels))
+		labelCount := len(m.cfg.Labels)
+		if m.cfg.Upstream.Enabled && m.cfg.Upstream.Label {
+			labelCount++
+		}
+
+		labelValues := make([]string, labelCount)
+		labels = &labelValues
 	}
 
 	return labels
 }
 
-// returnLabelsToPool clears the labels map and returns it to the pool for reuse.
-func (m *Metric) returnLabelsToPool(labels prometheus.Labels) {
-	// Clear the map and return it to the pool
-	for k := range labels {
-		delete(labels, k)
+// returnLabelsToPool clears label values and returns them to the pool for reuse.
+func (m *Metric) returnLabelsToPool(labelsPtr *[]string) {
+	labels := *labelsPtr
+	for i := range labels {
+		labels[i] = ""
 	}
 
-	m.labelsPool.Put(labels)
+	m.labelsPool.Put(labelsPtr)
 }
 
 // processLabels extracts and processes all configured labels from the log line.
-func (m *Metric) processLabels(line []string, labels prometheus.Labels) error {
+func (m *Metric) processLabels(line, labels []string) error {
 	lineLength := uint(len(line))
 
-	for _, label := range m.cfg.Labels {
+	for i, label := range m.cfg.Labels {
 		if label.LineIndex >= lineLength {
 			return fmt.Errorf("line index out of range for label %s, line length is %d", label.Name, lineLength)
 		}
@@ -221,14 +230,14 @@ func (m *Metric) processLabels(line []string, labels prometheus.Labels) error {
 		// Apply regex replacements if configured
 		labelValue = m.valueReplacements(label.Replacements, labelValue)
 
-		labels[label.Name] = labelValue
+		labels[i] = labelValue
 	}
 
 	return nil
 }
 
 // handleMetricValue handles setting the metric value based on the configuration type.
-func (m *Metric) handleMetricValue(line []string, value string, labels prometheus.Labels) error {
+func (m *Metric) handleMetricValue(line []string, value string, labels []string) error {
 	// Handle counter without value (increment by 1)
 	if m.cfg.ValueIndex == nil {
 		return m.handleCounterIncrement(labels)
@@ -253,14 +262,14 @@ func (m *Metric) handleMetricValue(line []string, value string, labels prometheu
 }
 
 // handleCounterIncrement handles counter metrics that increment by 1 (no value configured).
-func (m *Metric) handleCounterIncrement(labels prometheus.Labels) error {
+func (m *Metric) handleCounterIncrement(labels []string) error {
 	counterVec, ok := m.metric.(*prometheus.CounterVec)
 	if !ok {
 		// This should never happen due to validation in New(), but be defensive
 		return errors.New("valueIndex is nil but metric type is not counter")
 	}
 
-	counterVec.With(labels).Inc()
+	counterVec.WithLabelValues(labels...).Inc()
 
 	return nil
 }
@@ -275,20 +284,20 @@ func (m *Metric) handleCounterIncrement(labels prometheus.Labels) error {
 //   - line: The complete log line as string array
 //   - lineLength: Length of the line array (for bounds checking)
 //   - value: Comma-separated string of metric values
-//   - labels: Base labels map (will be modified to include upstream labels)
+//   - labels: Base label values (will be modified to include upstream labels)
 //
 // Returns:
 //   - error: Returns an error if upstream parsing fails or metric setting fails
 //
 // Thread Safety:
-// This function is thread-safe when called with unique labels maps per goroutine.
+// This function is thread-safe when called with unique label value slices per goroutine.
 //
 // Behavior:
 //   - Splits comma-separated values and processes each one
 //   - Maps values to upstream servers (reuses last upstream if fewer upstreams than values)
 //   - Skips values associated with excluded upstream servers
 //   - Adds "upstream" label when upstream labeling is enabled
-func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels prometheus.Labels) error {
+func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value string, labels []string) error {
 	upstreams, err := m.parseUpstreams(line, lineLength)
 	if err != nil {
 		return err
@@ -319,7 +328,7 @@ func (m *Metric) parseUpstreams(line []string, lineLength uint) ([]string, error
 }
 
 // processCommaDelimitedValues processes comma-separated metric values with upstream mapping.
-func (m *Metric) processCommaDelimitedValues(value string, upstreams []string, labels prometheus.Labels) error {
+func (m *Metric) processCommaDelimitedValues(value string, upstreams, labels []string) error {
 	valueIndex := 0
 
 	for {
@@ -354,7 +363,7 @@ func (m *Metric) extractNextValue(value string) (string, string) {
 }
 
 // processValueWithUpstream processes a single metric value with its associated upstream.
-func (m *Metric) processValueWithUpstream(valueElement string, upstreams []string, valueIndex int, labels prometheus.Labels) error {
+func (m *Metric) processValueWithUpstream(valueElement string, upstreams []string, valueIndex int, labels []string) error {
 	if len(upstreams) == 0 {
 		return m.setMetric(valueElement, labels)
 	}
@@ -368,7 +377,7 @@ func (m *Metric) processValueWithUpstream(valueElement string, upstreams []strin
 
 	// Add upstream label if enabled
 	if m.cfg.Upstream.Label {
-		labels["upstream"] = upstream
+		labels[len(m.cfg.Labels)] = upstream
 	}
 
 	return m.setMetric(valueElement, labels)
@@ -400,7 +409,7 @@ func (m *Metric) isUpstreamExcluded(upstream string) bool {
 //
 // Parameters:
 //   - value: The string representation of the metric value to be processed
-//   - labels: Prometheus labels map to identify the specific metric instance
+//   - labels: Prometheus label values to identify the specific metric instance
 //
 // Returns:
 //   - error: Returns an error if value parsing fails, counter receives negative value,
@@ -408,13 +417,13 @@ func (m *Metric) isUpstreamExcluded(upstream string) bool {
 //
 // Thread Safety:
 // This function is thread-safe and can be called concurrently by multiple goroutines.
-// The labels map should be unique per goroutine (handled by sync.Pool in Parse()).
+// The label value slice should be unique per goroutine (handled by sync.Pool in Parse()).
 //
 // Examples:
 //   - Counter: Adds the parsed value to the counter (must be non-negative)
 //   - Gauge: Sets the gauge to the parsed value
 //   - Histogram: Observes the parsed value as a sample
-func (m *Metric) setMetric(value string, labels prometheus.Labels) error {
+func (m *Metric) setMetric(value string, labels []string) error {
 	// Handle empty values early
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -451,18 +460,18 @@ func (m *Metric) applyMathTransformations(value float64) float64 {
 }
 
 // setMetricValue sets the value on the appropriate metric type.
-func (m *Metric) setMetricValue(value float64, labels prometheus.Labels) error {
+func (m *Metric) setMetricValue(value float64, labels []string) error {
 	switch metric := m.metric.(type) {
 	case *prometheus.CounterVec:
 		if value < 0 {
 			return fmt.Errorf("counter value cannot be negative: %f", value)
 		}
 
-		metric.With(labels).Add(value)
+		metric.WithLabelValues(labels...).Add(value)
 	case *prometheus.GaugeVec:
-		metric.With(labels).Set(value)
+		metric.WithLabelValues(labels...).Set(value)
 	case *prometheus.HistogramVec:
-		metric.With(labels).Observe(value)
+		metric.WithLabelValues(labels...).Observe(value)
 	default:
 		return fmt.Errorf("unsupported metric type %s", m.cfg.Type)
 	}
@@ -481,6 +490,10 @@ func (m *Metric) valueReplacements(replacements []config.Replacement, labelValue
 		}
 
 		if replacement.Regexp != nil && replacement.Regexp.MatchString(labelValue) {
+			if !strings.Contains(replacement.Replacement, "$") {
+				return replacement.Regexp.ReplaceAllLiteralString(labelValue, replacement.Replacement)
+			}
+
 			return replacement.Regexp.ReplaceAllString(labelValue, replacement.Replacement)
 		}
 	}

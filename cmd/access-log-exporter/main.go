@@ -103,7 +103,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		logger.LogAttrs(ctx, slog.LevelWarn, "error setting GOMEMLIMIT", slog.Any("error", err))
 	}
 
-	syslogMessageBuffer := make(chan string, conf.BufferSize)
+	syslogMessageBuffer := make(chan syslog.Message, conf.BufferSize)
 
 	syslogServer, err := syslog.New(ctx, logger, conf.Syslog.ListenAddress, syslogMessageBuffer)
 	if err != nil {
@@ -153,7 +153,8 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		case <-ctx.Done():
 			err := syslogServer.Close(ctx)
 			if err != nil {
-				logger.ErrorContext(ctx, "error shutting down syslog server",
+				logger.ErrorContext(
+					ctx, "error shutting down syslog server",
 					slog.String("address", conf.Syslog.ListenAddress),
 					slog.Any("error", err),
 				)
@@ -161,15 +162,12 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 			prometheusCollector.Close()
 
-			logger.InfoContext(ctx, "shutting down syslog server",
+			logger.InfoContext(
+				ctx, "shutting down syslog server",
 				slog.String("address", conf.Syslog.ListenAddress),
 			)
 
-			close(syslogMessageBuffer)
-
 			serverShutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-			server.RegisterOnShutdown(cancel)
 
 			//nolint:contextcheck
 			if err := server.Shutdown(serverShutdownCtx); err != nil {
@@ -224,7 +222,7 @@ func setupPrometheusRegistry(conf config.Config, logger *slog.Logger, prometheus
 	)
 
 	if !conf.Nginx.ScrapeURL.IsEmpty() {
-		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String()))
+		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String(), nginx.WithTimeout(conf.Nginx.ScrapeTimeout)))
 	}
 
 	return reg

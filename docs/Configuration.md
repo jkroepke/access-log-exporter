@@ -30,10 +30,12 @@ Usage of access-log-exporter:
     	Enables go profiling endpoint. This should be never exposed. (env: CONFIG_DEBUG_ENABLE)
   --nginx.scrape-url value
     	A URI or unix domain socket path for scraping NGINX metrics. For NGINX, the stub_status page must be available through the URI. Examples: http://127.0.0.1/stub_status or `unix:///var/run/nginx-status.sock` (env: CONFIG_NGINX_SCRAPE__URL)
+  --nginx.scrape-timeout duration
+    	Timeout for scraping NGINX metrics. (env: CONFIG_NGINX_SCRAPE__TIMEOUT) (default 1s)
   --preset string
     	Preset configuration to use. Available presets: simple, simple_upstream, simple_uri_upstream. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
   --syslog.listen-address string
-    	Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, tcp://0.0.0.0:8514, unix:///path/to/socket. (env: CONFIG_SYSLOG_LISTEN__ADDRESS) (default "udp://[::]:8514")
+    	Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, unix:///path/to/socket. (env: CONFIG_SYSLOG_LISTEN__ADDRESS) (default "udp://[::]:8514")
   --verify-config
     	Enable this flag to check config file loads, then exit (env: CONFIG_VERIFY__CONFIG)
   --version
@@ -86,6 +88,9 @@ To enable Nginx status metrics collection, configure the scrape URL using either
 **Command-line flag:**
 ```bash
 access-log-exporter --nginx.scrape-url http://127.0.0.1:8080/stub_status
+
+# With a custom scrape timeout
+access-log-exporter --nginx.scrape-url http://127.0.0.1:8080/stub_status --nginx.scrape-timeout 2s
 ```
 
 **Environment variable:**
@@ -98,6 +103,7 @@ access-log-exporter
 ```yaml
 nginx:
   scrapeUri: "http://127.0.0.1:8080/stub_status"
+  scrapeTimeout: 1s
 ```
 
 ### Supported URL Schemes
@@ -106,6 +112,9 @@ The nginx.scrape-url supports these URL schemes:
 
 - **HTTP endpoints:** `http://127.0.0.1:8080/stub_status`
 - **HTTPS endpoints:** `https://nginx.example.com/stub_status`
+- **Unix domain sockets:** `unix:///var/run/nginx-status.sock`
+
+For Unix domain sockets, access-log-exporter connects to the socket path and requests `/`. Configure the socket listener to serve `stub_status` at `/`.
 
 ### Nginx Configuration Requirements
 

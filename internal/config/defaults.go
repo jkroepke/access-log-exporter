@@ -2,6 +2,7 @@ package config
 
 import (
 	"log/slog"
+	"time"
 )
 
 //nolint:gochecknoglobals
@@ -20,5 +21,8 @@ var Defaults = Config{
 	},
 	Syslog: Syslog{
 		ListenAddress: "udp://[::]:8514",
+	},
+	Nginx: Nginx{
+		ScrapeTimeout: time.Second,
 	},
 }
