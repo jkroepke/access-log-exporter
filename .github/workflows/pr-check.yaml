@@ -32,6 +32,9 @@ jobs:
       - uses: srvaroa/labeler@bf262763a8a8e191f5847873aecc0f29df84f957 # v1.14.0
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          config_path: '.github/labeler.yml'
+          fail_on_error: true
   validate-labels:
     name: check labels missing
     runs-on: ubuntu-latest
