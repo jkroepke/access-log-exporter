@@ -14,6 +14,7 @@ jobs:
   add-labels:
     runs-on: ubuntu-latest
     if: >-
+      github.repository == github.event.pull_request.head.repo.full_name &&
       !contains(github.event.pull_request.labels.*.name, '💥 breaking-change') &&
       !contains(github.event.pull_request.labels.*.name, '✨ enhancement') &&
       !contains(github.event.pull_request.labels.*.name, '🐞 bug') &&
@@ -26,7 +27,7 @@ jobs:
         with:
           client-id: 1248576
           private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
-          permission-issues: write
+          permission-pull-requests: write
 
       - uses: srvaroa/labeler@bf262763a8a8e191f5847873aecc0f29df84f957 # v1.14.0
         env:
