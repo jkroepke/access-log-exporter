@@ -4,7 +4,6 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/jkroepke/access-log-exporter?style=flat&logo=github)](https://github.com/jkroepke/access-log-exporter/stargazers)
 [![GitHub all releases](https://img.shields.io/github/downloads/jkroepke/access-log-exporter/total?logo=github)](https://github.com/jkroepke/access-log-exporter/releases/latest)
 [![ghcr.io Pulls](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fjkroepke%2Faccess-log-exporter%2Faccess-log-exporter.json&query=%24.downloads&logo=github&label=ghcr.io%20pulls)](https://github.com/jkroepke/access-log-exporter/pkgs/container/access-log-exporter)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jkroepke/access-log-exporter)](https://goreportcard.com/report/github.com/jkroepke/access-log-exporter)
 [![codecov](https://codecov.io/gh/jkroepke/access-log-exporter/graph/badge.svg?token=TJRPHF5BVX)](https://codecov.io/gh/jkroepke/access-log-exporter)
 
 # access-log-exporter
