@@ -1,13 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>jkroepke/renovate-config"],
+  "extends": [
+    "github>jkroepke/renovate-config"
+  ],
   "packageRules": [
     {
       "groupName": "All go dependencies",
-      "matchDatasources": ["go"],
+      "matchDatasources": [
+        "go"
+      ],
       "matchPackageNames": [
         "*"
       ]
+    },
+    {
+      "groupName": "Go test dependencies",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchPackageNames": [
+        "github.com/moby/moby/api",
+        "github.com/moby/moby/client",
+        "github.com/stretchr/testify",
+        "github.com/testcontainers/testcontainers-go",
+        "golang.org/x/net"
+      ],
+      "semanticCommitType": "chore"
     }
   ]
 }
