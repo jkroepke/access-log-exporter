@@ -208,15 +208,15 @@ func lookupEnvOrDefault[T any](key string, defaultValue T) T {
 			valPtr = reflect.New(t)
 		}
 
-		if unmarshaler, okUnmarshal := valPtr.Interface().(encoding.TextUnmarshaler); okUnmarshal {
+		if unmarshaler, okUnmarshal := reflect.TypeAssert[encoding.TextUnmarshaler](valPtr); okUnmarshal {
 			if err := unmarshaler.UnmarshalText([]byte(envValue)); err != nil {
 				return defaultValue
 			}
 
 			if t.Kind() == reflect.Pointer {
-				value, ok = valPtr.Convert(t).Interface().(T)
+				value, ok = reflect.TypeAssert[T](valPtr.Convert(t))
 			} else {
-				value, ok = valPtr.Elem().Interface().(T)
+				value, ok = reflect.TypeAssert[T](valPtr.Elem())
 			}
 		}
 	}
