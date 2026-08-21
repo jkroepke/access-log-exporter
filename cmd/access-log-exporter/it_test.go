@@ -81,35 +81,33 @@ func TestIT(t *testing.T) {
 	}
 
 	nginx, err := testcontainers.GenericContainer(t.Context(), testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Image: dockerImage,
-			ConfigModifier: func(config *container.Config) {
-				config.Cmd = []string{
-					"nginx-debug", "-g", "daemon off;",
-				}
-			},
-			ExposedPorts: []string{
-				"8080/tcp",
-			},
-			Env: map[string]string{
-				"NGINX_ENTRYPOINT_QUIET_LOGS": "true",
-			},
-			Labels: map[string]string{
-				"testcontainers": "true",
-			},
-			HostConfigModifier: func(hostConfig *container.HostConfig) {
-				hostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
-			},
-			Files: []testcontainers.ContainerFile{
-				{
-					Reader:            strings.NewReader(nginxConfig),
-					ContainerFilePath: "/etc/nginx/nginx.conf",
-					FileMode:          0o644,
-				},
-			},
-			WaitingFor: wait.ForListeningPort("8080/tcp").WithStartupTimeout(time.Second * 5),
+		Image: dockerImage,
+		ConfigModifier: func(config *container.Config) {
+			config.Cmd = []string{
+				"nginx-debug", "-g", "daemon off;",
+			}
 		},
-		Started: true,
+		ExposedPorts: []string{
+			"8080/tcp",
+		},
+		Env: map[string]string{
+			"NGINX_ENTRYPOINT_QUIET_LOGS": "true",
+		},
+		Labels: map[string]string{
+			"testcontainers": "true",
+		},
+		HostConfigModifier: func(hostConfig *container.HostConfig) {
+			hostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
+		},
+		Files: []testcontainers.ContainerFile{
+			{
+				Reader:            strings.NewReader(nginxConfig),
+				ContainerFilePath: "/etc/nginx/nginx.conf",
+				FileMode:          0o644,
+			},
+		},
+		WaitingFor: wait.ForListeningPort("8080/tcp").WithStartupTimeout(time.Second * 5),
+		Started:    true,
 	})
 
 	testcontainers.CleanupContainer(t, nginx)
