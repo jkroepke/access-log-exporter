@@ -96,7 +96,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeOK
 	}
 
-	_, err := memlimit.SetGoMemLimitWithOpts(
+	_, err := memlimit.Set(
 		memlimit.WithLogger(logger),
 	)
 	if err != nil {
