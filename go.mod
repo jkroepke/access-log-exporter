@@ -4,8 +4,8 @@ go 1.27.1
 
 require (
 	github.com/KimMachineGun/automemlimit v1.0.0
-	github.com/moby/moby/api v1.55.0
-	github.com/moby/moby/client v0.5.1
+	github.com/moby/moby/api v1.56.0
+	github.com/moby/moby/client v0.6.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/common v0.71.0
 	github.com/stretchr/testify v1.12.1
