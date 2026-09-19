@@ -344,7 +344,7 @@ func splitUpstreamElements(value string) []string {
 	elements := make([]string, 0, strings.Count(value, ",")+strings.Count(value, " : ")+1)
 	start := 0
 
-	for i := 0; i < len(value); i++ {
+	for i := range len(value) {
 		isComma := value[i] == ','
 		isGroupSeparator := value[i] == ':' &&
 			i > 0 &&
