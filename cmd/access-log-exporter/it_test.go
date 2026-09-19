@@ -38,7 +38,7 @@ events {
 }
 
 http {
-	log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+	log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 	access_log syslog:server=host.docker.internal:8514,nohostname access_log_exporter;
 
 	server {
@@ -146,6 +146,7 @@ func TestIT(t *testing.T) {
 		for _, code := range []string{"200", "204", "404", "500"} {
 			req, err := http.NewRequestWithContext(t.Context(), method, endpoint+"/"+code, nil)
 			require.NoError(t, err)
+			req.Host = "untrusted.example"
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -158,6 +159,7 @@ func TestIT(t *testing.T) {
 
 			req, err = http.NewRequestWithContext(t.Context(), method, endpoint+"/proxy/"+code, nil)
 			require.NoError(t, err)
+			req.Host = "untrusted.example"
 
 			resp, err = http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -189,6 +191,8 @@ func TestIT(t *testing.T) {
 	time.Sleep(1 * time.Second) // Wait for the exporter to process the logs
 
 	require.Equal(t, 1, strings.Count(metrics, "log_parse_errors_total 0"), metrics)
+	require.Contains(t, metrics, `host="localhost"`, metrics)
+	require.NotContains(t, metrics, `host="untrusted.example"`, metrics)
 	require.Equal(t, 448, strings.Count(metrics, "http_request_duration_seconds_"), metrics)
 	require.Equal(t, 322, strings.Count(metrics, "http_request_size_bytes"), metrics)
 	require.Equal(t, 34, strings.Count(metrics, "http_requests_completed_total"), metrics)

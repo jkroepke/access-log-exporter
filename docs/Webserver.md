@@ -24,13 +24,17 @@ To configure Nginx, add the following lines to the configuration file.
 ```nginx
 # Use only one of the presets below, depending on your needs.
 # simple preset
-log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 
 # simple_upstream preset
-log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
 access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 ```
+
+### Host label cardinality
+
+The recommended log formats use `$server_name` as the `host` label source. `$http_host` contains the client-provided `Host` header and should not be exported directly as a Prometheus label on untrusted endpoints because arbitrary values create new time series. Use a custom normalized or allowlisted value if you need request-host-level metrics.
 
 References:
 - [Nginx Documentation: Logging](https://nginx.org/en/docs/http/ngx_http_log_module.html)
@@ -50,11 +54,11 @@ map $request_uri $loggable {
 
 # Use only one of the presets below, depending on your needs.
 # simple preset with exclusion
-log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter if=$loggable;
 
 # simple_upstream preset with exclusion
-log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
 access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter if=$loggable;
 ```
 

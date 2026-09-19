@@ -204,12 +204,18 @@ access-log-exporter includes four built-in presets and supports custom preset de
 
 ### Built-in Presets
 
+#### Host label cardinality
+
+The built-in Nginx presets use `$server_name` for field 0, which becomes the Prometheus `host` label. This keeps the default label values tied to the configured Nginx virtual servers.
+
+Avoid using `$http_host` or `$host` for a Prometheus label on endpoints that can receive arbitrary host names. Those variables can include values supplied by the client request and can therefore create unbounded time series. If the original host value is required, use a custom preset and normalize or allowlist the value before exporting it as a label.
+
 #### `simple` Preset
 
 The `simple` preset provides basic HTTP metrics without upstream server information for Nginx. Nginx duration variables are already expressed in seconds.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent'`
+- **Nginx:** `'$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent'`
 
 **Metrics generated:**
 - `http_requests_total` - Counter of total HTTP requests
@@ -236,7 +242,7 @@ The `simple_upstream` preset extends the simple preset with upstream server metr
 Only compatible with nginx, because apache2 does not support upstream metrics in the same way.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time'`
+- **Nginx:** `'$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time'`
 
 **Additional metrics:**
 - `http_upstream_connect_duration_seconds` - Histogram of upstream connection times
@@ -249,7 +255,7 @@ The `simple_uri_upstream` preset extends the simple_upstream preset with request
 Only compatible with nginx, because apache2 does not support upstream metrics in the same way.
 
 **Log format requirements:**
-- **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri'`
+- **Nginx:** `'$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri'`
 
 **Additional features:**
 - All metrics from `simple_upstream` preset
