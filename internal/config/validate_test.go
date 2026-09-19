@@ -41,10 +41,11 @@ func TestValidateTLS(t *testing.T) {
 	t.Parallel()
 
 	validConfig := func() config.Config {
-		return config.Config{
-			Preset:  "test",
-			Presets: config.Presets{"test": {}},
-		}
+		conf := config.Defaults
+		conf.Preset = "test"
+		conf.Presets = config.Presets{"test": {}}
+
+		return conf
 	}
 
 	for _, tc := range []struct {
@@ -102,7 +103,6 @@ func TestValidateTLS(t *testing.T) {
 		})
 	}
 }
-
 
 func TestValidateMetric(t *testing.T) {
 	t.Parallel()
