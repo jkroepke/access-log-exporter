@@ -126,7 +126,6 @@ func TestVerifyConfig(t *testing.T) {
 	require.Equal(t, ReturnCodeOK, returnCode, stdout)
 }
 
-
 func TestVerifyConfigRejectsInvalidMetricConfiguration(t *testing.T) {
 	t.Parallel()
 
