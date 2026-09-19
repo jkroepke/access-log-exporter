@@ -62,8 +62,15 @@ CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" acce
 ```
 
 **2. Start access-log-exporter:**
+
+For **Nginx**:
 ```bash
 access-log-exporter --preset simple
+```
+
+For **Apache2**:
+```bash
+access-log-exporter --preset simple_apache
 ```
 
 **3. Access metrics:**
@@ -73,7 +80,8 @@ curl http://localhost:4040/metrics
 
 ## Available Presets
 
-- **`simple`**: Basic HTTP metrics (requests, response times, sizes) - compatible with both Nginx and Apache
+- **`simple`**: Basic HTTP metrics (requests, response times, sizes) - Nginx
+- **`simple_apache`**: Basic HTTP metrics for Apache2, converting `%{ms}T` milliseconds to seconds
 - **`simple_upstream`**: Includes upstream server metrics - Nginx only
 - **`simple_uri_upstream`**: Extends `simple_upstream` with request URI tracking and path normalization - Nginx only
 

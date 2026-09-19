@@ -33,7 +33,7 @@ Usage of access-log-exporter:
   --nginx.scrape-timeout duration
     	Timeout for scraping NGINX metrics. (env: CONFIG_NGINX_SCRAPE__TIMEOUT) (default 1s)
   --preset string
-    	Preset configuration to use. Available presets: simple, simple_upstream, simple_uri_upstream. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
+    	Preset configuration to use. Available presets: simple, simple_apache, simple_upstream, simple_uri_upstream. Custom presets can be defined via config file. Default is simple. (env: CONFIG_PRESET) (default "simple")
   --syslog.listen-address string
     	Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, unix:///path/to/socket. (env: CONFIG_SYSLOG_LISTEN__ADDRESS) (default "udp://[::]:8514")
   --verify-config
@@ -206,10 +206,22 @@ access-log-exporter includes four built-in presets and supports custom preset de
 
 #### `simple` Preset
 
-The `simple` preset provides basic HTTP metrics without upstream server information. Compatible with both Nginx and Apache2.
+The `simple` preset provides basic HTTP metrics without upstream server information for Nginx. Nginx duration variables are already expressed in seconds.
 
 **Log format requirements:**
 - **Nginx:** `'$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent'`
+
+**Metrics generated:**
+- `http_requests_total` - Counter of total HTTP requests
+- `http_request_size_bytes` - Histogram of request sizes
+- `http_response_size_bytes` - Histogram of response sizes
+- `http_request_duration_seconds` - Histogram of response times
+
+#### `simple_apache` Preset
+
+The `simple_apache` preset provides the same basic HTTP metrics for Apache2. Apache `%{ms}T` reports request duration in milliseconds, so this preset converts that value to seconds.
+
+**Log format requirements:**
 - **Apache2:** `"%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O"`
 
 **Metrics generated:**

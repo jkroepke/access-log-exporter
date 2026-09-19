@@ -15,13 +15,80 @@
 #   scrapeUri: "http://127.0.0.1:8080/stub_status"
 #   scrapeTimeout: 1s
 presets:
-  # apache
-  # LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
-  # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
   # nginx
   # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
   # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple:
+    metrics:
+      - name: "http_requests_total"
+        type: "counter"
+        help: "The total number of client requests."
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_requests_completed_total"
+        type: "counter"
+        help: "The total number of completed requests."
+        valueIndex: 3
+        replacements:
+          - string: "OK"
+            replacement: "1"
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_request_size_bytes"
+        type: "histogram"
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
+        help: "The request length (including request line, header, and request body)"
+        valueIndex: 5
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_response_size_bytes"
+        type: "histogram"
+        buckets: [ 10,1000,100000,1000000,5000000,50000000,200000000 ]
+        help: "The response length (including request line, header, and request body)"
+        valueIndex: 6
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+      - name: "http_request_duration_seconds"
+        type: "histogram"
+        buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
+        help: "The time spent on receiving the response from the upstream server"
+        valueIndex: 4
+        labels:
+          - name: "host"
+            lineIndex: 0
+          - name: "method"
+            lineIndex: 1
+          - name: "status"
+            lineIndex: 2
+
+  # apache
+  # LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
+  # CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
+  simple_apache:
     metrics:
       - name: "http_requests_total"
         type: "counter"
@@ -155,9 +222,6 @@ presets:
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving and response the response to the client"
         valueIndex: 4
-        math:
-          enabled: true
-          div: 1000
         labels:
           - name: "host"
             lineIndex: 0
@@ -171,9 +235,6 @@ presets:
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on establishing a connection with the upstream server"
         valueIndex: 8
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
@@ -191,9 +252,6 @@ presets:
         help: "The time spent on receiving the response header from the upstream server"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         valueIndex: 9
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
@@ -211,9 +269,6 @@ presets:
         help: "The time spent on receiving the response from the upstream server"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         valueIndex: 10
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
@@ -326,9 +381,6 @@ presets:
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on receiving and response the response to the client"
         valueIndex: 4
-        math:
-          enabled: true
-          div: 1000
         labels:
           - name: "host"
             lineIndex: 0
@@ -351,9 +403,6 @@ presets:
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         help: "The time spent on establishing a connection with the upstream server"
         valueIndex: 8
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
@@ -380,9 +429,6 @@ presets:
         help: "The time spent on receiving the response header from the upstream server"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         valueIndex: 9
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
@@ -409,9 +455,6 @@ presets:
         help: "The time spent on receiving the response from the upstream server"
         buckets: [ .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10 ]
         valueIndex: 10
-        math:
-          enabled: true
-          div: 1000
         upstream:
           enabled: true
           addrLineIndex: 7
