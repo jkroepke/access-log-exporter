@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -24,7 +23,6 @@ type Syslog struct {
 	con        packetReader
 	msgCh      chan<- Message
 	done       chan struct{}
-	bufferPool *sync.Pool
 	listenAddr string
 }
 
@@ -34,11 +32,6 @@ func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan
 		logger:     logger.With(slog.String("component", "syslog")),
 		msgCh:      msgCh,
 		done:       make(chan struct{}),
-		bufferPool: &sync.Pool{
-			New: func() any {
-				return new(packetBuffer)
-			},
-		},
 	}
 
 	uri, err := url.Parse(listenAddr)
@@ -82,15 +75,12 @@ func (s *Syslog) Start() error {
 	msgCh := s.msgCh
 	done := s.done
 
+	buffer := make([]byte, maxDatagramSize)
+
 	for {
-		buffer, _ := s.bufferPool.Get().(*packetBuffer)
-		msg := buffer[:]
-
 		// The sender address is unused, so prefer Read over ReadFrom to avoid address allocation.
-		n, err := con.Read(msg)
+		n, err := con.Read(buffer)
 		if err != nil {
-			s.bufferPool.Put(buffer)
-
 			select {
 			case <-done:
 				return nil
@@ -114,21 +104,17 @@ func (s *Syslog) Start() error {
 
 		if n <= 0 {
 			// Ignore empty messages
-			s.bufferPool.Put(buffer)
-
 			continue
 		}
 
 		// Ignore messages not starting with '<'
-		if msg[0] != '<' {
-			s.bufferPool.Put(buffer)
-
+		if buffer[0] != '<' {
 			continue
 		}
 
 		// Ignore trailing control characters and NULs
 		//nolint:revive
-		for ; (n > 0) && (msg[n-1] < 32); n-- {
+		for ; (n > 0) && (buffer[n-1] < 32); n-- {
 		}
 
 		// msg may contain a syslog message with a header like "<34>Oct 11 22:14:15 nginx: "
@@ -137,13 +123,13 @@ func (s *Syslog) Start() error {
 		colonCount := 0
 		messageStart := -1
 
-		for i, b := range msg[:n] {
+		for i, b := range buffer[:n] {
 			if b == ':' {
 				colonCount++
 				if colonCount == 3 {
 					messageStart = i + 1
 					// Optionally, check for a space after the colon
-					if messageStart < n && msg[messageStart] == ' ' {
+					if messageStart < n && buffer[messageStart] == ' ' {
 						messageStart++
 					}
 
@@ -153,13 +139,11 @@ func (s *Syslog) Start() error {
 		}
 
 		if messageStart == -1 {
-			s.bufferPool.Put(buffer)
-
 			continue // fewer than 4 colons found
 		}
 
-		// Now msg[messageStart:n] contains the message after the third colon (and space, if present).
-		message := newMessage(buffer, messageStart, n, s.bufferPool)
+		// Now buffer[messageStart:n] contains the message after the third colon (and space, if present).
+		message := newMessage(buffer, messageStart, n)
 
 		select {
 		case msgCh <- message:

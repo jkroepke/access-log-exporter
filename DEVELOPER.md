@@ -58,7 +58,7 @@ The syslog component:
 - Listens on UDP or Unix domain sockets
 - Parses syslog format messages (e.g., `<34>Oct 11 22:14:15 nginx: actual_log_message`)
 - Extracts the actual log message after the third colon
-- Uses a buffer pool to minimize memory allocations
+- Reuses a single 64 KiB receive buffer; message payloads are copied into strings before entering the worker queue
 
 #### Concurrent Processing
 ```go
@@ -125,7 +125,7 @@ presets:
 
 #### Memory Management
 - **sync.Pool**: Reuses `prometheus.Labels` maps across goroutines to reduce allocations
-- **Buffer pooling**: Syslog server reuses byte buffers for reading messages
+- **Reusable receive buffer**: Syslog server uses one 64 KiB buffer for datagram reads instead of retaining a buffer per queued message
 - **Pre-sized allocations**: Maps and slices are allocated with known capacity
 
 #### Concurrency
@@ -157,7 +157,7 @@ Manages the worker pool and coordinates metric processing:
 Handles syslog protocol reception:
 - Supports UDP and Unix domain sockets
 - Parses syslog format and extracts log messages
-- Uses buffer pooling for high-performance message processing
+- Reuses a single 64 KiB receive buffer for high-performance message processing
 
 #### `internal/config`
 Configuration management and validation:

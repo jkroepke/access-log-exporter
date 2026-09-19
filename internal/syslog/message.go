@@ -1,27 +1,17 @@
 package syslog
 
-import "sync"
-
-const bufferSize = 4096
-
-type packetBuffer [bufferSize]byte
+const maxDatagramSize = 64 * 1024
 
 type Message struct {
-	buffer *packetBuffer
-	pool   *sync.Pool
-	Line   string
+	Line string
 }
 
-func newMessage(buffer *packetBuffer, start, end int, pool *sync.Pool) Message {
+func newMessage(buffer []byte, start, end int) Message {
 	return Message{
-		Line:   string(buffer[start:end]),
-		buffer: buffer,
-		pool:   pool,
+		Line: string(buffer[start:end]),
 	}
 }
 
-func (m Message) Release() {
-	if m.pool != nil {
-		m.pool.Put(m.buffer)
-	}
-}
+// Release is kept for callers that explicitly release messages.
+// Message data no longer retains the reusable receive buffer.
+func (Message) Release() {}
