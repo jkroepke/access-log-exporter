@@ -274,16 +274,16 @@ func (m *Metric) handleCounterIncrement(labels []string) error {
 	return nil
 }
 
-// setMetricWithUpstream processes comma-separated metric values with corresponding upstream servers.
+// setMetricWithUpstream processes Nginx upstream metric values with corresponding upstream servers.
 //
 // This function handles the upstream feature where multiple metric values can be associated
-// with different upstream servers. It parses both comma-separated values and upstream addresses,
+// with different upstream servers. It parses both comma-separated retry values and colon-separated upstream groups,
 // applies exclusion rules, and sets metrics with appropriate upstream labels.
 //
 // Parameters:
 //   - line: The complete log line as string array
 //   - lineLength: Length of the line array (for bounds checking)
-//   - value: Comma-separated string of metric values
+//   - value: Nginx upstream value list, including comma and group separators
 //   - labels: Base label values (will be modified to include upstream labels)
 //
 // Returns:
@@ -293,7 +293,7 @@ func (m *Metric) handleCounterIncrement(labels []string) error {
 // This function is thread-safe when called with unique label value slices per goroutine.
 //
 // Behavior:
-//   - Splits comma-separated values and processes each one
+//   - Splits Nginx upstream values and processes each one
 //   - Maps values to upstream servers (reuses last upstream if fewer upstreams than values)
 //   - Skips values associated with excluded upstream servers
 //   - Adds "upstream" label when upstream labeling is enabled
@@ -303,7 +303,7 @@ func (m *Metric) setMetricWithUpstream(line []string, lineLength uint, value str
 		return err
 	}
 
-	return m.processCommaDelimitedValues(value, upstreams, labels)
+	return m.processUpstreamValues(value, upstreams, labels)
 }
 
 // parseUpstreams extracts and processes upstream server addresses from the log line.
@@ -317,49 +317,52 @@ func (m *Metric) parseUpstreams(line []string, lineLength uint) ([]string, error
 		return nil, fmt.Errorf("line index out of range for upstream address index %d, line length is %d", m.cfg.Upstream.AddrLineIndex, lineLength)
 	}
 
-	upstreams := strings.Split(line[m.cfg.Upstream.AddrLineIndex], ",")
-
-	// Trim whitespace from upstreams
-	for i, upstream := range upstreams {
-		upstreams[i] = strings.TrimSpace(upstream)
-	}
-
-	return upstreams, nil
+	return splitUpstreamElements(line[m.cfg.Upstream.AddrLineIndex]), nil
 }
 
-// processCommaDelimitedValues processes comma-separated metric values with upstream mapping.
-func (m *Metric) processCommaDelimitedValues(value string, upstreams, labels []string) error {
-	valueIndex := 0
-
-	for {
-		valueElement, remaining := m.extractNextValue(value)
-
-		if valueElement != "-" {
-			if err := m.processValueWithUpstream(valueElement, upstreams, valueIndex, labels); err != nil {
-				return err
-			}
+// processUpstreamValues processes Nginx upstream values with upstream mapping.
+func (m *Metric) processUpstreamValues(value string, upstreams, labels []string) error {
+	for valueIndex, valueElement := range splitUpstreamElements(value) {
+		if valueElement == "-" {
+			continue
 		}
 
-		valueIndex++
-
-		if remaining == "" {
-			break
+		if err := m.processValueWithUpstream(valueElement, upstreams, valueIndex, labels); err != nil {
+			return err
 		}
-
-		value = remaining
 	}
 
 	return nil
 }
 
-// extractNextValue extracts the next comma-separated value from the input string.
-func (m *Metric) extractNextValue(value string) (string, string) {
-	before, after, found := strings.Cut(value, ",")
-	if found {
-		return strings.TrimSpace(before), after
+// splitUpstreamElements splits Nginx upstream variables while preserving address colons.
+//
+// Nginx separates retries within one upstream group with commas and different upstream groups
+// with a colon surrounded by spaces. Requiring whitespace around the colon avoids splitting
+// host:port values, IPv6 literals, and unix:/ socket paths.
+func splitUpstreamElements(value string) []string {
+	elements := make([]string, 0, strings.Count(value, ",")+strings.Count(value, " : ")+1)
+	start := 0
+
+	for i := range len(value) {
+		isComma := value[i] == ','
+		isGroupSeparator := value[i] == ':' &&
+			i > 0 &&
+			i+1 < len(value) &&
+			value[i-1] == ' ' &&
+			value[i+1] == ' '
+
+		if !isComma && !isGroupSeparator {
+			continue
+		}
+
+		elements = append(elements, strings.TrimSpace(value[start:i]))
+		start = i + 1
 	}
 
-	return strings.TrimSpace(value), ""
+	elements = append(elements, strings.TrimSpace(value[start:]))
+
+	return elements
 }
 
 // processValueWithUpstream processes a single metric value with its associated upstream.

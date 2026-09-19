@@ -560,6 +560,37 @@ http_upstream_connect_duration_seconds{host="web.example.org",method="POST",stat
 `,
 		},
 		{
+			name: "metric with upstream group separators and label",
+			cfg: config.Metric{
+				Name:       "http_upstream_connect_duration_seconds",
+				Type:       "gauge",
+				Help:       "The time spent on establishing a connection with the upstream server",
+				ValueIndex: new(uint(7)),
+				Upstream: config.Upstream{
+					Enabled:       true,
+					AddrLineIndex: 6,
+					Label:         true,
+				},
+				Labels: []config.Label{
+					{
+						Name:      "host",
+						LineIndex: 0,
+					},
+				},
+			},
+			logLines: []string{
+				"redirect.example\tGET\t200\t0.125\t1536\t4096\t10.0.1.10:8080, [2001:db8::1]:8080 : unix:/run/nginx.sock, 10.0.2.20:8080\t1, 2 : 3, 4",
+			},
+			metrics: `
+# HELP http_upstream_connect_duration_seconds The time spent on establishing a connection with the upstream server
+# TYPE http_upstream_connect_duration_seconds gauge
+http_upstream_connect_duration_seconds{host="redirect.example",upstream="10.0.1.10:8080"} 1
+http_upstream_connect_duration_seconds{host="redirect.example",upstream="10.0.2.20:8080"} 4
+http_upstream_connect_duration_seconds{host="redirect.example",upstream="[2001:db8::1]:8080"} 2
+http_upstream_connect_duration_seconds{host="redirect.example",upstream="unix:/run/nginx.sock"} 3
+`,
+		},
+		{
 			name: "metric with uri and replacement",
 			cfg: config.Metric{
 				Name: "http_requests_total",
