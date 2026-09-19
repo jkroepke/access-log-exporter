@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	syslogclient "log/syslog"
 	"net"
+	"strings"
 	"testing"
 
 	"github.com/jkroepke/access-log-exporter/internal/syslog"
@@ -86,6 +87,45 @@ func TestSyslogServerRawMessage(t *testing.T) {
 	_, err = fmt.Fprint(syslogClient, logMessage)
 	require.NoError(t, err)
 
+	require.Equal(t, logMessage, readMessage(t, logBuffer))
+}
+
+func TestSyslogServerLargeMessage(t *testing.T) {
+	t.Parallel()
+
+	unixSocket, err := nettest.LocalPath()
+	require.NoError(t, err)
+
+	logBuffer := make(chan syslog.Message, 1)
+
+	server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, server.Close(t.Context()))
+	})
+
+	var serverErr error
+
+	go func() {
+		serverErr = server.Start()
+	}()
+
+	t.Cleanup(func() {
+		require.NoError(t, serverErr)
+	})
+
+	var dial net.Dialer
+
+	syslogClient, err := dial.DialContext(t.Context(), "unixgram", unixSocket)
+	require.NoError(t, err)
+
+	logMessage := "localhost\tGET\t200\t" + strings.Repeat("x", 16*1024)
+	rawMessage := "<190>Aug 15 20:16:01 nginx: " + logMessage
+
+	n, err := syslogClient.Write([]byte(rawMessage))
+	require.NoError(t, err)
+	require.Equal(t, len(rawMessage), n)
 	require.Equal(t, logMessage, readMessage(t, logBuffer))
 }
 
