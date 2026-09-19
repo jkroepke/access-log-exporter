@@ -105,7 +105,7 @@ func TestPresetDurationUnits(t *testing.T) {
 	for _, metric := range apachePreset.Metrics {
 		if metric.Name == "http_request_duration_seconds" {
 			assert.True(t, metric.Math.Enabled)
-			assert.Equal(t, float64(1000), metric.Math.Div)
+			assert.InDelta(t, 1000.0, metric.Math.Div, 0.000001)
 
 			return
 		}
