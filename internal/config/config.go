@@ -69,16 +69,14 @@ func (c *Config) ReadFromConfigFile(configFilePath string) error {
 func (c *Config) ReadFromFlagAndEnvironment(args []string, writer io.Writer) error {
 	flagSet := c.newFlagSet(writer)
 
-	if err := applyEnvironment(flagSet); err != nil {
-		return fmt.Errorf("error parsing environment variables: %w", err)
+	if !lookupVersionOrHelpArgument(args) {
+		if err := applyEnvironment(flagSet); err != nil {
+			return fmt.Errorf("error parsing environment variables: %w", err)
+		}
 	}
 
 	if err := flagSet.Parse(args[1:]); err != nil {
 		return fmt.Errorf("error parsing command line arguments: %w", err)
-	}
-
-	if flagSet.NArg() != 0 {
-		return errors.New("error parsing command line arguments: positional arguments are not supported")
 	}
 
 	if flagSet.Lookup("version").Value.String() == "true" {
