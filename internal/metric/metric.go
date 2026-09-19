@@ -16,13 +16,8 @@ import (
 
 //nolint:cyclop
 func New(cfg config.Metric) (*Metric, error) {
-	// Validate metric configuration
-	if cfg.Name == "" {
-		return nil, errors.New("metric name cannot be empty")
-	}
-
-	if cfg.ValueIndex == nil && cfg.Type != "counter" {
-		return nil, errors.New("valueIndex must be set for non-counter metrics")
+	if err := config.ValidateMetric(cfg); err != nil {
+		return nil, err
 	}
 
 	labelCount := len(cfg.Labels)
@@ -39,10 +34,6 @@ func New(cfg config.Metric) (*Metric, error) {
 	)
 
 	for i, label := range cfg.Labels {
-		if label.Name == "" {
-			return nil, errors.New("metric label name cannot be empty")
-		}
-
 		labelKeys[i] = label.Name
 
 		if label.UserAgent {

@@ -37,6 +37,7 @@ import (
 	"github.com/jkroepke/access-log-exporter/internal/config"
 	"github.com/jkroepke/access-log-exporter/internal/nginx"
 	"github.com/jkroepke/access-log-exporter/internal/syslog"
+	"github.com/jkroepke/access-log-exporter/internal/validation"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -112,12 +113,6 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeError
 	}
 
-	go func() {
-		logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
-
-		cancel(syslogServer.Start())
-	}()
-
 	prometheusCollector, err := collector.New(ctx, logger, conf.Presets[conf.Preset], conf.WorkerCount, syslogMessageBuffer)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
@@ -125,7 +120,22 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeError
 	}
 
-	reg := setupPrometheusRegistry(conf, logger, prometheusCollector)
+	reg, err := setupPrometheusRegistry(conf, logger, prometheusCollector)
+	if err != nil {
+		logger.LogAttrs(ctx, slog.LevelError, "error creating Prometheus registry", slog.Any("error", err))
+		cancel(err)
+		_ = syslogServer.Close(ctx)
+		prometheusCollector.Close()
+
+		return ReturnCodeError
+	}
+
+	go func() {
+		logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
+
+		cancel(syslogServer.Start())
+	}()
+
 	server := setupServer(conf, logger, reg)
 
 	wg := &sync.WaitGroup{}
@@ -208,24 +218,38 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 	}
 }
 
-func setupPrometheusRegistry(conf config.Config, logger *slog.Logger, prometheusCollector *collector.Collector) *prometheus.Registry {
+func setupPrometheusRegistry(
+	conf config.Config,
+	logger *slog.Logger,
+	prometheusCollector *collector.Collector,
+) (*prometheus.Registry, error) {
 	prometheus.DefaultGatherer = nil   // Disable default gatherer to avoid conflicts with custom registry
 	prometheus.DefaultRegisterer = nil // Disable default registerer to avoid conflicts with custom registry
 
 	reg := prometheus.NewRegistry()
-	reg.MustRegister(
+
+	collectorsToRegister := []prometheus.Collector{
 		collectors.NewGoCollector(),
 		collectors.NewBuildInfoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		versioncollector.NewCollector("access_log_exporter"),
 		prometheusCollector,
-	)
-
-	if !conf.Nginx.ScrapeURL.IsEmpty() {
-		reg.MustRegister(nginx.New(logger, conf.Nginx.ScrapeURL.String(), nginx.WithTimeout(conf.Nginx.ScrapeTimeout)))
 	}
 
-	return reg
+	if !conf.Nginx.ScrapeURL.IsEmpty() {
+		collectorsToRegister = append(
+			collectorsToRegister,
+			nginx.New(logger, conf.Nginx.ScrapeURL.String(), nginx.WithTimeout(conf.Nginx.ScrapeTimeout)),
+		)
+	}
+
+	for _, prometheusCollector := range collectorsToRegister {
+		if err := reg.Register(prometheusCollector); err != nil {
+			return nil, fmt.Errorf("could not register Prometheus collector: %w", err)
+		}
+	}
+
+	return reg, nil
 }
 
 // setupServer initializes the HTTP server with the given configuration and logger.
@@ -303,7 +327,7 @@ func setupConfiguration(args []string, logWriter io.Writer) (config.Config, erro
 		return config.Config{}, fmt.Errorf("configuration error: %w", err)
 	}
 
-	if err = config.Validate(conf); err != nil {
+	if err = validation.Validate(conf); err != nil {
 		return config.Config{}, fmt.Errorf("configuration validation error: %w", err)
 	}
 

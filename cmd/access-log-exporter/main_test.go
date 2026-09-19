@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -123,4 +124,32 @@ func TestVerifyConfig(t *testing.T) {
 		"--verify-config",
 	}, stdout, nil)
 	require.Equal(t, ReturnCodeOK, returnCode, stdout)
+}
+
+
+func TestVerifyConfigRejectsInvalidMetricConfiguration(t *testing.T) {
+	t.Parallel()
+
+	configFile := filepath.Join(t.TempDir(), "config.yaml")
+	require.NoError(t, os.WriteFile(configFile, []byte(`
+preset: test
+presets:
+  test:
+    metrics:
+      - name: http_request_duration_seconds
+        type: histogram
+        valueIndex: 0
+        buckets: [0.1, 0.1]
+`), 0o600))
+
+	stdout := &bytes.Buffer{}
+
+	returnCode := run(t.Context(), []string{
+		"access-log-exporter",
+		"--config=" + configFile,
+		"--verify-config",
+	}, stdout, nil)
+
+	require.Equal(t, ReturnCodeError, returnCode, stdout)
+	require.Contains(t, stdout.String(), "histogram buckets must be in increasing order")
 }
