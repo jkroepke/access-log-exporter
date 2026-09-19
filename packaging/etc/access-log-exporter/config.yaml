@@ -16,7 +16,7 @@
 #   scrapeTimeout: 1s
 presets:
   # nginx
-  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+  # log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
   # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple:
     metrics:
@@ -161,7 +161,7 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
+  # log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time';
   # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple_upstream:
     metrics:
@@ -284,7 +284,7 @@ presets:
   # apache
   # not supported
   # nginx
-  # log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri';
+  # log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent\t$upstream_addr\t$upstream_connect_time\t$upstream_header_time\t$upstream_response_time\t$request_uri';
   # access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
   simple_uri_upstream:
     metrics:

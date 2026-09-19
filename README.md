@@ -51,9 +51,11 @@ docker run -p 4040:4040 -p 8514:8514/udp ghcr.io/jkroepke/access-log-exporter:la
 
 For **Nginx**, add to your configuration:
 ```nginx
-log_format access_log_exporter '$http_host\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
+log_format access_log_exporter '$server_name\t$request_method\t$status\t$request_completion\t$request_time\t$request_length\t$bytes_sent';
 access_log syslog:server=127.0.0.1:8514,nohostname access_log_exporter;
 ```
+
+The built-in Nginx presets intentionally use `$server_name` for the `host` label. Unlike `$server_name`, `$http_host` reflects the client-provided `Host` header and can create unbounded Prometheus label values when arbitrary hostnames reach Nginx. If you need the original `Host` header, use a custom log format and normalize or allowlist it before exporting it as a label.
 
 For **Apache2**, add to your configuration:
 ```apache
