@@ -112,6 +112,23 @@ func validatePresets(presets Presets) error {
 
 // ValidateMetric validates a metric configuration without constructing the Prometheus collector.
 func ValidateMetric(cfg Metric) error {
+	if err := validateMetricIdentity(cfg); err != nil {
+		return err
+	}
+
+	labelNames, err := validateMetricLabels(cfg.Labels)
+	if err != nil {
+		return err
+	}
+
+	if err = validateMetricUpstream(cfg, labelNames); err != nil {
+		return err
+	}
+
+	return validateMetricType(cfg)
+}
+
+func validateMetricIdentity(cfg Metric) error {
 	if cfg.Name == "" {
 		return errors.New("metric name cannot be empty")
 	}
@@ -120,35 +137,52 @@ func ValidateMetric(cfg Metric) error {
 		return errors.New("valueIndex must be set for non-counter metrics")
 	}
 
-	labelNames := make(map[string]struct{}, len(cfg.Labels)+1)
-	for _, label := range cfg.Labels {
+	return nil
+}
+
+func validateMetricLabels(labels []Label) (map[string]struct{}, error) {
+	labelNames := make(map[string]struct{}, len(labels)+1)
+
+	for _, label := range labels {
 		if label.Name == "" {
-			return errors.New("metric label name cannot be empty")
+			return nil, errors.New("metric label name cannot be empty")
 		}
 
 		if _, exists := labelNames[label.Name]; exists {
-			return fmt.Errorf("metric label %q is duplicated", label.Name)
+			return nil, fmt.Errorf("metric label %q is duplicated", label.Name)
 		}
 
 		labelNames[label.Name] = struct{}{}
 	}
 
+	return labelNames, nil
+}
+
+func validateMetricUpstream(cfg Metric, labelNames map[string]struct{}) error {
 	if !cfg.Upstream.Enabled {
 		if cfg.Upstream.Label || len(cfg.Upstream.Excludes) != 0 || cfg.Upstream.AddrLineIndex != 0 {
 			return errors.New("upstream settings require upstream.enabled")
 		}
-	} else {
-		if cfg.ValueIndex == nil {
-			return errors.New("valueIndex must be set when upstream processing is enabled")
-		}
 
-		if cfg.Upstream.Label {
-			if _, exists := labelNames["upstream"]; exists {
-				return errors.New("metric label \"upstream\" conflicts with the upstream label")
-			}
-		}
+		return nil
 	}
 
+	if cfg.ValueIndex == nil {
+		return errors.New("valueIndex must be set when upstream processing is enabled")
+	}
+
+	if !cfg.Upstream.Label {
+		return nil
+	}
+
+	if _, exists := labelNames["upstream"]; exists {
+		return errors.New("metric label \"upstream\" conflicts with the upstream label")
+	}
+
+	return nil
+}
+
+func validateMetricType(cfg Metric) error {
 	switch cfg.Type {
 	case "counter", "gauge":
 		return nil
