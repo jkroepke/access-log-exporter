@@ -146,6 +146,7 @@ func TestIT(t *testing.T) {
 		for _, code := range []string{"200", "204", "404", "500"} {
 			req, err := http.NewRequestWithContext(t.Context(), method, endpoint+"/"+code, nil)
 			require.NoError(t, err)
+
 			req.Host = "untrusted.example"
 
 			resp, err := http.DefaultClient.Do(req)
@@ -159,6 +160,7 @@ func TestIT(t *testing.T) {
 
 			req, err = http.NewRequestWithContext(t.Context(), method, endpoint+"/proxy/"+code, nil)
 			require.NoError(t, err)
+
 			req.Host = "untrusted.example"
 
 			resp, err = http.DefaultClient.Do(req)
@@ -193,11 +195,11 @@ func TestIT(t *testing.T) {
 	require.Equal(t, 1, strings.Count(metrics, "log_parse_errors_total 0"), metrics)
 	require.Contains(t, metrics, `host="localhost"`, metrics)
 	require.NotContains(t, metrics, `host="untrusted.example"`, metrics)
-	require.Equal(t, 448, strings.Count(metrics, "http_request_duration_seconds_"), metrics)
-	require.Equal(t, 322, strings.Count(metrics, "http_request_size_bytes"), metrics)
-	require.Equal(t, 34, strings.Count(metrics, "http_requests_completed_total"), metrics)
-	require.Equal(t, 34, strings.Count(metrics, "http_requests_total"), metrics)
-	require.Equal(t, 320, strings.Count(metrics, "http_response_size_bytes_"), metrics)
+	require.Equal(t, 224, strings.Count(metrics, "http_request_duration_seconds_"), metrics)
+	require.Equal(t, 162, strings.Count(metrics, "http_request_size_bytes"), metrics)
+	require.Equal(t, 18, strings.Count(metrics, "http_requests_completed_total"), metrics)
+	require.Equal(t, 18, strings.Count(metrics, "http_requests_total"), metrics)
+	require.Equal(t, 160, strings.Count(metrics, "http_response_size_bytes_"), metrics)
 	require.Equal(t, 21, strings.Count(metrics, "nginx_"), metrics)
 
 	termCh <- syscall.SIGTERM

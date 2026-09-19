@@ -208,7 +208,7 @@ access-log-exporter includes four built-in presets and supports custom preset de
 
 The built-in Nginx presets use `$server_name` for field 0, which becomes the Prometheus `host` label. This keeps the default label values tied to the configured Nginx virtual servers.
 
-Avoid using `$http_host` or `$host` for a Prometheus label on endpoints that can receive arbitrary host names. Those variables can include values supplied by the client request and can therefore create unbounded time series. If the original host value is required, use a custom preset and normalize or allowlist the value before exporting it as a label.
+Avoid using `$http_host` or `$host` for a Prometheus label on endpoints that can receive arbitrary hostnames. Those variables can include values supplied by the client request and can therefore create unbounded time series. If the original host value is required, use a custom preset and normalize or allowlist the value before exporting it as a label.
 
 #### `simple` Preset
 
