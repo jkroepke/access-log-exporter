@@ -125,6 +125,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		logger.LogAttrs(ctx, slog.LevelError, "error creating Prometheus registry", slog.Any("error", err))
 
 		cancel(err)
+
 		_ = syslogServer.Close(ctx)
 		prometheusCollector.Close()
 
