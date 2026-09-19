@@ -31,7 +31,7 @@ func TestValidatePrometheusDescriptors(t *testing.T) {
 			name: "invalid metric name",
 			metrics: []config.Metric{
 				{
-					Name: "invalid\\xffmetric",
+					Name: "invalid\xffmetric",
 					Type: "counter",
 					Help: "Invalid metric",
 				},
