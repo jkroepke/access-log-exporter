@@ -17,7 +17,7 @@ import (
 // without opening listeners or starting workers.
 func Validate(conf config.Config) error {
 	if err := config.Validate(conf); err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	presetNames := make([]string, 0, len(conf.Presets))
