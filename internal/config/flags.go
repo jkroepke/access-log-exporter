@@ -8,7 +8,7 @@ import (
 func (c *Config) flagSet(flagSet *flag.FlagSet) {
 	flagSet.String(
 		"config",
-		lookupEnvOrDefault("config", "config.yaml"),
+		c.ConfigFile,
 		"path to one .yaml config file",
 	)
 
@@ -28,21 +28,21 @@ func (c *Config) flagSet(flagSet *flag.FlagSet) {
 	flagSet.UintVar(
 		&c.BufferSize,
 		"buffer-size",
-		lookupEnvOrDefault("buffer_size", c.BufferSize),
+		c.BufferSize,
 		"Size of the buffer for syslog messages. Default is 1000. Set to 0 to disable buffering.",
 	)
 
 	flagSet.IntVar(
 		&c.WorkerCount,
 		"worker",
-		lookupEnvOrDefault("worker", c.WorkerCount),
+		c.WorkerCount,
 		"Number of workers to process syslog messages. 0 or below means number of available CPU cores.",
 	)
 
 	flagSet.StringVar(
 		&c.Preset,
 		"preset",
-		lookupEnvOrDefault("preset", c.Preset),
+		c.Preset,
 		"Preset configuration to use. "+
 			"Available presets: simple, simple_apache, simple_upstream, simple_uri_upstream. "+
 			"Custom presets can be defined via config file.",
@@ -60,13 +60,13 @@ func (c *Config) flagSetLog(flagSet *flag.FlagSet) {
 	flagSet.StringVar(
 		&c.Log.Format,
 		"log.format",
-		lookupEnvOrDefault("log.format", c.Log.Format),
+		c.Log.Format,
 		"log format. json or console",
 	)
 	flagSet.TextVar(
 		&c.Log.Level,
 		"log.level",
-		lookupEnvOrDefault("log.level", c.Log.Level),
+		c.Log.Level,
 		"log level. Can be one of: debug, info, warn, error",
 	)
 }
@@ -76,7 +76,7 @@ func (c *Config) flagSetNginx(flagSet *flag.FlagSet) {
 	flagSet.TextVar(
 		&c.Nginx.ScrapeURL,
 		"nginx.scrape-url",
-		lookupEnvOrDefault("nginx.scrape-url", c.Nginx.ScrapeURL),
+		c.Nginx.ScrapeURL,
 		"A URI or unix domain socket path for scraping NGINX metrics. "+
 			"For NGINX, the stub_status page must be available through the URI. "+
 			"Examples: http://127.0.0.1/stub_status or unix:///var/run/nginx-status.sock",
@@ -84,7 +84,7 @@ func (c *Config) flagSetNginx(flagSet *flag.FlagSet) {
 	flagSet.DurationVar(
 		&c.Nginx.ScrapeTimeout,
 		"nginx.scrape-timeout",
-		lookupEnvOrDefault("nginx.scrape-timeout", c.Nginx.ScrapeTimeout),
+		c.Nginx.ScrapeTimeout,
 		"Timeout for scraping NGINX metrics.",
 	)
 }
@@ -94,7 +94,7 @@ func (c *Config) flagSetDebug(flagSet *flag.FlagSet) {
 	flagSet.BoolVar(
 		&c.Debug.Enable,
 		"debug.enable",
-		lookupEnvOrDefault("debug.enable", c.Debug.Enable),
+		c.Debug.Enable,
 		"Enables go profiling endpoint. This should be never exposed.",
 	)
 }
@@ -104,19 +104,19 @@ func (c *Config) flagSetWeb(flagSet *flag.FlagSet) {
 	flagSet.StringVar(
 		&c.Web.ListenAddress,
 		"web.listen-address",
-		lookupEnvOrDefault("web.listen-address", c.Web.ListenAddress),
+		c.Web.ListenAddress,
 		"Addresses on which to expose metrics. Examples: `:4041` or `[::1]:4041` for http",
 	)
 	flagSet.StringVar(
 		&c.Web.TLSCertFile,
 		"web.tls-cert-file",
-		lookupEnvOrDefault("web.tls-cert-file", c.Web.TLSCertFile),
+		c.Web.TLSCertFile,
 		"Path to the TLS certificate file. When set along with --web.tls-key-file, enables HTTPS.",
 	)
 	flagSet.StringVar(
 		&c.Web.TLSKeyFile,
 		"web.tls-key-file",
-		lookupEnvOrDefault("web.tls-key-file", c.Web.TLSKeyFile),
+		c.Web.TLSKeyFile,
 		"Path to the TLS private key file. When set along with --web.tls-cert-file, enables HTTPS.",
 	)
 }
@@ -126,7 +126,7 @@ func (c *Config) flagSetSyslog(flagSet *flag.FlagSet) {
 	flagSet.StringVar(
 		&c.Syslog.ListenAddress,
 		"syslog.listen-address",
-		lookupEnvOrDefault("syslog.listen-address", c.Syslog.ListenAddress),
+		c.Syslog.ListenAddress,
 		"Addresses on which to expose syslog. Examples: udp://0.0.0.0:8514, unix:///path/to/socket.",
 	)
 }
