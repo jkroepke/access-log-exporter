@@ -17,7 +17,7 @@ import (
 //nolint:cyclop
 func New(cfg config.Metric) (*Metric, error) {
 	if err := config.ValidateMetric(cfg); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	labelCount := len(cfg.Labels)
