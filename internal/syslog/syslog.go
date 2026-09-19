@@ -81,7 +81,6 @@ func (s *Syslog) Start() error {
 		// The sender address is unused, so prefer Read over ReadFrom to avoid address allocation.
 		n, err := con.Read(buffer)
 		if err != nil {
-
 			select {
 			case <-done:
 				return nil
@@ -105,13 +104,11 @@ func (s *Syslog) Start() error {
 
 		if n <= 0 {
 			// Ignore empty messages
-
 			continue
 		}
 
 		// Ignore messages not starting with '<'
 		if buffer[0] != '<' {
-
 			continue
 		}
 
@@ -142,7 +139,6 @@ func (s *Syslog) Start() error {
 		}
 
 		if messageStart == -1 {
-
 			continue // fewer than 4 colons found
 		}
 
