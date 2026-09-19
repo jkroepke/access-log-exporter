@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/jkroepke/access-log-exporter/internal/config"
@@ -72,6 +73,45 @@ web:
 			}
 		})
 	}
+}
+
+func TestPresetDurationUnits(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+
+	conf, err := config.New([]string{
+		"access-log-exporter",
+		"--config",
+		"../../packaging/etc/access-log-exporter/config.yaml",
+	}, &buf)
+	require.NoError(t, err)
+
+	for _, presetName := range []string{"simple", "simple_upstream", "simple_uri_upstream"} {
+		preset, ok := conf.Presets[presetName]
+		require.True(t, ok, presetName)
+
+		for _, metric := range preset.Metrics {
+			if strings.HasSuffix(metric.Name, "_duration_seconds") {
+				assert.False(t, metric.Math.Enabled, "%s/%s", presetName, metric.Name)
+				assert.Zero(t, metric.Math.Div, "%s/%s", presetName, metric.Name)
+			}
+		}
+	}
+
+	apachePreset, ok := conf.Presets["simple_apache"]
+	require.True(t, ok)
+
+	for _, metric := range apachePreset.Metrics {
+		if metric.Name == "http_request_duration_seconds" {
+			assert.True(t, metric.Math.Enabled)
+			assert.Equal(t, float64(1000), metric.Math.Div)
+
+			return
+		}
+	}
+
+	require.Fail(t, "http_request_duration_seconds missing from simple_apache preset")
 }
 
 func TestConfigHelpFlag(t *testing.T) {

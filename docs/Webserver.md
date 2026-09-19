@@ -72,6 +72,12 @@ LogFormat "%v\t%m\t%>s\tOK\t%{ms}T\t%I\t%O" accesslog_exporter
 CustomLog "|/usr/bin/logger --rfc3164 --server 127.0.0.1 --port 8514 --udp" accesslog_exporter
 ```
 
+Use the `simple_apache` preset so the `%{ms}T` request duration is converted from milliseconds to seconds:
+
+```bash
+access-log-exporter --preset simple_apache
+```
+
 ### Important Considerations
 
 Apache does not natively log information about upstream servers. To track upstream response times or status codes, integrate additional modules or external tools.
