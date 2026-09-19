@@ -1,23 +1,19 @@
 package config
 
 import (
-	"encoding"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"reflect"
-	"strconv"
 	"strings"
-	"time"
 
 	"go.yaml.in/yaml/v4"
 )
 
 var ErrVersion = errors.New("flag: version requested")
 
-// New loads the configuration from configuration files, command line arguments and environment variables in that order.
+// New loads the configuration from configuration files, environment variables, and command line arguments in that order.
 //
 //goland:noinspection GoMixedReceiverTypes
 func New(args []string, writer io.Writer) (Config, error) {
@@ -41,7 +37,7 @@ func New(args []string, writer io.Writer) (Config, error) {
 	return config, nil
 }
 
-// ReadFromConfigFile reads the configuration from a configuration file and command line arguments.
+// ReadFromConfigFile reads the configuration from a configuration file.
 //
 //goland:noinspection GoMixedReceiverTypes
 func (c *Config) ReadFromConfigFile(configFilePath string) error {
@@ -65,32 +61,19 @@ func (c *Config) ReadFromConfigFile(configFilePath string) error {
 	return nil
 }
 
-// ReadFromFlagAndEnvironment reads the configuration from command line arguments and environment variables.
+// ReadFromFlagAndEnvironment reads configuration overrides from environment variables and command line arguments.
+//
+// Environment variables are applied before command line arguments so command line arguments keep the highest priority.
 //
 //goland:noinspection GoMixedReceiverTypes
 func (c *Config) ReadFromFlagAndEnvironment(args []string, writer io.Writer) error {
-	// Load the c from command line arguments
-	flagSet := flag.NewFlagSet("access-log-exporter", flag.ContinueOnError)
-	flagSet.SetOutput(writer)
-	flagSet.Usage = func() {
-		_, _ = fmt.Fprint(flagSet.Output(), "Documentation available at https://github.com/jkroepke/access-log-exporter/wiki\r\n\r\n")
-		_, _ = fmt.Fprint(flagSet.Output(), "Usage of access-log-exporter:\r\n\r\n")
-		// --help should display options with double dash
-		flagSet.VisitAll(func(flag *flag.Flag) {
-			flag.Name = "-" + flag.Name
-		})
-		flagSet.PrintDefaults()
-	}
+	flagSet := c.newFlagSet(writer)
 
-	c.flagSet(flagSet)
-
-	flagSet.VisitAll(func(flag *flag.Flag) {
-		if flag.Name == "version" {
-			return
+	if !lookupVersionOrHelpArgument(args) {
+		if err := applyEnvironment(flagSet); err != nil {
+			return fmt.Errorf("error parsing environment variables: %w", err)
 		}
-
-		flag.Usage += fmt.Sprintf(" (env: %s)", getEnvironmentVariableByFlagName(flag.Name))
-	})
+	}
 
 	if err := flagSet.Parse(args[1:]); err != nil {
 		return fmt.Errorf("error parsing command line arguments: %w", err)
@@ -101,6 +84,32 @@ func (c *Config) ReadFromFlagAndEnvironment(args []string, writer io.Writer) err
 	}
 
 	return nil
+}
+
+func (c *Config) newFlagSet(writer io.Writer) *flag.FlagSet {
+	flagSet := flag.NewFlagSet("access-log-exporter", flag.ContinueOnError)
+	flagSet.SetOutput(writer)
+	flagSet.Usage = func() {
+		_, _ = fmt.Fprint(flagSet.Output(), "Documentation available at https://github.com/jkroepke/access-log-exporter/wiki\r\n\r\n")
+		_, _ = fmt.Fprint(flagSet.Output(), "Usage of access-log-exporter:\r\n\r\n")
+		// --help should display options with double dash
+		flagSet.VisitAll(func(configurationFlag *flag.Flag) {
+			configurationFlag.Name = "-" + configurationFlag.Name
+		})
+		flagSet.PrintDefaults()
+	}
+
+	c.flagSet(flagSet)
+
+	flagSet.VisitAll(func(configurationFlag *flag.Flag) {
+		if configurationFlag.Name == "version" {
+			return
+		}
+
+		configurationFlag.Usage += fmt.Sprintf(" (env: %s)", getEnvironmentVariableByFlagName(configurationFlag.Name))
+	})
+
+	return flagSet
 }
 
 func lookupConfigArgument(args []string) string {
@@ -119,6 +128,10 @@ func lookupConfigArgument(args []string) string {
 		}
 	}
 
+	if configFilePath, ok := os.LookupEnv(getEnvironmentVariableByFlagName("config")); ok {
+		return configFilePath
+	}
+
 	defaultConfigFilePath := "config.yaml"
 
 	if koDataPath, ok := os.LookupEnv("KO_DATA_PATH"); ok {
@@ -126,7 +139,7 @@ func lookupConfigArgument(args []string) string {
 		defaultConfigFilePath = koDataPath + "/config.yaml"
 	}
 
-	return lookupEnvOrDefault("config", defaultConfigFilePath)
+	return defaultConfigFilePath
 }
 
 func lookupVersionOrHelpArgument(args []string) bool {
@@ -142,90 +155,51 @@ func lookupVersionOrHelpArgument(args []string) bool {
 	return false
 }
 
-// lookupEnvOrDefault looks up the environment variable by the flag name and returns the value.
-// If the environment variable is not set, it returns the default value.
-// It supports the following types: string, bool, int, uint, time.Duration and types implementing [encoding.TextUnmarshaler].
-// If the type is not supported, it panics.
-//
-//nolint:cyclop
-func lookupEnvOrDefault[T any](key string, defaultValue T) T {
-	envValue, ok := os.LookupEnv(getEnvironmentVariableByFlagName(key))
-	if !ok {
-		return defaultValue
-	}
+func applyEnvironment(flagSet *flag.FlagSet) error {
+	var environmentError error
 
-	ok = false
-
-	var value T
-
-	switch any(defaultValue).(type) {
-	case string:
-		value, ok = any(envValue).(T)
-	case bool:
-		boolVal, err := strconv.ParseBool(envValue)
-		if err != nil {
-			return defaultValue
+	flagSet.VisitAll(func(configurationFlag *flag.Flag) {
+		if environmentError != nil || configurationFlag.Name == "version" {
+			return
 		}
 
-		value, ok = any(boolVal).(T)
-	case int:
-		intValue, err := strconv.Atoi(envValue)
-		if err != nil {
-			return defaultValue
+		environmentVariable := getEnvironmentVariableByFlagName(configurationFlag.Name)
+		if value, ok := os.LookupEnv(environmentVariable); ok {
+			environmentError = setEnvironmentValue(configurationFlag, environmentVariable, value)
+
+			return
 		}
 
-		value, ok = any(intValue).(T)
-	case uint:
-		intValue, err := strconv.ParseUint(envValue, 10, 0)
-		if err != nil {
-			return defaultValue
-		}
-
-		value, ok = any(uint(intValue)).(T)
-	case float64:
-		floatValue, err := strconv.ParseFloat(envValue, 64)
-		if err != nil {
-			return defaultValue
-		}
-
-		value, ok = any(floatValue).(T)
-	case time.Duration:
-		durationValue, err := time.ParseDuration(envValue)
-		if err != nil {
-			return defaultValue
-		}
-
-		value, ok = any(durationValue).(T)
-	default:
-		// Handle types implementing encoding.TextUnmarshaler via reflection
-		t := reflect.TypeOf(defaultValue)
-
-		var valPtr reflect.Value
-
-		if t.Kind() == reflect.Pointer {
-			valPtr = reflect.New(t.Elem())
-		} else {
-			valPtr = reflect.New(t)
-		}
-
-		if unmarshaler, okUnmarshal := reflect.TypeAssert[encoding.TextUnmarshaler](valPtr); okUnmarshal {
-			if err := unmarshaler.UnmarshalText([]byte(envValue)); err != nil {
-				return defaultValue
-			}
-
-			if t.Kind() == reflect.Pointer {
-				value, ok = reflect.TypeAssert[T](valPtr.Convert(t))
-			} else {
-				value, ok = reflect.TypeAssert[T](valPtr.Elem())
+		if legacyEnvironmentVariable, ok := legacyEnvironmentVariableByFlagName(configurationFlag.Name); ok {
+			if value, exists := os.LookupEnv(legacyEnvironmentVariable); exists {
+				environmentError = setEnvironmentValue(configurationFlag, legacyEnvironmentVariable, value)
 			}
 		}
+	})
+
+	return environmentError
+}
+
+func setEnvironmentValue(configurationFlag *flag.Flag, name, value string) error {
+	if getter, ok := configurationFlag.Value.(flag.Getter); ok {
+		if _, isBoolean := getter.Get().(bool); isBoolean && value != "true" && value != "false" {
+			return fmt.Errorf("invalid value for environment variable %s: use true or false", name)
+		}
 	}
 
-	if !ok {
-		panic(fmt.Sprintf("failed to convert environment variable %s to type %T", key, defaultValue))
+	if err := configurationFlag.Value.Set(value); err != nil {
+		return fmt.Errorf("invalid value for environment variable %s: %w", name, err)
 	}
 
-	return value
+	return nil
+}
+
+func legacyEnvironmentVariableByFlagName(flagName string) (string, bool) {
+	if flagName == "buffer-size" {
+		return "CONFIG_BUFFER_SIZE", true
+	}
+
+	return "", false
 }
 
 // getEnvironmentVariableByFlagName converts a flag name to an environment variable name.
