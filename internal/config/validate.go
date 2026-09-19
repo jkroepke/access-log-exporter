@@ -11,7 +11,7 @@ import (
 // Validate validates the complete static configuration.
 func Validate(conf Config) error {
 	if _, ok := conf.Presets[conf.Preset]; !ok {
-		return fmt.Errorf("preset %q not found in configuration", conf.Preset)
+		return fmt.Errorf("preset '%s' not found in configuration", conf.Preset)
 	}
 
 	if err := validateTLS(conf); err != nil {
