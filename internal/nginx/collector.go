@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -39,6 +40,19 @@ type Collector struct {
 	client              *http.Client
 	scrapeURL           string
 	timeout             time.Duration
+	scrapeMutex         sync.Mutex
+	scrapeCall          *scrapeCall
+}
+
+type scrapeCall struct {
+	done   chan struct{}
+	result scrapeResult
+}
+
+type scrapeResult struct {
+	stats         StubStats
+	serverVersion string
+	up            bool
 }
 
 // StubStats represents NGINX stub_status metrics.
@@ -146,6 +160,58 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	result := c.scrape()
+
+	c.collectUp(ch, boolToFloat(result.up), result.serverVersion)
+	if !result.up {
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsActive,
+		prometheus.GaugeValue, float64(result.stats.Connections.Active))
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsAccepted,
+		prometheus.CounterValue, float64(result.stats.Connections.Accepted))
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsHandled,
+		prometheus.CounterValue, float64(result.stats.Connections.Handled))
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsReading,
+		prometheus.GaugeValue, float64(result.stats.Connections.Reading))
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsWriting,
+		prometheus.GaugeValue, float64(result.stats.Connections.Writing))
+
+	ch <- prometheus.MustNewConstMetric(c.connectionsWaiting,
+		prometheus.GaugeValue, float64(result.stats.Connections.Waiting))
+}
+
+func (c *Collector) scrape() scrapeResult {
+	c.scrapeMutex.Lock()
+	if c.scrapeCall != nil {
+		call := c.scrapeCall
+		c.scrapeMutex.Unlock()
+
+		<-call.done
+
+		return call.result
+	}
+
+	call := &scrapeCall{done: make(chan struct{})}
+	c.scrapeCall = call
+	c.scrapeMutex.Unlock()
+
+	call.result = c.scrapeOnce()
+
+	c.scrapeMutex.Lock()
+	c.scrapeCall = nil
+	close(call.done)
+	c.scrapeMutex.Unlock()
+
+	return call.result
+}
+
+func (c *Collector) scrapeOnce() scrapeResult {
 	serverVersion := defaultServerVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
@@ -159,9 +225,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			slog.Any("error", err),
 		)
 
-		c.collectUp(ch, 0, serverVersion)
-
-		return
+		return scrapeResult{serverVersion: serverVersion}
 	}
 
 	req.Header.Set("User-Agent", userAgent)
@@ -174,9 +238,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			slog.Any("error", err),
 		)
 
-		c.collectUp(ch, 0, serverVersion)
-
-		return
+		return scrapeResult{serverVersion: serverVersion}
 	}
 
 	defer func() {
@@ -190,12 +252,9 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			slog.Int("status_code", resp.StatusCode),
 		)
 
-		c.collectUp(ch, 0, serverVersion)
-
-		return
+		return scrapeResult{serverVersion: serverVersion}
 	}
 
-	// Attempt to read the server version from the response header
 	if version := resp.Header.Get("Server"); strings.HasPrefix(version, "nginx/") {
 		serverVersion = strings.TrimPrefix(version, "nginx/")
 	}
@@ -208,30 +267,22 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			slog.Any("error", err),
 		)
 
-		c.collectUp(ch, 0, serverVersion)
-
-		return
+		return scrapeResult{serverVersion: serverVersion}
 	}
 
-	c.collectUp(ch, 1, serverVersion)
+	return scrapeResult{
+		stats:         stats,
+		serverVersion: serverVersion,
+		up:            true,
+	}
+}
 
-	ch <- prometheus.MustNewConstMetric(c.connectionsActive,
-		prometheus.GaugeValue, float64(stats.Connections.Active))
+func boolToFloat(value bool) float64 {
+	if value {
+		return 1
+	}
 
-	ch <- prometheus.MustNewConstMetric(c.connectionsAccepted,
-		prometheus.CounterValue, float64(stats.Connections.Accepted))
-
-	ch <- prometheus.MustNewConstMetric(c.connectionsHandled,
-		prometheus.CounterValue, float64(stats.Connections.Handled))
-
-	ch <- prometheus.MustNewConstMetric(c.connectionsReading,
-		prometheus.GaugeValue, float64(stats.Connections.Reading))
-
-	ch <- prometheus.MustNewConstMetric(c.connectionsWriting,
-		prometheus.GaugeValue, float64(stats.Connections.Writing))
-
-	ch <- prometheus.MustNewConstMetric(c.connectionsWaiting,
-		prometheus.GaugeValue, float64(stats.Connections.Waiting))
+	return 0
 }
 
 func (c *Collector) collectUp(ch chan<- prometheus.Metric, value float64, serverVersion string) {

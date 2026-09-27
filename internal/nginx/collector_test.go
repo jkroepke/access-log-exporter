@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/jkroepke/access-log-exporter/internal/nginx"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -194,4 +197,54 @@ nginx_connections_writing 1
 nginx_up{version="1.29.0"} 1`
 
 	require.NoError(t, testutil.CollectAndCompare(col, strings.NewReader(strings.TrimSpace(expected)+"\n")))
+}
+
+
+func TestCollectorCoalescesConcurrentScrapes(t *testing.T) {
+	t.Parallel()
+
+	var requestCount atomic.Int32
+
+	requestStarted := make(chan struct{}, 1)
+	releaseRequest := make(chan struct{})
+
+	stubServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requestCount.Add(1)
+
+		select {
+		case requestStarted <- struct{}{}:
+		default:
+		}
+
+		<-releaseRequest
+
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
+		require.NoError(t, err)
+	}))
+	t.Cleanup(stubServer.Close)
+
+	col := nginx.New(slog.New(slog.DiscardHandler), stubServer.URL)
+
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+
+	for range 8 {
+		wg.Go(func() {
+			<-start
+			require.Equal(t, 7, testutil.CollectAndCount(col))
+		})
+	}
+
+	close(start)
+	<-requestStarted
+
+	require.Never(t, func() bool {
+		return requestCount.Load() > 1
+	}, 100*time.Millisecond, 10*time.Millisecond)
+
+	close(releaseRequest)
+	wg.Wait()
+
+	require.Equal(t, int32(1), requestCount.Load())
 }
