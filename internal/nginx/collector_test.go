@@ -219,20 +219,25 @@ func TestCollectorCoalescesConcurrentScrapes(t *testing.T) {
 		<-releaseRequest
 
 		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n"))
-		require.NoError(t, err)
+		if _, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n")); err != nil {
+			t.Errorf("write stub_status response: %v", err)
+		}
 	}))
 	t.Cleanup(stubServer.Close)
 
 	col := nginx.New(slog.New(slog.DiscardHandler), stubServer.URL)
 
-	start := make(chan struct{})
 	var wg sync.WaitGroup
+
+	start := make(chan struct{})
 
 	for range 8 {
 		wg.Go(func() {
 			<-start
-			require.Equal(t, 7, testutil.CollectAndCount(col))
+
+			if count := testutil.CollectAndCount(col); count != 7 {
+				t.Errorf("unexpected metric count: got %d, want 7", count)
+			}
 		})
 	}
 
