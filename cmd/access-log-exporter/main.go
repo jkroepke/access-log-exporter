@@ -128,6 +128,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 
 		_ = syslogServer.Close(ctx)
 		close(syslogMessageBuffer)
+
 		prometheusCollector.Close()
 
 		return ReturnCodeError
