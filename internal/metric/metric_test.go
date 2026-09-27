@@ -225,8 +225,6 @@ http_requests_total 200
 					{
 						String:      new("OK"),
 						Replacement: "1",
-
-						StringReplacer: strings.NewReplacer("OK", "1"),
 					},
 				},
 			},
@@ -240,6 +238,36 @@ http_requests_total 200
 # HELP http_requests_completed_total The total number of completed requests.
 # TYPE http_requests_completed_total counter
 http_requests_completed_total 3
+`,
+		},
+		{
+			name: "string replacements match exact values",
+			cfg: config.Metric{
+				Name: "http_requests_total",
+				Type: "counter",
+				Help: "The total number of client requests.",
+				Labels: []config.Label{
+					{
+						Name:      "path",
+						LineIndex: 0,
+						Replacements: []config.Replacement{
+							{
+								String:      new("/api"),
+								Replacement: "/normalized",
+							},
+						},
+					},
+				},
+			},
+			logLines: []string{
+				"/api",
+				"/api/users",
+			},
+			metrics: `
+# HELP http_requests_total The total number of client requests.
+# TYPE http_requests_total counter
+http_requests_total{path="/api/users"} 1
+http_requests_total{path="/normalized"} 1
 `,
 		},
 		{

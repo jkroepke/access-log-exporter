@@ -479,8 +479,8 @@ func (m *Metric) valueReplacements(replacements []config.Replacement, labelValue
 	}
 
 	for _, replacement := range replacements {
-		if replacement.StringReplacer != nil && strings.Contains(labelValue, *replacement.String) {
-			return replacement.StringReplacer.Replace(labelValue)
+		if replacement.String != nil && labelValue == *replacement.String {
+			return replacement.Replacement
 		}
 
 		if replacement.Regexp != nil && replacement.Regexp.MatchString(labelValue) {
