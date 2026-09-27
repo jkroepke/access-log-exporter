@@ -50,7 +50,7 @@ nfpms:
     section: net
     description: |
       A Prometheus exporter that receives access logs through the syslog protocol and converts them into metrics.
-    license: MIT License
+    license: Apache-2.0
     formats:
       - deb
       - rpm
