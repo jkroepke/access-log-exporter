@@ -271,6 +271,26 @@ http_requests_total{path="/normalized"} 1
 `,
 		},
 		{
+			name: "metric rejects NaN",
+			cfg: config.Metric{
+				Name:       "test_gauge",
+				Type:       "gauge",
+				ValueIndex: new(uint(0)),
+			},
+			logLines: []string{"NaN"},
+			parseErr: `failed to set metric test_gauge with value "NaN": metric value "NaN" is not finite`,
+		},
+		{
+			name: "metric rejects infinity",
+			cfg: config.Metric{
+				Name:       "test_gauge",
+				Type:       "gauge",
+				ValueIndex: new(uint(0)),
+			},
+			logLines: []string{"+Inf"},
+			parseErr: `failed to set metric test_gauge with value "+Inf": metric value "+Inf" is not finite`,
+		},
+		{
 			name: "simple preset",
 			cfg: config.Metric{
 				Name:       "http_request_duration_seconds",
