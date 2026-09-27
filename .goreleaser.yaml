@@ -17,8 +17,6 @@ builds:
     goarch:
       - amd64
       - arm64
-    goamd64:
-      - v2
     mod_timestamp: '{{ .CommitTimestamp }}'
     env:
       - CGO_ENABLED=0
@@ -133,7 +131,7 @@ dockers_v2:
       "org.opencontainers.image.vendor": 'Jan-Otto Kröpke'
       "org.opencontainers.image.version": '{{.Version}}'
     platforms:
-      - linux/amd64/v2
+      - linux/amd64
       - linux/arm64
     # flags:
     #   - '{{ if not .IsSnapshot }}--sbom=true{{end}}'
