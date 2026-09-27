@@ -38,10 +38,10 @@ type Collector struct {
 	connectionsWriting  *prometheus.Desc
 	logger              *slog.Logger
 	client              *http.Client
+	scrapeCall          *scrapeCall
 	scrapeURL           string
 	timeout             time.Duration
 	scrapeMutex         sync.Mutex
-	scrapeCall          *scrapeCall
 }
 
 type scrapeCall struct {
@@ -50,8 +50,8 @@ type scrapeCall struct {
 }
 
 type scrapeResult struct {
-	stats         StubStats
 	serverVersion string
+	stats         StubStats
 	up            bool
 }
 
@@ -163,6 +163,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	result := c.scrape()
 
 	c.collectUp(ch, boolToFloat(result.up), result.serverVersion)
+
 	if !result.up {
 		return
 	}
@@ -198,6 +199,7 @@ func (c *Collector) scrape() scrapeResult {
 	}
 
 	call := &scrapeCall{done: make(chan struct{})}
+
 	c.scrapeCall = call
 	c.scrapeMutex.Unlock()
 
