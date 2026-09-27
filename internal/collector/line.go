@@ -32,38 +32,29 @@ func (c *Collector) lineHandlerWorkers(ctx context.Context, logger *slog.Logger,
 // lineHandlerWorker is a worker that will read messages from the message channel
 // and call the lineHandler method to process them.
 // It will log any errors that occur during parsing and increment the metricLogParseError.
-// The worker will stop when the context is done or when the message channel is closed.
+// The worker stops after the message channel is closed and all queued messages are processed.
 func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, messageCh <-chan syslog.Message) {
 	var err error
 
 	fields := make([]string, 0, 16)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case msg, ok := <-messageCh:
-			if !ok {
-				return
-			}
+	for msg := range messageCh {
+		c.metricLogLastReceived.SetToCurrentTime()
 
-			c.metricLogLastReceived.SetToCurrentTime()
+		fields = splitLineFields(fields, msg.Line)
 
-			fields = splitLineFields(fields, msg.Line)
+		err = c.lineHandler(fields)
+		if err != nil {
+			logger.LogAttrs(
+				ctx, slog.LevelDebug, "error parsing metric",
+				slog.Any("err", err),
+				slog.String("line", msg.Line),
+			)
 
-			err = c.lineHandler(fields)
-			if err != nil {
-				logger.LogAttrs(
-					ctx, slog.LevelDebug, "error parsing metric",
-					slog.Any("err", err),
-					slog.String("line", msg.Line),
-				)
-
-				c.metricLogParseError.Inc()
-			}
-
-			msg.Release()
+			c.metricLogParseError.Inc()
 		}
+
+		msg.Release()
 	}
 }
 

@@ -127,12 +127,17 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		cancel(err)
 
 		_ = syslogServer.Close(ctx)
+		close(syslogMessageBuffer)
 		prometheusCollector.Close()
 
 		return ReturnCodeError
 	}
 
+	syslogStartDone := make(chan struct{})
+
 	go func() {
+		defer close(syslogStartDone)
+
 		logger.InfoContext(ctx, "syslog server started", slog.String("address", conf.Syslog.ListenAddress))
 
 		cancel(syslogServer.Start())
@@ -172,6 +177,8 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 				)
 			}
 
+			<-syslogStartDone
+			close(syslogMessageBuffer)
 			prometheusCollector.Close()
 
 			logger.InfoContext(
