@@ -207,6 +207,7 @@ func (c *Collector) scrape() scrapeResult {
 
 	c.scrapeMutex.Lock()
 	c.scrapeCall = nil
+
 	close(call.done)
 	c.scrapeMutex.Unlock()
 
