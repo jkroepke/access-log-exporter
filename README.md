@@ -17,7 +17,7 @@ access-log-exporter processes logs from multiple web servers and has undergone t
 ## Features
 
 - **Multi-server support**: Works with Nginx and Apache HTTP Server,
-- **Syslog protocol**: Receives logs via UDP/TCP syslog for real-time processing,
+- **Syslog protocol**: Receives logs via UDP or Unix datagram syslog for real-time processing,
 - **Flexible configuration**: Customizable presets for different monitoring needs,
 - **Built-in presets**: Ready-to-use configurations for common scenarios,
 - **Upstream metrics**: Support for Nginx upstream server monitoring,
