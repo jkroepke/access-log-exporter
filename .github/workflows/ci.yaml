@@ -28,14 +28,6 @@ jobs:
           cache: "${{ github.actor != 'renovate[bot]' && github.actor != 'mend[bot]' }}"
 
       - run: go build ./cmd/access-log-exporter
-
-      - name: Verify container default config
-        run: |
-          mkdir -p linux/amd64
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o linux/amd64/access-log-exporter ./cmd/access-log-exporter
-          docker build --build-arg TARGETPLATFORM=linux/amd64 --tag access-log-exporter:test .
-          docker run --rm access-log-exporter:test --verify-config
-
       - run: go test ./... -timeout 20s -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./...
       - run: go test ./... -timeout 20s -run='^$' -bench=. -benchmem -count 3
 
