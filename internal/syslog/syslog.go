@@ -1,6 +1,7 @@
 package syslog
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -69,7 +70,7 @@ func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan
 	return syslogServer, nil
 }
 
-//nolint:gocognit,cyclop
+//nolint:cyclop
 func (s *Syslog) Start() error {
 	con := s.con
 	msgCh := s.msgCh
@@ -119,32 +120,11 @@ func (s *Syslog) Start() error {
 		for ; (n > 0) && (buffer[n-1] < 32); n-- {
 		}
 
-		// msg may contain a syslog message with a header like "<34>Oct 11 22:14:15 nginx: "
-		// We need to find the first occurrence of ": " to extract the actual message.
-		// Find the index after the third occurrence of ':' (optionally followed by a space).
-		colonCount := 0
-		messageStart := -1
-
-		for i, b := range buffer[:n] {
-			if b == ':' {
-				colonCount++
-				if colonCount == 3 {
-					messageStart = i + 1
-					// Optionally, check for a space after the colon
-					if messageStart < n && buffer[messageStart] == ' ' {
-						messageStart++
-					}
-
-					break
-				}
-			}
-		}
-
+		messageStart := syslogMessageStart(buffer[:n])
 		if messageStart == -1 {
-			continue // fewer than 4 colons found
+			continue
 		}
 
-		// Now buffer[messageStart:n] contains the message after the third colon (and space, if present).
 		message := newMessage(buffer, messageStart, n, receivedAtUnixNano)
 
 		select {
@@ -176,4 +156,151 @@ func (s *Syslog) Close(ctx context.Context) error {
 	s.logger.InfoContext(ctx, "syslog server shutdown complete")
 
 	return nil
+}
+
+
+const rfc3164TimestampLength = len("Jan  1 00:00:00")
+
+func syslogMessageStart(message []byte) int {
+	priorityEnd := bytes.IndexByte(message, '>')
+	if priorityEnd < 2 || priorityEnd+1 >= len(message) {
+		return -1
+	}
+
+	header := message[priorityEnd+1:]
+	if isRFC5424Header(header) {
+		start := rfc5424MessageStart(header)
+		if start == -1 {
+			return -1
+		}
+
+		return priorityEnd + 1 + start
+	}
+
+	if len(header) <= rfc3164TimestampLength {
+		return -1
+	}
+
+	tagEnd := bytes.IndexByte(header[rfc3164TimestampLength:], ':')
+	if tagEnd == -1 {
+		return -1
+	}
+
+	start := rfc3164TimestampLength + tagEnd + 1
+	if start < len(header) && header[start] == ' ' {
+		start++
+	}
+
+	return priorityEnd + 1 + start
+}
+
+func isRFC5424Header(header []byte) bool {
+	versionEnd := bytes.IndexByte(header, ' ')
+	if versionEnd <= 0 {
+		return false
+	}
+
+	for _, char := range header[:versionEnd] {
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+
+	return header[0] != '0'
+}
+
+func rfc5424MessageStart(header []byte) int {
+	position := rfc5424StructuredDataStart(header)
+	if position == -1 {
+		return -1
+	}
+
+	switch header[position] {
+	case '-':
+		return skipMessageSeparator(header, position+1)
+	case '[':
+		position = rfc5424StructuredDataEnd(header, position)
+		if position == -1 {
+			return -1
+		}
+
+		return skipMessageSeparator(header, position)
+	default:
+		return -1
+	}
+}
+
+func rfc5424StructuredDataStart(header []byte) int {
+	position := 0
+
+	// VERSION, TIMESTAMP, HOSTNAME, APP-NAME, PROCID and MSGID precede STRUCTURED-DATA.
+	for range 6 {
+		fieldEnd := bytes.IndexByte(header[position:], ' ')
+		if fieldEnd == -1 {
+			return -1
+		}
+
+		position += fieldEnd + 1
+	}
+
+	if position >= len(header) {
+		return -1
+	}
+
+	return position
+}
+
+func rfc5424StructuredDataEnd(header []byte, position int) int {
+	inQuotes := false
+	escaped := false
+
+	for position < len(header) {
+		char := header[position]
+
+		if escaped {
+			escaped = false
+			position++
+
+			continue
+		}
+
+		if char == '\\' && inQuotes {
+			escaped = true
+			position++
+
+			continue
+		}
+
+		if char == '"' {
+			inQuotes = !inQuotes
+			position++
+
+			continue
+		}
+
+		if char == ']' && !inQuotes {
+			position++
+			if position < len(header) && header[position] == '[' {
+				continue
+			}
+
+			return position
+		}
+
+		position++
+	}
+
+	return -1
+}
+
+func skipMessageSeparator(header []byte, position int) int {
+	if position == len(header) {
+		return position
+	}
+
+	if header[position] != ' ' {
+		return -1
+	}
+
+	return position + 1
 }

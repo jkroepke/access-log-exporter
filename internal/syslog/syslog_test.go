@@ -90,6 +90,44 @@ func TestSyslogServerRawMessage(t *testing.T) {
 	require.Equal(t, logMessage, readMessage(t, logBuffer))
 }
 
+func TestSyslogServerRFC5424(t *testing.T) {
+	t.Parallel()
+
+	unixSocket, err := nettest.LocalPath()
+	require.NoError(t, err)
+
+	logBuffer := make(chan syslog.Message, 1)
+
+	server, err := syslog.New(t.Context(), slog.New(slog.DiscardHandler), "unix://"+unixSocket, logBuffer)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, server.Close(t.Context()))
+	})
+
+	var serverErr error
+
+	go func() {
+		serverErr = server.Start()
+	}()
+
+	t.Cleanup(func() {
+		require.NoError(t, serverErr)
+	})
+
+	var dial net.Dialer
+
+	syslogClient, err := dial.DialContext(t.Context(), "unixgram", unixSocket)
+	require.NoError(t, err)
+
+	logMessage := "example.com\tGET\t200"
+	rawMessage := `<190>1 2026-09-27T10:00:00+02:00 gateway nginx 123 ID47 [meta key="a:b"] ` + logMessage
+
+	_, err = syslogClient.Write([]byte(rawMessage))
+	require.NoError(t, err)
+	require.Equal(t, logMessage, readMessage(t, logBuffer))
+}
+
 func TestSyslogServerLargeMessage(t *testing.T) {
 	t.Parallel()
 
