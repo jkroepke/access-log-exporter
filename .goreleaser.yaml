@@ -133,7 +133,7 @@ dockers_v2:
       "org.opencontainers.image.vendor": 'Jan-Otto Kröpke'
       "org.opencontainers.image.version": '{{.Version}}'
     platforms:
-      - linux/amd64
+      - linux/amd64/v2
       - linux/arm64
     # flags:
     #   - '{{ if not .IsSnapshot }}--sbom=true{{end}}'
