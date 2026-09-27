@@ -275,6 +275,7 @@ Each preset contains a list of metrics with their configuration.
 access-log-exporter supports these Prometheus metric types:
 
 - **`counter`**: Monotonically increasing values (e.g., request counts)
+- **`gauge`**: Numeric values that can increase or decrease
 - **`histogram`**: Distribution of values with configurable buckets (e.g., response times)
 
 #### Metric Configuration Options
@@ -283,9 +284,9 @@ Each metric supports these configuration options:
 
 ##### Basic Options
 - **`name`**: Metric name (must follow Prometheus naming conventions)
-- **`type`**: Metric type (`counter` or `histogram`)
+- **`type`**: Metric type (`counter`, `gauge`, or `histogram`)
 - **`help`**: Description of what the metric measures
-- **`valueIndex`**: Specifies, which field from the tab-separated log line contains the numeric value for this metric. Only required for histogram metrics. Fields start counting from 0 (zero-based indexing).
+- **`valueIndex`**: Specifies, which field from the tab-separated log line contains the numeric value for this metric. Required for gauge and histogram metrics. Fields start counting from 0 (zero-based indexing).
 
 <details>
 <summary>Understanding `valueIndex` with examples</summary>
@@ -329,7 +330,7 @@ This creates these indexed fields:
 
 **Important notes:**
 - Counter metrics can either count log line occurrences (without `valueIndex`) or sum numeric values from a specific field (with `valueIndex`)
-- Histogram metrics require `valueIndex` to know which field contains the measurable value
+- Gauge and histogram metrics require `valueIndex` to know which field contains the measurable value
 - Field indexing starts at 0, not 1
 - The field must contain a valid numeric value when using `valueIndex`
 
