@@ -219,6 +219,7 @@ func TestCollectorCoalescesConcurrentScrapes(t *testing.T) {
 		<-releaseRequest
 
 		w.WriteHeader(http.StatusOK)
+
 		if _, err := w.Write([]byte("Active connections: 1\nserver accepts handled requests\n10 10 10\nReading: 0 Writing: 1 Waiting: 0\n")); err != nil {
 			t.Errorf("write stub_status response: %v", err)
 		}
