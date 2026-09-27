@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/jkroepke/access-log-exporter/internal/config/types"
@@ -89,7 +88,6 @@ type Label struct {
 type Replacement struct {
 	String         *string           `json:"string,omitempty" yaml:"string,omitempty"`
 	Regexp         *regexp.Regexp    `json:"regexp,omitempty" yaml:"regexp,omitempty"`
-	StringReplacer *strings.Replacer `json:"-"                yaml:"-"`
 	Replacement    string            `json:"replacement"      yaml:"replacement"`
 }
 
@@ -121,10 +119,6 @@ func (r *Replacement) UnmarshalYAML(data *yaml.Node) error {
 
 	if r.Regexp != nil && r.String != nil {
 		return errors.New("replacement can not have both regexp and string")
-	}
-
-	if r.String != nil {
-		r.StringReplacer = strings.NewReplacer(*r.String, r.Replacement)
 	}
 
 	return nil
