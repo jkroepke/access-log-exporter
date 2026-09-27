@@ -3,6 +3,7 @@ package metric
 import (
 	"errors"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -429,8 +430,15 @@ func (m *Metric) setMetric(value string, labels []string) error {
 		return fmt.Errorf("failed to parse value %q: %w", value, err)
 	}
 
+	if !isFinite(valueFloat) {
+		return fmt.Errorf("metric value %q is not finite", value)
+	}
+
 	// Apply math transformations if configured
 	valueFloat = m.applyMathTransformations(valueFloat)
+	if !isFinite(valueFloat) {
+		return fmt.Errorf("metric value %q became non-finite after math transformations", value)
+	}
 
 	// Set the metric value based on type
 	return m.setMetricValue(valueFloat, labels)
@@ -493,4 +501,9 @@ func (m *Metric) valueReplacements(replacements []config.Replacement, labelValue
 	}
 
 	return labelValue
+}
+
+
+func isFinite(value float64) bool {
+	return !math.IsNaN(value) && !math.IsInf(value, 0)
 }
