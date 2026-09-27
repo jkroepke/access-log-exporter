@@ -14,7 +14,7 @@ SupplementaryGroups=access-log-exporter
 ExecStart=/usr/bin/access-log-exporter -config ${CONFIG_FILE}
 NoExecPaths=/
 ExecPaths=/usr/bin/access-log-exporter /usr/bin/env /usr/bin/kill
-ExecReload=/usr/bin/env kill -USR1 $MAINPID
+ExecReload=/usr/bin/env kill -HUP $MAINPID
 
 Environment=CONFIG_FILE=/etc/access-log-exporter/config.yaml
 
