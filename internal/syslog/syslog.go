@@ -107,6 +107,8 @@ func (s *Syslog) Start() error {
 			continue
 		}
 
+		receivedAtUnixNano := time.Now().UnixNano()
+
 		// Ignore messages not starting with '<'
 		if buffer[0] != '<' {
 			continue
@@ -143,7 +145,7 @@ func (s *Syslog) Start() error {
 		}
 
 		// Now buffer[messageStart:n] contains the message after the third colon (and space, if present).
-		message := newMessage(buffer, messageStart, n)
+		message := newMessage(buffer, messageStart, n, receivedAtUnixNano)
 
 		select {
 		case msgCh <- message:

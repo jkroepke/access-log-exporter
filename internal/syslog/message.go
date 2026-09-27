@@ -3,12 +3,14 @@ package syslog
 const maxDatagramSize = 64 * 1024
 
 type Message struct {
-	Line string
+	Line               string
+	ReceivedAtUnixNano int64
 }
 
-func newMessage(buffer []byte, start, end int) Message {
+func newMessage(buffer []byte, start, end int, receivedAtUnixNano int64) Message {
 	return Message{
-		Line: string(buffer[start:end]),
+		Line:               string(buffer[start:end]),
+		ReceivedAtUnixNano: receivedAtUnixNano,
 	}
 }
 

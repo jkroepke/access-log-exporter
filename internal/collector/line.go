@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/jkroepke/access-log-exporter/internal/syslog"
 )
@@ -47,7 +48,11 @@ func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, 
 				return
 			}
 
-			c.metricLogLastReceived.SetToCurrentTime()
+			if msg.ReceivedAtUnixNano > 0 {
+				c.metricLogLastReceived.Set(float64(msg.ReceivedAtUnixNano) / float64(time.Second))
+			} else {
+				c.metricLogLastReceived.SetToCurrentTime()
+			}
 
 			fields = splitLineFields(fields, msg.Line)
 
