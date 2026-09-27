@@ -113,7 +113,7 @@ func run(ctx context.Context, args []string, stdout io.Writer, termCh <-chan os.
 		return ReturnCodeError
 	}
 
-	prometheusCollector, err := collector.New(ctx, logger, conf.Presets[conf.Preset], conf.WorkerCount, syslogMessageBuffer)
+	prometheusCollector, err := collector.New(context.WithoutCancel(ctx), logger, conf.Presets[conf.Preset], conf.WorkerCount, syslogMessageBuffer)
 	if err != nil {
 		logger.LogAttrs(ctx, slog.LevelError, "error creating collector", slog.Any("error", err))
 
