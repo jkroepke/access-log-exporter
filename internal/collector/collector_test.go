@@ -2,6 +2,7 @@ package collector_test
 
 import (
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,10 +26,22 @@ func TestCollectorExposesLastReceivedMetric(t *testing.T) {
 		col.Close()
 	})
 
-	messageCh <- syslog.Message{Line: "example.com\tGET\t200"}
+	messageCh <- syslog.Message{
+		Line:               "example.com\tGET\t200",
+		ReceivedAtUnixNano: int64(42 * time.Second),
+	}
 
 	require.Eventually(t, func() bool {
-		return testutil.CollectAndCount(col, "log_last_received_timestamp_seconds") == 1
+		expected := `# HELP log_last_received_timestamp_seconds Timestamp of the last received log message in seconds since epoch
+# TYPE log_last_received_timestamp_seconds gauge
+log_last_received_timestamp_seconds 42
+`
+
+		return testutil.CollectAndCompare(
+			col,
+			strings.NewReader(expected),
+			"log_last_received_timestamp_seconds",
+		) == nil
 	}, time.Second, 10*time.Millisecond)
 }
 
