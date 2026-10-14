@@ -48,6 +48,8 @@ func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, 
 				return
 			}
 
+			c.metricLogReceived.Inc()
+
 			if msg.ReceivedAtUnixNano > 0 {
 				c.metricLogLastReceived.Set(float64(msg.ReceivedAtUnixNano) / float64(time.Second))
 			} else {
@@ -66,8 +68,6 @@ func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, 
 
 				c.metricLogParseError.Inc()
 			}
-
-			msg.Release()
 		}
 	}
 }

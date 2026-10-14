@@ -27,8 +27,8 @@ type Syslog struct {
 	listenAddr string
 }
 
-func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan<- Message) (Syslog, error) {
-	syslogServer := Syslog{
+func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan<- Message) (*Syslog, error) {
+	syslogServer := &Syslog{
 		listenAddr: listenAddr,
 		logger:     logger.With(slog.String("component", "syslog")),
 		msgCh:      msgCh,
@@ -37,7 +37,7 @@ func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan
 
 	uri, err := url.Parse(listenAddr)
 	if err != nil {
-		return Syslog{}, fmt.Errorf("could not parse syslog listen address '%s': %w", listenAddr, err)
+		return nil, fmt.Errorf("could not parse syslog listen address '%s': %w", listenAddr, err)
 	}
 
 	var (
@@ -55,14 +55,14 @@ func New(ctx context.Context, logger *slog.Logger, listenAddr string, msgCh chan
 	}
 
 	if err != nil {
-		return Syslog{}, fmt.Errorf("could not listen syslog server on '%s': %w", listenAddr, err)
+		return nil, fmt.Errorf("could not listen syslog server on '%s': %w", listenAddr, err)
 	}
 
 	conn, ok := listener.(packetReader)
 	if !ok {
 		_ = listener.Close()
 
-		return Syslog{}, fmt.Errorf("syslog listener for '%s' does not support address-less reads", listenAddr)
+		return nil, fmt.Errorf("syslog listener for '%s' does not support address-less reads", listenAddr)
 	}
 
 	syslogServer.con = conn
@@ -130,8 +130,6 @@ func (s *Syslog) Start() error {
 		select {
 		case msgCh <- message:
 		case <-done:
-			message.Release()
-
 			return nil
 		}
 	}
@@ -157,7 +155,6 @@ func (s *Syslog) Close(ctx context.Context) error {
 
 	return nil
 }
-
 
 const rfc3164TimestampLength = len("Jan  1 00:00:00")
 

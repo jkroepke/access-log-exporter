@@ -70,3 +70,42 @@ func newTestPreset() config.Preset {
 		},
 	}
 }
+
+func TestCollectorExposesBufferMetrics(t *testing.T) {
+	t.Parallel()
+
+	messageCh := make(chan syslog.Message, 8)
+
+	col, err := collector.New(t.Context(), slog.New(slog.DiscardHandler), newTestPreset(), 1, messageCh)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		close(messageCh)
+		col.Close()
+	})
+
+	messageCh <- syslog.Message{Line: "example.com\tGET\t200"}
+
+	messageCh <- syslog.Message{Line: "example.com\tGET\t500"}
+
+	require.Eventually(t, func() bool {
+		expected := `# HELP log_buffer_length Number of log messages currently waiting in the syslog message buffer
+# TYPE log_buffer_length gauge
+log_buffer_length 0
+# HELP log_buffer_size Capacity of the syslog message buffer. Once the buffer is full, the syslog receiver blocks and the kernel drops datagrams.
+# TYPE log_buffer_size gauge
+log_buffer_size 8
+# HELP log_messages_received_total Total number of log messages taken from the buffer for processing
+# TYPE log_messages_received_total counter
+log_messages_received_total 2
+`
+
+		return testutil.CollectAndCompare(
+			col,
+			strings.NewReader(expected),
+			"log_buffer_length",
+			"log_buffer_size",
+			"log_messages_received_total",
+		) == nil
+	}, time.Second, 10*time.Millisecond)
+}
