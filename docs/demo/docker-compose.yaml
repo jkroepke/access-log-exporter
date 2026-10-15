@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: nginx:1-alpine-slim
+    image: docker.io/library/nginx:1-alpine-slim
     healthcheck:
       test: [ "CMD", "wget", "-q", "http://127.0.0.1:8090/stub_status","-O","/dev/null" ]
       interval: 30s
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
   httpbin:
-    image: mccutchen/go-httpbin
+    image: docker.io/mccutchen/go-httpbin:latest
     networks:
       access-log-exporter:
         aliases:
@@ -40,7 +40,7 @@ services:
       - --preset=simple_uri_upstream
       - --nginx.scrape-url=http://nginx:8090/stub_status
   load-generator:
-    image: golang:1.27
+    image: docker.io/library/golang:1.27
     networks:
       access-log-exporter:
     depends_on:
@@ -54,7 +54,7 @@ services:
     volumes:
       - ./load-generator/main.go:/main.go
   prometheus:
-    image: prom/prometheus
+    image: docker.io/prom/prometheus
     depends_on:
       - access-log-exporter
     networks:
@@ -70,7 +70,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
   grafana:
-    image: grafana/grafana
+    image: docker.io/grafana/grafana
     networks:
       access-log-exporter:
         aliases:
