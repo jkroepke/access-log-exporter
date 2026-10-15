@@ -38,8 +38,13 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 	}
 
 	collector := &Collector{
-		wg:      &sync.WaitGroup{},
-		metrics: metrics,
+		wg:        &sync.WaitGroup{},
+		metrics:   metrics,
+		messageCh: messageCh,
+		metricLogReceived: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "log_messages_received_total",
+			Help: "Total number of log messages taken from the buffer for processing",
+		}),
 		metricLogParseError: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "log_parse_errors_total",
 			Help: "Total number of parse errors",
@@ -48,6 +53,16 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 			Name: "log_last_received_timestamp_seconds",
 			Help: "Timestamp of the last received log message in seconds since epoch",
 		}),
+		metricBufferSize: prometheus.NewDesc(
+			"log_buffer_size",
+			"Capacity of the syslog message buffer. Once the buffer is full, the syslog receiver blocks and the kernel drops datagrams.",
+			nil, nil,
+		),
+		metricBufferLength: prometheus.NewDesc(
+			"log_buffer_length",
+			"Number of log messages currently waiting in the syslog message buffer",
+			nil, nil,
+		),
 	}
 
 	collector.lineHandlerWorkers(ctx, logger, workerCount, messageCh)
@@ -57,8 +72,13 @@ func New(ctx context.Context, logger *slog.Logger, preset config.Preset, workerC
 
 // Describe implements the prometheus.Collector interface.
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
+	c.metricLogReceived.Describe(ch)
 	c.metricLogParseError.Describe(ch)
 	c.metricLogLastReceived.Describe(ch)
+
+	ch <- c.metricBufferSize
+
+	ch <- c.metricBufferLength
 
 	for _, met := range c.metrics {
 		met.Describe(ch)
@@ -67,8 +87,13 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus.Collector interface.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	c.metricLogReceived.Collect(ch)
 	c.metricLogParseError.Collect(ch)
 	c.metricLogLastReceived.Collect(ch)
+
+	ch <- prometheus.MustNewConstMetric(c.metricBufferSize, prometheus.GaugeValue, float64(cap(c.messageCh)))
+
+	ch <- prometheus.MustNewConstMetric(c.metricBufferLength, prometheus.GaugeValue, float64(len(c.messageCh)))
 
 	for _, met := range c.metrics {
 		met.Collect(ch)

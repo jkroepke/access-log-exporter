@@ -56,27 +56,33 @@ The application starts by:
 
 The syslog component:
 - Listens on UDP or Unix domain sockets
-- Parses syslog format messages (e.g., `<34>Oct 11 22:14:15 nginx: actual_log_message`)
-- Extracts the actual log message after the third colon
+- Parses RFC 3164 (e.g., `<34>Oct 11 22:14:15 nginx: actual_log_message`) and RFC 5424 headers without regular expressions
+- Strips the syslog header and keeps only the log message
 - Reuses a single 64 KiB receive buffer; message payloads are copied into strings before entering the worker queue
 
 #### Concurrent Processing
 ```go
 // Multiple worker goroutines process messages concurrently
-func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, messageCh <-chan string) {
+func (c *Collector) lineHandlerWorker(ctx context.Context, logger *slog.Logger, messageCh <-chan syslog.Message) {
+    fields := make([]string, 0, 16) // reused per worker
+
     for msg := range messageCh {
-        // Split message into fields (tab-separated)
-        line := strings.Split(msg, "\t")
+        // Split message into fields (tab-separated) without allocating per line
+        fields = splitLineFields(fields, msg.Line)
 
         // Process each configured metric
         for _, metric := range c.metrics {
-            metric.Parse(line)
+            metric.Parse(fields)
         }
     }
 }
 ```
 
 Workers operate independently and process messages from a shared channel, providing high throughput through parallel processing.
+
+When the message buffer is full, the syslog receiver blocks on the channel send and stops reading from the socket.
+The kernel then drops datagrams silently. The `log_buffer_length` and `log_buffer_size` metrics show how close the
+buffer is to that point, and `log_messages_received_total` makes a throughput drop visible.
 
 #### Metric Processing
 ```go
@@ -169,8 +175,11 @@ Configuration management and validation:
 ### 6. Monitoring and Observability
 
 The exporter includes built-in metrics:
+- `log_messages_received_total`: Counter of messages taken from the buffer for processing
 - `log_parse_errors_total`: Counter of parsing errors
 - `log_last_received_timestamp_seconds`: Timestamp of last received message
+- `log_buffer_size`: Capacity of the message buffer (`bufferSize`)
+- `log_buffer_length`: Messages currently waiting in the buffer; a value near `log_buffer_size` means the receiver is about to block and the kernel will drop datagrams
 - Standard Go runtime metrics (memory, GC, goroutines)
 - Optional nginx stub_status metrics
 

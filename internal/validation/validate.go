@@ -45,12 +45,24 @@ func validatePreset(conf config.Config, presetName string, preset config.Preset)
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		versioncollector.NewCollector("access_log_exporter"),
 		prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "log_messages_received_total",
+			Help: "Total number of log messages taken from the buffer for processing",
+		}),
+		prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "log_parse_errors_total",
 			Help: "Total number of parse errors",
 		}),
 		prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "log_last_received_timestamp_seconds",
 			Help: "Timestamp of the last received log message in seconds since epoch",
+		}),
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "log_buffer_size",
+			Help: "Capacity of the syslog message buffer",
+		}),
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "log_buffer_length",
+			Help: "Number of log messages currently waiting in the syslog message buffer",
 		}),
 	}
 

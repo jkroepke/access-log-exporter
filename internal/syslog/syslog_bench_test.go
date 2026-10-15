@@ -46,7 +46,7 @@ func Benchmark_Syslog_Unix(b *testing.B) {
 	for b.Loop() {
 		_, _ = syslogClient.Write(logMessageBytes)
 
-		(<-logBuffer).Release()
+		<-logBuffer
 	}
 
 	b.ReportAllocs()
@@ -91,7 +91,7 @@ func Benchmark_Syslog_IP(b *testing.B) {
 	for b.Loop() {
 		_, _ = syslogClient.Write(logMessageBytes)
 
-		(<-logBuffer).Release()
+		<-logBuffer
 	}
 
 	b.ReportAllocs()

@@ -237,7 +237,6 @@ func readMessage(t *testing.T, logBuffer <-chan syslog.Message) string {
 	t.Helper()
 
 	msg := <-logBuffer
-	defer msg.Release()
 
 	return msg.Line
 }

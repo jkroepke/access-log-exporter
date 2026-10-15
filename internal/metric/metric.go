@@ -178,18 +178,8 @@ func (m *Metric) validateAndExtractValue(line []string) (string, bool, error) {
 
 // getLabelsFromPool retrieves label values from the sync.Pool for thread-safe reuse.
 func (m *Metric) getLabelsFromPool() *[]string {
-	labels, ok := m.labelsPool.Get().(*[]string)
-	if !ok {
-		labelCount := len(m.cfg.Labels)
-		if m.cfg.Upstream.Enabled && m.cfg.Upstream.Label {
-			labelCount++
-		}
-
-		labelValues := make([]string, labelCount)
-		labels = &labelValues
-	}
-
-	return labels
+	// The pool only ever holds *[]string, see New().
+	return m.labelsPool.Get().(*[]string) //nolint:forcetypeassert
 }
 
 // returnLabelsToPool clears label values and returns them to the pool for reuse.
@@ -502,7 +492,6 @@ func (m *Metric) valueReplacements(replacements []config.Replacement, labelValue
 
 	return labelValue
 }
-
 
 func isFinite(value float64) bool {
 	return !math.IsNaN(value) && !math.IsInf(value, 0)
