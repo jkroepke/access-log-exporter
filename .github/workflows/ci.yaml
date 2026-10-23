@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     name: Build & Test
@@ -36,7 +36,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   goreleaser:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Test goreleaser
     permissions:
       contents: read
@@ -79,7 +79,7 @@ jobs:
           path: dist/
   lint:
     name: lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -103,7 +103,7 @@ jobs:
 
   super-lint:
     name: super-lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -185,7 +185,7 @@ jobs:
       - lint
       - goreleaser
       - super-lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
       id-token: write
