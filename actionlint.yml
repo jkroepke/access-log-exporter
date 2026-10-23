@@ -1,5 +1,5 @@
-# Temporary workaround until actionlint recognizes the GitHub-hosted ubuntu-26.04 runner.
-paths:
-  .github/workflows/**/*.{yml,yaml}:
-    ignore:
-      - '^label "ubuntu-26\.04" is unknown\.'
+# Temporary workaround for GitHub-hosted runner labels not yet recognized by actionlint.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
+    - ubuntu-26.04-arm
