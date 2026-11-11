@@ -144,8 +144,7 @@ jobs:
   release:
     if: github.repository_owner == 'jkroepke' && github.ref_name == 'main'
     name: Release
-    runs-on: ubuntu-latest
-    environment: "Create Release Tag"
+    runs-on: ubuntu-26.04
     concurrency: create-tag
     needs:
       - build
@@ -153,15 +152,9 @@ jobs:
       - goreleaser
       - super-lint
     permissions:
-      contents: read
+      actions: write
+      contents: write
     steps:
-      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        id: app-token
-        with:
-          client-id: 1248576
-          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
-          permission-contents: 'write'
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -171,15 +164,32 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
 
+      # Creates the next tag from the conventional commits since the last one
+      # (.releaserc.json).
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx -y semantic-release
+
+      # A tag created with GITHUB_TOKEN does not trigger the tag push run of CI,
+      # but a workflow_dispatch does. Dispatch CI on the new tag, so it runs
+      # exactly once without a GitHub App token (same as tag.yaml). The tag run
+      # publishes the release.
+      - name: Dispatch CI on the new tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for tag in $(git tag --points-at HEAD --list 'v*'); do
+            gh workflow run ci.yaml --ref "$tag"
+          done
+
   publish:
     name: Publish package
     if: >-
-      github.event_name == 'push'
-      && startsWith(github.ref, 'refs/tags/v')
+      github.repository_owner == 'jkroepke'
+      && github.ref_type == 'tag'
+      && startsWith(github.ref_name, 'v')
     needs:
       - build
       - lint
