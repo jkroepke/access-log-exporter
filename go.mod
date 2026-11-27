@@ -12,7 +12,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.45.0
 	github.com/ua-parser/uap-go v0.0.0-20261028195011-4cb30e998c4c
 	go.yaml.in/yaml/v4 v4.0.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 )
 
 require (
